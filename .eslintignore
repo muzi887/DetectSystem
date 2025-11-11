@@ -1,0 +1,16 @@
+# 忽略依赖目录
+node_modules/
+
+# 忽略构建输出目录
+dist/
+
+# 忽略静态资源目录
+public/
+
+# 忽略测试文件
+*.test.ts
+*.test.js
+*.spec.js
+
+# 忽略压缩过的 JS 文件
+*.min.js

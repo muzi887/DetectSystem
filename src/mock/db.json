@@ -1,0 +1,99 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "phone": "13800000000",
+      "name": "测试用户",
+      "password": "123456",
+      "role": "user"
+    },
+    {
+      "name": "顶层await测试",
+      "phone": "13999999999",
+      "password": "123",
+      "id": 2
+    },
+    {
+      "name": "顶层await测试",
+      "phone": "13999999999",
+      "password": "123",
+      "id": 3
+    },
+    {
+      "name": "更新后的名字",
+      "phone": "13999999899",
+      "password": "1233",
+      "id": 4
+    }
+  ],
+  "monitorPoints": [
+    {
+      "id": 1,
+      "name": "点A",
+      "lat": 35,
+      "lng": 139,
+      "temp": 28,
+      "soilMoisture": 30,
+      "status": "normal"
+    },
+    {
+      "id": 2,
+      "name": "点B",
+      "lat": 35.1,
+      "lng": 139.1,
+      "temp": 33,
+      "soilMoisture": 12,
+      "status": "warning"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "pointId": 2,
+      "level": "medium",
+      "message": "土壤湿度低",
+      "time": 1697625600000,
+      "handled": false
+    },
+    {
+      "id": 2,
+      "pointId": 1,
+      "level": "high",
+      "message": "温度异常升高，超过阈值",
+      "time": 1697712000000,
+      "handled": true
+    },
+    {
+      "id": 3,
+      "pointId": 2,
+      "level": "low",
+      "message": "设备通信延迟",
+      "time": 1697798400000,
+      "handled": false
+    },
+    {
+      "time": 1760965149506,
+      "handled": true,
+      "pointId": 4,
+      "level": "medium",
+      "message": "土壤湿度持续下降",
+      "id": 4
+    },
+    {
+      "time": 1760965172018,
+      "handled": true,
+      "pointId": 3,
+      "level": "low",
+      "message": "设备通信延迟",
+      "id": 5
+    },
+    {
+      "time": 1762823845668,
+      "handled": false,
+      "pointId": 1,
+      "level": "medium",
+      "message": "土壤湿度持续下降",
+      "id": 6
+    }
+  ]
+}
