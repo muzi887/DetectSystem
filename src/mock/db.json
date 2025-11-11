@@ -94,6 +94,46 @@
       "level": "medium",
       "message": "土壤湿度持续下降",
       "id": 6
+    },
+    {
+      "time": 1762832156560,
+      "handled": false,
+      "pointId": 2,
+      "level": "medium",
+      "message": "手动触发:${point.name}状态${point.status}",
+      "id": 7
+    },
+    {
+      "time": 1762847700263,
+      "handled": false,
+      "pointId": 2,
+      "level": "medium",
+      "message": "手动触发:${point.name}状态${point.status}",
+      "id": 8
+    },
+    {
+      "time": 1762847704528,
+      "handled": false,
+      "pointId": 1,
+      "level": "medium",
+      "message": "手动触发:${point.name}状态${point.status}",
+      "id": 9
+    },
+    {
+      "time": 1762850173196,
+      "handled": false,
+      "pointId": 2,
+      "level": "medium",
+      "message": "手动触发:点B状态warning",
+      "id": 10
+    },
+    {
+      "time": 1762851977263,
+      "handled": false,
+      "pointId": 1,
+      "level": "medium",
+      "message": "手动触发:点A状态normal",
+      "id": 11
     }
   ]
 }
