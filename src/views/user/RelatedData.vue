@@ -62,7 +62,7 @@ import { ref, onMounted, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 // 1. 导入所有需要的依赖
-import { useDataStore } from '@/stores/data'
+import { useDataStore } from '@/stores/data.ts'
 import * as echarts from 'echarts'
 
 // 2. 粘贴所有来自 Dashboard.vue 的 script 逻辑
