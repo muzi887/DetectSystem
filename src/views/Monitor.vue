@@ -196,54 +196,39 @@ export default defineComponent({
 
     // 6.重写生命周期钩子
     onMounted(async () => {
-      markersLayer = L.layerGroup().addTo(map)
+      await initMap()
+      await refreshData() // 首次加载数据
+      renderMarkers() // 首次渲染
 
-      // 在map实例上监听popupopen事件
-      // map: Leaflet 地图实例
-      map.on('popupopen', (e) => {
-        // e.popup是当前打开的popup 实例,getElement()用于获取Leaflet地图实例对象的根DOM元素
-        const popupContent = e.popup.getElement()
-        if (!popupContent) return
+      // 监听 monitorPoints 变化，自动重绘 markers
+      watch(
+        () => dataStore.monitorPoints,
+        () => {
+          renderMarkers()
+        },
+        { deep: true }
+      )
 
-        // 在popup的DOM内部查找带有data-id属性的按钮
-        const btn = popupContent.querySelector('button[data-id]') as HTMLButtonElement | null
-        if (btn) {
-          // 从按钮的data-id属性获取监测点ID
-          const pointId = Number(btn.dataset.id)
-          // 通过pointId从 dataStore.monitorPoints 找到对应的监测点的完整信息(提供给createAlert)
-          const point = dataStore.monitorPoints.find((p) => p.id === pointId)
-          if (!point) return
-
-          //绑定异步点击事件处理函数到btn
-          btn.onclick = async () => {
-            btn.disabled = true //防止重复点击
-            btn.innerText = '正在触发...'
-
-            try {
-              // 调用API，创建Alert
-              await dataStore.createAlert({
-                pointId: point.id,
-                level: 'medium',
-                message: `手动触发:${point.name}状态${point.status}`,
-                time: Date.now(),
-                handled: false
-              })
-              message.success('已成功创建预警！')
-              //创建成功后，关闭popup
-              map?.closePopup()
-            } catch (error) {
-              message.error('创建预警失败')
-              console.error('Create alert failed:', error)
-              btn.innerText = '模拟触发预警' // 恢复按钮文字
-              btn.disabled = false
-            }
+      // 监听 alerts 变化，只更新弹窗内容，性能更高
+      watch(
+        () => dataStore.alerts,
+        () => {
+          for (const p of dataStore.monitorPoints) {
+            const mk = markersById.get(p.id)
+            if (mk) mk.setPopupContent(buildPopupHtml(p))
           }
-        }
-      })
+        },
+        { deep: true }
+      )
     })
-    // 当监测点更新时重新渲染 markers
-    // 这里直接监听 store 数据变更也可以（略）
-    return { mapRef }
+
+    // 组件销毁时清理地图，防止内存泄漏
+    onBeforeUnmount(() => {
+      if (map) {
+        map.remove()
+        map = null
+      }
+    })
 
     // 组件销毁时清理地图，防止内存泄漏
     onBeforeUnmount(() => {
