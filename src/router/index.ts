@@ -1,20 +1,11 @@
 // src/router/index.ts
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
-// 1. 引入 useUserStore 以便在守卫中使用
+// 引入 useUserStore 以便在守卫中使用
 import { useUserStore } from '@/stores/user'
 
 // =========================================================
-// 1. 现有组件的动态导入 (Admin/Portal)
-// =========================================================
-// const Login = () => import('../views/Login.vue')
-// const Dashboard = () => import('../views/Dashboard.vue')
-// const Monitor = () => import('../views/Monitor.vue')
-// const Alerts = () => import('../views/Alerts.vue')
-// const RelatedData = () => import('../views/RelatedData.vue')
-
-// =========================================================
-// 2. 普通用户/7大核心功能：组件的动态导入
+// 普通用户/7大核心功能组件的动态导入
 // =========================================================
 // 1. 首页 -> 登录
 const Home = () => import('../views/user/Home.vue')
@@ -34,12 +25,12 @@ const About = () => import('../views/user/About.vue')
 // 统一组装所有路由配置
 const routes: RouteRecordRaw[] = [
   { path: '/', component: Home, name: 'Home' }, // 默认根路径
-  {
-    path: '/home', // 对应：1. 首页
-    component: Home,
-    name: 'Home',
-    meta: { requireAuth: true, title: '首页' }
-  },
+  // {
+  //   path: '/home', // 对应：1. 首页
+  //   component: Home,
+  //   name: 'Home',
+  //   meta: { requireAuth: true, title: '首页' }
+  // },
   {
     path: '/related-data', // 对应：2.相关数据
     component: RelatedData,
@@ -77,66 +68,31 @@ const routes: RouteRecordRaw[] = [
     meta: { requireAuth: true, title: '关于我们' }
   }
 
-  // =========================================================
-  // C. BasicLayout 风格的后台功能页面 (Admin 专属)
-  // 原有的 dashboard, monitor, alerts 归类到此，仅供管理员使用
-  // =========================================================
-  // {
-  //   path: '/admin', // 创建一个 /admin 的父路由
-  //   redirect: '/admin/dashboard', // 默认重定向到管理员仪表盘
-  //   meta: { requireAuth: true, role: 'admin' }, // 通过 meta.role 来实现更细致的权限控制
-  //   children: [
-  //     {
-  //       path: 'dashboard', // 路径是 /admin/dashboard
-  //       component: Dashboard,
-  //       name: 'Dashboard',
-  //       // meta: { requireAuth: true }
-  //       meta: { title: '管理员仪表盘' }
-  //     },
-  //     {
-  //       path: 'monitor', // 路径是 /admin/monitor
-  //       component: Monitor,
-  //       name: 'AdminMonitor', // 避免与普通用户的 MapVisualization 冲突，名称最好区分
-  //       meta: { title: '后台监测管理' }
-  //     },
-  //     {
-  //       path: 'alerts', // 路径是 /admin/alerts
-  //       component: Alerts,
-  //       name: 'AdminAlerts', // 避免与普通用户的 WarningSystem 冲突，名称最好区分
-  //       meta: { title: '后台警报管理' }
-  //     }
-  //   ]
-  // }
-
   // 捕获所有未匹配的路由
   // { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFound.vue') }
 ]
+
+// =========================================================
 // 创建路由实例
+// =========================================================
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
 
-//全局前置守卫
+// =========================================================
+// 全局前置守卫（仅检查是否已登录，无角色认证）
+// =========================================================
 router.beforeEach((to) => {
-  // 2. 在守卫函数内部获取 user store 实例
+  // 从 pinia store 获取 token / role
   const userStore = useUserStore()
-  const token = userStore.token // 从 store 获取 token，保持单一数据源
+  const token = userStore.token
 
   // 认证检查：如果路由需要认证（meta.requireAuth为true），但用户未登录（没有token），
   // 就强制跳转到登录页面。
   if (to.meta.requireAuth && !token) {
-    return { path: '/login', query: { redirect: to.fullPath } }
+    return { name: 'Home', replace: true }
   }
-
-  // // 3. 权限检查：如果路由需要特定角色，但用户角色不匹配
-  // const requiredRole = to.meta.role as string | undefined
-  // if (requiredRole && userRole !== requiredRole) {
-  //   // 如果用户角色不符合要求 (例如，普通用户尝试访问 admin 页面)
-  //   // 则重定向到他们有权限的首页（这里假设是 /map）
-  //   // 使用 replace: true, 用户无法通过浏览器后退按钮返回到被拒绝的页面
-  //   return { path: '/map', replace: true }
-  // }
 
   // 如果所有检查都通过，则允许导航，默认放行
 })
