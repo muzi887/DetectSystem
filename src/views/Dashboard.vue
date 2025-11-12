@@ -46,14 +46,14 @@
       </a-card>
 
       <!-- 简洁卡片：总点数 / 未处理 / 趋势图 -->
-      <!-- <a-card
+      <a-card
         title="最近 7 天预警趋势"
         :loading="loadingAlerts"
         style="flex: 1 1 400px; min-width: 320px">
         <div
           ref="chart"
           style="height: 220px; width: 100%"></div>
-      </a-card> -->
+      </a-card>
     </div>
 
     <!-- 监测点列表 -->
