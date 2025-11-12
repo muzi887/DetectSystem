@@ -46,14 +46,14 @@
       </a-card>
 
       <!-- 简洁卡片：总点数 / 未处理 / 趋势图 -->
-      <a-card
+      <!-- <a-card
         title="最近 7 天预警趋势"
         :loading="loadingAlerts"
         style="flex: 1 1 400px; min-width: 320px">
         <div
           ref="chart"
           style="height: 220px; width: 100%"></div>
-      </a-card>
+      </a-card> -->
     </div>
 
     <!-- 监测点列表 -->
@@ -119,10 +119,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from 'vue'
+import { defineComponent, ref, computed, onMounted, watch } from 'vue' //
 import BasicLayout from '@/layouts/BasicLayout.vue'
-import { useDataStore } from '@/stores/data'
-import * as echarts from 'echarts'
+import { useDataStore } from '@/stores/data.ts'
+import * as echarts from 'echarts' //
 import { message } from 'ant-design-vue'
 
 export default defineComponent({
@@ -133,8 +133,8 @@ export default defineComponent({
     const dataStore = useDataStore()
 
     // chart DOM & instance
-    const chart = ref<HTMLDivElement | null>(null)
-    const chartInstance = ref<any>(null)
+    const chart = ref<HTMLDivElement | null>(null) //
+    const chartInstance = ref<any>(null) //
 
     // modal / form
     const createModalVisible = ref(false)
@@ -151,7 +151,7 @@ export default defineComponent({
     const loadingPoints = computed(() => dataStore.loadingPoints)
     const loadingAlerts = computed(() => dataStore.loadingAlerts)
 
-    // 构建最近 7 天数据（返回 reactive-friendly 值）
+    // 构建最近 7 天数据（返回 reactive-friendly 值）//
     function buildTrendSeries() {
       const now = Date.now()
       const dayMs = 24 * 60 * 60 * 1000

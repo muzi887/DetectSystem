@@ -4,6 +4,22 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http'
 
+// 类型定义
+// 定义预警级别
+export type AlertLevel = 'low' | 'medium' | 'high' | 'critical'
+
+// 定义预警数据结构
+export interface Alert {
+  id: number // 服务端分配的ID
+  pointId: number // 关联的监测点ID
+  level: AlertLevel // 预警级别
+  message: string // 预警信息
+  time: number // 预警时间戳
+  handled: boolean // 是否已处理
+}
+// Omit<Alert, 'id'> ：一个和 Alert 类型一样的对象，但是省略掉 id 字段
+export type CreateAlertPayload = Omit<Alert, 'id'>
+
 export const useDataStore = defineStore('data', () => {
   const monitorPoints = ref<Array<any>>([])
   const alerts = ref<Array<any>>([])
@@ -39,14 +55,16 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  // 创建预警 - 核心功能！
+  // 创建预警
+  // 接收调用者传来的一些预警信息（alertData），然后补全一些默认字段（如 time 和 handled），
+  // 最后把完整的预警数据包（payload）发送给服务器。
   async function createAlert(alertData: Partial<Alert>) {
     console.log(' 创建预警请求:', alertData)
 
-    const payload: Alert = {
+    // id 由服务器（或者数据库）在保存这条数据后自动生成并返回
+    const payload: CreateAlertPayload = {
       time: Date.now(),
       handled: false,
-      // 强制保证 pointId/level/message 等字段存在（调用者应传好）
       pointId: Number(alertData.pointId || 0),
       level: (alertData.level || 'medium') as AlertLevel,
       message: String(alertData.message || ''),

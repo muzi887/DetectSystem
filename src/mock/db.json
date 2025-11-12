@@ -8,28 +8,31 @@
       "role": "user"
     },
     {
-      "name": "顶层await测试",
-      "phone": "13999999999",
+      "id": 2,
+      "name": "张三",
+      "phone": "13911112222",
       "password": "123",
-      "id": 2
+      "role": "user"
     },
     {
-      "name": "顶层await测试",
-      "phone": "13999999999",
+      "id": 3,
+      "name": "李四",
+      "phone": "13788889999",
       "password": "123",
-      "id": 3
+      "role": "user"
     },
     {
-      "name": "更新后的名字",
-      "phone": "13999999899",
-      "password": "1233",
-      "id": 4
+      "id": 4,
+      "name": "管理员",
+      "phone": "18800001111",
+      "password": "admin",
+      "role": "admin"
     }
   ],
   "monitorPoints": [
     {
       "id": 1,
-      "name": "点A",
+      "name": "监测站A - 平原",
       "lat": 35,
       "lng": 139,
       "temp": 28,
@@ -38,11 +41,47 @@
     },
     {
       "id": 2,
-      "name": "点B",
+      "name": "监测站B - 丘陵",
       "lat": 35.1,
       "lng": 139.1,
       "temp": 33,
       "soilMoisture": 12,
+      "status": "warning"
+    },
+    {
+      "id": 3,
+      "name": "监测站C - 山谷",
+      "lat": 35.02,
+      "lng": 139.08,
+      "temp": 15,
+      "soilMoisture": 65,
+      "status": "normal"
+    },
+    {
+      "id": 4,
+      "name": "数据中心D - 海岸",
+      "lat": 34.9,
+      "lng": 139.2,
+      "temp": 38,
+      "soilMoisture": 20,
+      "status": "critical"
+    },
+    {
+      "id": 5,
+      "name": "监测站E - 森林",
+      "lat": 35.15,
+      "lng": 138.95,
+      "temp": 25,
+      "soilMoisture": 55,
+      "status": "normal"
+    },
+    {
+      "id": 6,
+      "name": "基站F - 山顶",
+      "lat": 35.18,
+      "lng": 139.12,
+      "temp": 29,
+      "soilMoisture": 25,
       "status": "warning"
     }
   ],
@@ -51,8 +90,8 @@
       "id": 1,
       "pointId": 2,
       "level": "medium",
-      "message": "土壤湿度低",
-      "time": 1697625600000,
+      "message": "土壤湿度持续偏低",
+      "time": 1762823845668,
       "handled": false
     },
     {
@@ -72,68 +111,52 @@
       "handled": false
     },
     {
-      "time": 1760965149506,
-      "handled": true,
+      "id": 4,
       "pointId": 4,
-      "level": "medium",
-      "message": "土壤湿度持续下降",
-      "id": 4
+      "level": "critical",
+      "message": "核心温度达到危险阈值！",
+      "time": 1762832156560,
+      "handled": false
     },
     {
-      "time": 1760965172018,
-      "handled": true,
+      "id": 5,
       "pointId": 3,
       "level": "low",
-      "message": "设备通信延迟",
-      "id": 5
+      "message": "设备电量低于20%",
+      "time": 1760965172018,
+      "handled": true
     },
     {
-      "time": 1762823845668,
-      "handled": false,
-      "pointId": 1,
-      "level": "medium",
-      "message": "土壤湿度持续下降",
-      "id": 6
-    },
-    {
-      "time": 1762832156560,
-      "handled": false,
-      "pointId": 2,
-      "level": "medium",
-      "message": "手动触发:${point.name}状态${point.status}",
-      "id": 7
-    },
-    {
+      "id": 6,
+      "pointId": 6,
+      "level": "warning",
+      "message": "土壤水分低于警戒线",
       "time": 1762847700263,
-      "handled": false,
-      "pointId": 2,
-      "level": "medium",
-      "message": "手动触发:${point.name}状态${point.status}",
-      "id": 8
+      "handled": false
     },
     {
+      "id": 7,
+      "pointId": 5,
+      "level": "low",
+      "message": "网络信号弱，数据上传延迟",
       "time": 1762847704528,
-      "handled": false,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发:${point.name}状态${point.status}",
-      "id": 9
+      "handled": true
     },
     {
+      "id": 8,
+      "pointId": 1,
+      "level": "medium",
+      "message": "传感器校准建议",
       "time": 1762850173196,
-      "handled": false,
-      "pointId": 2,
-      "level": "medium",
-      "message": "手动触发:点B状态warning",
-      "id": 10
+      "handled": false
     },
     {
-      "time": 1762851977263,
+      "time": 1762949548866,
       "handled": false,
-      "pointId": 1,
+      "pointId": 7,
       "level": "medium",
-      "message": "手动触发:点A状态normal",
-      "id": 11
+      "message": "温度异常升高，超过阈值",
+      "id": 9
     }
   ]
 }

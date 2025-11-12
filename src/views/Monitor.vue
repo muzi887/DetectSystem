@@ -23,8 +23,8 @@
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
-import BasicLayout from '../layouts/BasicLayout.vue'
-import { useDataStore } from '../stores/data'
+import BasicLayout from '@/layouts/BasicLayout.vue'
+import { useDataStore } from '@/stores/data.ts'
 import * as L from 'leaflet' // L 是 Leaflet 的命名空间
 import 'leaflet.markercluster'
 
@@ -188,7 +188,6 @@ export default defineComponent({
       }).addTo(map)
 
       // 初始化 markerClusterGroup
-      // @ts-expect-error - a-L's type definition is sometimes tricky, use ts-ignore to bypass
       markerCluster = L.markerClusterGroup()
       markerCluster.addTo(map)
     }

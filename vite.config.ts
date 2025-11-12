@@ -54,7 +54,7 @@ export default defineConfig(({ command, mode }) => {
       // 配置路径别名
       alias: {
         // 如果报错__dirname找不到，需要安装node,执行npm install @types/node --save-dev
-        '@': resolve(__dirname, 'src')
+        '@': resolve(__dirname, './src')
       }
     },
     server: {
