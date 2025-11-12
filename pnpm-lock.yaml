@@ -51,6 +51,9 @@ importers:
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
+      '@types/leaflet':
+        specifier: ^1.9.21
+        version: 1.9.21
       '@types/leaflet.markercluster':
         specifier: ^1.5.6
         version: 1.5.6

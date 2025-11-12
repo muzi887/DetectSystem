@@ -22,28 +22,29 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import { message } from 'ant-design-vue' // message 组件在新版本中不再直接使用，但可以保留以备后用
-import BasicLayout from '@/layouts/BasicLayout.vue'
-import { useDataStore } from '@/stores/data'
+import { message } from 'ant-design-vue'
+import BasicLayout from '../layouts/BasicLayout.vue'
+import { useDataStore } from '../stores/data'
 import * as L from 'leaflet' // L 是 Leaflet 的命名空间
 import 'leaflet.markercluster'
-import { contain } from 'echarts/types/src/scale/helper.js'
 
 export default defineComponent({
   components: { BasicLayout },
   setup() {
+    // 获取状态管理实例，用于获取和操作监测点、预警等全局数据。
     const dataStore = useDataStore()
+    // 响应式引用，关联模板中的地图容器
     const mapRef = ref<HTMLDivElement | null>(null)
 
-    // Leaflet 地图实例
+    // 存储Leaflet 地图的实例
     let map: L.Map | null = null
     // LayerGroup：管理所有 marker（方便统一清除 / 重建）。
-    // 替换 markersLayer：可以管理大量marker
+    // 替换 markersLayer：可以管理大量marker，将密集的点聚合显示
     let markerCluster: L.MarkerClusterGroup | null = null
-    // 新增Map存储marker实例，无需遍历
+    // 新增Map存储每个监测点 ID 和其对应的 L.Marker 实例
     const markersById = new Map<number, L.Marker>()
 
-    // 1. 根据状态返回颜色的函数
+    // 1. 根据status返回颜色的函数，用于渲染图标
     function statusColor(status: string) {
       if (!status) return '#aaa'
       if (status === 'normal') return '#52c41a' // green
@@ -52,25 +53,26 @@ export default defineComponent({
       return '#1890ff' // default blue
     }
 
-    // 2. 创建自定义 HTML 图标的函数
-    function createDivlcon(point: any) {
+    // 2.  创建自定义的 HTML 图标 (L.divIcon)的函数
+    function createDivIcon(point: any) {
       const color = statusColor(point.status)
+      // 动态生成一段 HTML 字符串，包含一个根据状态变色的圆点和下方的监测点名称
+      // L.divIcon 将这段 HTML 转换为 Leaflet 可用的图标。
       const html = `
         <div class="custom-marker" style="display:flex;flex-direction:column;align-items:center;">
           <div style="width:18px;height:18px;border-radius:50%;background:${color};box-shadow:0 0 0 4px rgba(0,0,0,0.06)"></div>
           <div style="font-size:11px;margin-top:4px;white-space:nowrap">${point.name}</div>
         </div>
       `
-
-      return L.divlcon({
+      return L.divIcon({
         html,
-        className: 'my-div-icon',
+        className: 'my-div-icon', // 可通过 CSS 进一步定义样式
         iconSize: [40, 40],
         iconAnchor: [20, 20],
         popupAnchor: [0, -18]
       })
     }
-    // 3. 构建动态弹窗内容的函数
+    // 3. 为每个 marker 创建其点击后弹窗（Popup）的 HTML 内容的函数
     function buildPopupHtml(point: any) {
       // 查找此监测点是否有未处理的预警
       const unhandled = dataStore.alerts.find((a) => a.pointId === point.id && !a.handled)
@@ -92,18 +94,28 @@ export default defineComponent({
         </div>
       `
     }
-    // 4.从后端拉取点并渲染 markers
+    // 4.将 dataStore.monitorPoints 中的数据转换成地图上的 markers。
     function renderMarkers() {
       if (!markerCluster || !map) return
+      // 清空聚合层和 markersById Map，避免重复渲染。
       markerCluster.clearLayers()
       markersById.clear()
 
+      // 遍历 dataStore.monitorPoints
       for (const p of dataStore.monitorPoints) {
         const icon = createDivIcon(p)
-        const marker = L.marker([p.lat, p.lng])
+        const marker = L.marker([p.lat, p.lng], { icon })
         marker.bindPopup(buildPopupHtml(p))
 
+        // 监听每一个单独的marker,而不是整体的map
+        // 处理动态 HTML 中的事件：当弹窗被打开后，
+        // 通过 e.popup._contentNode 获取弹窗的 DOM 容器，（getElement()）
+        // 然后用 querySelector 找到内部的按钮并绑定 onclick 事件。
         marker.on('popupopen', (e) => {
+          // At this moment, 'p' and 'marker' are instantly available
+          // because of a JavaScript feature called a "closure".
+          // The function "remembers" the 'p' and 'marker' from its creation scope.
+          // No searching is needed!
           const container = (e as any).popup?._contentNode as HTMLElement | undefined
           if (container) {
             const triggerBtn = container.querySelector(
@@ -112,6 +124,9 @@ export default defineComponent({
             const closeBtn = container.querySelector(
               'button[data-action="close"]'
             ) as HTMLButtonElement | null
+
+            // 按钮点击逻辑：调用 `dataStore` 中的 action (`createAlert` 或 `updateAlert`)，
+            // 并在请求期间禁用按钮 (`disabled = true`)，请求结束后无论成功失败都恢复按钮 (`finally` 块)
             if (triggerBtn) {
               triggerBtn.onclick = async () => {
                 triggerBtn.disabled = true
@@ -127,7 +142,7 @@ export default defineComponent({
                   marker.setPopupContent(buildPopupHtml(p))
                 } catch (err) {
                   console.error('createAlert error', err)
-                  alert('触发预警失败') // 使用原生 alert 或 message 组件
+                  message.error('触发预警失败')
                 } finally {
                   triggerBtn.disabled = false
                 }
@@ -143,11 +158,11 @@ export default defineComponent({
                     // 关键：原地刷新弹窗
                     marker.setPopupContent(buildPopupHtml(p))
                   } else {
-                    alert('该点暂无未处理预警')
+                    message.info('该点暂无未处理预警')
                   }
                 } catch (err) {
                   console.error('updateAlert error', err)
-                  alert('关闭预警失败')
+                  message.error('关闭预警失败')
                 } finally {
                   closeBtn.disabled = false
                 }
@@ -155,7 +170,7 @@ export default defineComponent({
             }
           }
         })
-        markersById.set(p.id, marker) // 存储marker
+        markersById.set(p.id, marker) // 存储marker到Map
         markerCluster.addLayer(marker) // 添加到聚合图层
       }
       // 渲染后自动缩放到合适范围
@@ -165,7 +180,7 @@ export default defineComponent({
     //5. initMap, refreshData, zoomToAll
     async function initMap() {
       if (!mapRef.value) return
-      // 初始化地图：设置初始中心和缩放等级
+      // 初始化地图：设置瓦片图层：初始中心和缩放等级
       map = L.map(mapRef.value as HTMLDivElement).setView([35.05, 139.05], 10)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -188,30 +203,35 @@ export default defineComponent({
     // 缩放至全部点位函数
     function zoomToAll() {
       if (!markerCluster || !map) return
+      // 获取 markerCluster 中的所有图层
       const layers = markerCluster.getLayers()
       if (layers.length === 0) return
       const group = L.featureGroup(layers as L.Layer[])
-      map.fitBounds(group.getBounds().pad(0.2))
+      // 调用 map.fitBounds() 让地图自动缩放和平移到能正好显示所有点的最佳视野
+      map.fitBounds(group.getBounds().pad(0.2)) // .pad(0.2) 增加了少许边距
     }
 
     // 6.重写生命周期钩子
+    // 在组件挂载到 DOM 后执行
     onMounted(async () => {
-      await initMap()
-      await refreshData() // 首次加载数据
-      renderMarkers() // 首次渲染
+      await initMap() // 确保地图容器已存在并初始化地图实例
+      await refreshData() // 获取初始数据
+      renderMarkers() // 根据获取到的数据渲染 markers
 
       // 监听 monitorPoints 变化，自动重绘 markers
       watch(
         () => dataStore.monitorPoints,
+        // 当数据变化时，直接调用 renderMarkers() 重绘所有点
         () => {
           renderMarkers()
         },
-        { deep: true }
+        { deep: true } // 确保了即使是数组内部对象的属性变化也能被侦测到。
       )
 
       // 监听 alerts 变化，只更新弹窗内容，性能更高
       watch(
         () => dataStore.alerts,
+        // 当预警状态改变时，只更新其弹窗内容，避免了昂贵的 DOM 操作
         () => {
           for (const p of dataStore.monitorPoints) {
             const mk = markersById.get(p.id)
@@ -230,13 +250,11 @@ export default defineComponent({
       }
     })
 
-    // 组件销毁时清理地图，防止内存泄漏
-    onBeforeUnmount(() => {
-      if (map) {
-        map.remove()
-        map = null
-      }
-    })
+    return {
+      mapRef, // 模板中的 <div ref="mapRef"> 需要
+      zoomToAll, // 模板中的 <a-button @click="zoomToAll"> 需要
+      refreshData // 模板中的 <a-button @click="refreshData"> 需要
+    }
   }
 })
 </script>

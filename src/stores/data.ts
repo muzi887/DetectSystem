@@ -25,7 +25,7 @@ export const useDataStore = defineStore('data', () => {
   }
 
   // force 参数（兼容外部调用）
-  async function fetchAlerts(force: false) {
+  async function fetchAlerts(force: boolean = false) {
     // 目前没有本地缓存策略；force 参数为了兼容调用方
     loadingAlerts.value = true
     try {
