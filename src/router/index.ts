@@ -7,7 +7,9 @@ import { useUserStore } from '@/stores/user'
 // =========================================================
 // 普通用户/7大核心功能组件的动态导入
 // =========================================================
-// 1. 首页 -> 登录
+// 0. 登录
+const Login = () => import('../views/user/Login.vue')
+// 1. 首页 ->
 const Home = () => import('../views/user/Home.vue')
 // 2. 相关数据 -> 决策建议
 const RelatedData = () => import('../views/user/RelatedData.vue')
@@ -24,12 +26,18 @@ const About = () => import('../views/user/About.vue')
 
 // 统一组装所有路由配置
 const routes: RouteRecordRaw[] = [
-  { path: '/', redirect: '/home' }, // 默认根路径
+  { path: '/', redirect: '/login' }, // 默认根路径
+  {
+    path: '/login', // 对应：0. 登录
+    component: Login,
+    name: 'Login',
+    meta: { requireAuth: false, title: '登录' }
+  },
   {
     path: '/home', // 对应：1. 首页
     component: Home,
     name: 'Home',
-    meta: { requireAuth: false, title: '首页' }
+    meta: { requireAuth: true, title: '首页' }
   },
   {
     path: '/related-data', // 对应：2.相关数据
@@ -83,22 +91,31 @@ const router = createRouter({
 // =========================================================
 // 全局前置守卫（仅检查是否已登录，针对 Pinia ref 的正确用法）
 // =========================================================
-router.beforeEach((to) => {
+router.beforeEach((to, from, next) => {
   // 从 pinia store 获取 token / role
   const userStore = useUserStore()
 
   // userStore.token 是 pinia 的 ref，必须读 .value（防止把 ref 本身当成真值）
-  const tokenRef = (userStore as any).token
-  const token = tokenRef ? tokenRef.value : ''
+  // 直接从 store 的 state 中读取 token
+  // Pinia 会自动处理 ref 的解包，不需要也不应该使用 .value
+  const token = userStore.token
 
-  // 认证检查：如果路由需要认证（meta.requireAuth为true），但用户未登录（没有token），
-  // 就强制跳转到登录页面。
-  const requireAuth = Boolean((to.meta as any)?.requireAuth)
+  // 判断目标路由是否需要认证（meta.requireAuth为true）
+  const requireAuth = to.meta.requireAuth
   if (requireAuth && !token) {
-    return { name: 'Home', replace: true }
+    // 如果需要认证但没有 token，重定向到登录页
+    // 并将用户想去的页面路径作为查询参数，以便登录后能跳回去
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath }
+    })
+  } else if (to.name === 'Login' && token) {
+    // 如果用户已经登录，但又访问了登录页，直接让他去首页
+    next({ name: 'Home' })
+  } else {
+    // 其他所有情况，正常放行
+    next()
   }
-
-  // 如果所有检查都通过，则允许导航，默认放行
 })
 
 // 导出路由配置

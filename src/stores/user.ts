@@ -23,7 +23,7 @@ export const useUserStore = defineStore('user', () => {
   // 登录 API
   async function loginApi(phone: string, password: string) {
     // 使用封装的 http（会自动加 baseURL 和 token header）
-    const res = await http.post('/api/login', { phone, password }) // 调用真实 API
+    const res = await http.post('/login', { phone, password }) // 调用真实 API
 
     if (res.data && res.data.token) {
       token.value = res.data.token // 使用服务器返回的 token

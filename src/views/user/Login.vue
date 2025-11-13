@@ -1,4 +1,4 @@
-<!-- src/views/Login.vue -->
+<!-- src/views/user/Login.vue -->
 <template>
   <div class="login-page-container">
     <!-- 顶部 Header -->
@@ -20,41 +20,42 @@
 
     <!-- 导航栏 -->
     <nav class="nav-bar">
-      <a
-        href="#"
-        class="nav-item active">
+      <router-link
+        to="/home"
+        class="nav-item">
         首页
-      </a>
-      <a
-        href="#"
+      </router-link>
+
+      <router-link
+        to="/related-data"
         class="nav-item">
         相关数据
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/map"
         class="nav-item">
         灾害实时监测
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/analysis"
         class="nav-item">
         智能分析
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/warnings"
         class="nav-item">
         灾害预警
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/decision"
         class="nav-item">
         智慧决策
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/about"
         class="nav-item">
         关于我们
-      </a>
+      </router-link>
     </nav>
 
     <!-- 主体内容 -->
@@ -81,7 +82,7 @@
           <a-form-item
             name="phone"
             :rules="[{ required: true, message: '请输入手机号!' }]">
-            <!-- v-model:value="form.phone" 绑定到你已有的 form 对象 -->
+            <!-- v-model:value="form.phone" 绑定到已有的 form 对象 -->
             <a-input
               v-model:value="form.phone"
               placeholder="手机号/用户名" />
@@ -89,7 +90,7 @@
           <a-form-item
             name="password"
             :rules="[{ required: true, message: '请输入密码!' }]">
-            <!-- v-model:value="form.password" 绑定到你已有的 form 对象 -->
+            <!-- v-model:value="form.password" 绑定到已有的 form 对象 -->
             <a-input-password
               v-model:value="form.password"
               placeholder="密码" />
@@ -100,7 +101,7 @@
           <a-form-item>
             <!--
               - html-type="submit" 让按钮可以触发表单的 finish 事件
-              - :loading="loading" 保留了你之前的加载状态
+              - :loading="loading" 保留了之前的加载状态
             -->
             <a-button
               type="primary"
@@ -120,7 +121,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, reactive, ref } from 'vue'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue' // 引入 message 用于错误提示
 
@@ -136,13 +137,18 @@ export default defineComponent({
       loading.value = true
       try {
         // 调用登录函数
-        await store.loginApi(form.phone, form.password)
+        const res = await store.loginApi(form.phone, form.password)
 
-        message.success('登录成功！') // 增加成功提示
+        if (res && res.token) {
+          message.success('登录成功！')
 
-        // 跳转到目标页面
-        const redirect = (route.query.redirect as string) || '/admin/dashboard'
-        await router.push(redirect)
+          // 跳转到目标页面
+          const redirect = (route.query.redirect as string) || '/home'
+          await router.push(redirect)
+        } else {
+          // 若后端返回的结构不同，按需调整此处提示
+          message.error(res?.message || '登录失败，请检查手机号或密码')
+        }
       } catch (err: any) {
         message.error('登录失败，请检查手机号或密码')
         console.error('Login API request failed:', err)
@@ -160,7 +166,7 @@ export default defineComponent({
 .login-page-container {
   width: 100vw;
   height: 100vh;
-  background-image: url('@/assets/bg.webp'); /* 确保图片路径正确 */
+  background-image: url('@/assets/bg.webp');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -288,21 +294,21 @@ export default defineComponent({
   display: inline-block;
 }
 
-.login-form :deep(.ant-input-affix-wrapper),
-.login-form :deep(.ant-input) {
+.login-form ::v-deep(.ant-input-affix-wrapper),
+.login-form ::v-deep(.ant-input) {
   background-color: rgb(255 255 255 / 80%) !important;
   border-radius: 4px;
 }
 
-.login-form :deep(.ant-form-item-label > label) {
+.login-form ::v-deep(.ant-form-item-label > label) {
   color: #fff; /* 虽然没显示label，但以防万一 */
 }
 
-.login-form :deep(.ant-checkbox-wrapper) {
+.login-form ::v-deep(.ant-checkbox-wrapper) {
   color: var(--light-green);
 }
 
-.login-form :deep(.ant-btn-primary) {
+.login-form ::v-deep(.ant-btn-primary) {
   background-color: var(--dark-green) !important;
   border-color: var(--dark-green) !important;
   height: 40px;

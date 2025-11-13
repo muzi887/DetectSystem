@@ -1,6 +1,6 @@
-<!-- src/views/user/Home.vue -->
+<!-- src/views/user/Home.vue-->
 <template>
-  <div class="login-page-container">
+  <div class="app-layout-container">
     <!-- 顶部 Header -->
     <header class="header">
       <div class="logo-area">
@@ -18,11 +18,12 @@
       </div>
     </header>
 
-    <!-- 导航栏 -->
+    <!-- 导航栏  -->
     <nav class="nav-bar">
+      <!-- 注意：在真正的 Home 页面，可以将当前页面设为 active -->
       <router-link
         to="/home"
-        class="nav-item">
+        class="nav-item active">
         首页
       </router-link>
 
@@ -58,115 +59,109 @@
       </router-link>
     </nav>
 
-    <!-- 主体内容 -->
+    <!-- 主体内容 (首页仪表盘内容) -->
     <main class="main-content">
-      <!-- 左侧麦穗图片面板 (装饰性) -->
-      <div class="info-panel">
-        <img
-          src="@/assets/wheat.jpg"
-          class="info-panel-img" />
+      <div class="dashboard-panel welcome">
+        <h2>欢迎！</h2>
+        <p>AI作物灾害智慧监测预警系统为您提供最新、最准确的农情数据和预警信息。</p>
+        <div class="quick-links">
+          <router-link
+            to="/map"
+            class="quick-btn">
+            实时监测
+          </router-link>
+          <router-link
+            to="/warnings"
+            class="quick-btn">
+            最新预警
+          </router-link>
+          <router-link
+            to="/analysis"
+            class="quick-btn">
+            查看报告
+          </router-link>
+        </div>
       </div>
 
-      <!-- 右侧登录表单 (核心功能) -->
-      <div class="login-panel">
-        <h3 class="login-title">密码登录</h3>
-        <!--
-          - 使用 Ant Design Vue 的 a-form
-          - @finish 事件会在表单验证通过后触发，等同于之前的 @submit
-          - 它会自动调用 onSubmit 方法
-        -->
-        <a-form
-          class="login-form"
-          :model="form"
-          @finish="onSubmit">
-          <a-form-item
-            name="phone"
-            :rules="[{ required: true, message: '请输入手机号!' }]">
-            <!-- v-model:value="form.phone" 绑定到你已有的 form 对象 -->
-            <a-input
-              v-model:value="form.phone"
-              placeholder="手机号/用户名" />
-          </a-form-item>
-          <a-form-item
-            name="password"
-            :rules="[{ required: true, message: '请输入密码!' }]">
-            <!-- v-model:value="form.password" 绑定到你已有的 form 对象 -->
-            <a-input-password
-              v-model:value="form.password"
-              placeholder="密码" />
-          </a-form-item>
-          <a-form-item>
-            <a-checkbox>记住登录状态与用户协议</a-checkbox>
-          </a-form-item>
-          <a-form-item>
-            <!--
-              - html-type="submit" 让按钮可以触发表单的 finish 事件
-              - :loading="loading" 保留了你之前的加载状态
-            -->
-            <a-button
-              type="primary"
-              html-type="submit"
-              :loading="loading"
-              block>
-              立即登录
-            </a-button>
-          </a-form-item>
-        </a-form>
-        <div class="login-extra">
-          <a href="#">忘记密码?</a>
+      <div class="dashboard-panel stats">
+        <h3>核心指标概览</h3>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <h4>监测区域</h4>
+            <p class="value">230,000 亩</p>
+          </div>
+          <div class="stat-card">
+            <h4>当前预警</h4>
+            <p class="value alert">5 条</p>
+          </div>
+          <div class="stat-card">
+            <h4>数据更新</h4>
+            <p class="value">10 分钟前</p>
+          </div>
         </div>
+      </div>
+
+      <div class="dashboard-panel recent-alerts">
+        <h3>最新预警动态</h3>
+        <a-list
+          item-layout="horizontal"
+          :data-source="recentAlerts">
+          <template #renderItem="{ item }">
+            <a-list-item>
+              <a-list-item-meta :description="item.time">
+                <template #title>
+                  <a :class="item.type">{{ item.title }}</a>
+                </template>
+              </a-list-item-meta>
+            </a-list-item>
+          </template>
+        </a-list>
       </div>
     </main>
   </div>
 </template>
+
 <script lang="ts">
-import { defineComponent, reactive, ref } from 'vue'
-import { useUserStore } from '@/stores/user'
-import { useRouter, useRoute } from 'vue-router'
-import { message } from 'ant-design-vue' // 引入 message 用于错误提示
+import { defineComponent, ref } from 'vue'
 
 export default defineComponent({
   setup() {
-    const form = reactive({ phone: '', password: '' })
-    const loading = ref(false)
-    const store = useUserStore()
-    const router = useRouter()
-    const route = useRoute()
-
-    async function onSubmit() {
-      loading.value = true
-      try {
-        // 调用登录函数
-        const res = await store.loginApi(form.phone, form.password)
-
-        if (res && res.token) {
-          message.success('登录成功！')
-
-          // 跳转到目标页面
-          const redirect = (route.query.redirect as string) || '/home'
-          await router.push(redirect)
-        } else {
-          // 若后端返回的结构不同，按需调整此处提示
-          message.error(res?.message || '登录失败，请检查手机号或密码')
-        }
-      } catch (err: any) {
-        message.error('登录失败，请检查手机号或密码')
-        console.error('Login API request failed:', err)
-      } finally {
-        loading.value = false
+    // 模拟最新预警数据
+    const recentAlerts = ref([
+      {
+        title: '霜冻预警：黄淮平原小麦区有低温风险',
+        time: '2024-05-15 09:30',
+        type: 'level-high'
+      },
+      {
+        title: '病虫害监测：部分玉米出现蚜虫侵染',
+        time: '2024-05-14 16:45',
+        type: 'level-medium'
+      },
+      {
+        title: '干旱趋势：华北地区未来一周降水不足',
+        time: '2024-05-14 10:00',
+        type: 'level-low'
       }
+    ])
+
+    return {
+      recentAlerts
     }
-    return { form, onSubmit, loading }
   }
 })
 </script>
 
 <style scoped>
-/* 整个页面的样式 */
-.login-page-container {
+/* ---------------------------------------------------- */
+
+/* 基础布局和颜色变量 */
+
+/* ---------------------------------------------------- */
+.app-layout-container {
   width: 100vw;
-  height: 100vh;
-  background-image: url('@/assets/bg.webp');
+  min-height: 100vh; /* 允许内容撑开 */
+  background-image: url('@/assets/bg.webp'); /* 统一背景 */
   background-size: cover;
   background-position: center;
   display: flex;
@@ -175,13 +170,12 @@ export default defineComponent({
   font-family:
     'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
     Arial, sans-serif;
-}
 
-/* 颜色变量 */
-.login-page-container {
+  /* 颜色变量 */
   --primary-green: #677662;
   --dark-green: #4a5c43;
   --light-green: #eef1ea;
+  --glass-bg: rgb(255 255 255 / 10%); /* 玻璃背景色 */
 }
 
 /* 顶部 Header */
@@ -240,88 +234,151 @@ export default defineComponent({
 }
 
 .nav-item.active {
-  background-color: var(--dark-green);
+  background-color: var(--dark-green); /* 当前页面的激活状态 */
   font-weight: bold;
 }
 
-/* 主体内容 */
+/* ---------------------------------------------------- */
+
+/*  Home 页面（仪表盘）内容样式 */
+
+/* ---------------------------------------------------- */
 .main-content {
   flex-grow: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 50px;
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* 两栏布局 */
+  grid-template-rows: auto 1fr;
+  gap: 20px;
   padding: 40px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 20px auto; /* 居中显示 */
 }
 
-/* 玻璃感面板通用样式 */
-.info-panel,
-.login-panel {
-  background-color: rgb(255 255 255 / 10%);
+/* 玻璃感面板通用样式  */
+.dashboard-panel {
+  background-color: var(--glass-bg);
   border-radius: 16px;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
   backdrop-filter: blur(12px);
   border: 1px solid rgb(255 255 255 / 20%);
-}
-
-.info-panel {
-  width: 55%;
-  height: 60%;
-  max-width: 800px;
-}
-
-.info-panel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.login-panel {
-  width: 320px;
-  padding: 20px 30px;
-}
-
-.login-title {
   color: #fff;
-  text-align: left;
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: bold;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--primary-green);
-  display: inline-block;
 }
 
-.login-form ::v-deep(.ant-input-affix-wrapper),
-.login-form ::v-deep(.ant-input) {
-  background-color: rgb(255 255 255 / 80%) !important;
-  border-radius: 4px;
+/* 欢迎面板 */
+.welcome {
+  grid-column: 1 / 3; /* 跨越两列 */
+  padding: 30px;
+  text-align: center;
+  background-color: rgb(74 92 67 / 50%); /* 更浓的背景色 */
 }
 
-.login-form ::v-deep(.ant-form-item-label > label) {
-  color: #fff; /* 虽然没显示label，但以防万一 */
-}
-
-.login-form ::v-deep(.ant-checkbox-wrapper) {
+.welcome h2 {
   color: var(--light-green);
+  font-size: 28px;
+  margin-bottom: 10px;
 }
 
-.login-form ::v-deep(.ant-btn-primary) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-  height: 40px;
+.welcome p {
+  margin-bottom: 20px;
   font-size: 16px;
 }
 
-.login-extra {
-  margin-top: 10px;
-  text-align: right;
+.quick-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 
-.login-extra a {
+.quick-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--dark-green);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.quick-btn:hover {
+  background-color: #5d7454;
+}
+
+/* 统计面板 */
+.stats {
+  grid-column: 1 / 2;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stat-card {
+  padding: 15px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  text-align: center;
+  background-color: rgb(255 255 255 / 5%);
+}
+
+.stat-card h4 {
   color: var(--light-green);
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.stat-card .value {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.stat-card .alert {
+  color: #f90; /* 预警数字高亮 */
+}
+
+/* 最新预警面板 */
+.recent-alerts {
+  grid-column: 2 / 3;
+}
+
+.recent-alerts :deep(.ant-list) {
+  color: white;
+}
+
+.recent-alerts :deep(.ant-list-item) {
+  border-block-end: 1px solid rgb(255 255 255 / 20%);
+  padding-block: 10px;
+}
+
+.recent-alerts :deep(.ant-list-item-meta-title a) {
+  color: white;
+  font-weight: normal;
+  transition: color 0.3s;
+}
+
+.recent-alerts :deep(.ant-list-item-meta-title a:hover) {
+  color: var(--light-green);
+}
+
+.recent-alerts :deep(.ant-list-item-meta-description) {
+  color: rgb(255 255 255 / 70%);
   font-size: 12px;
+}
+
+.level-high {
+  color: #ff4d4f !important; /* 红色警告 */
+  font-weight: bold !important;
+}
+
+.level-medium {
+  color: #faad14 !important; /* 黄色中等警告 */
+}
+
+.level-low {
+  color: #1890ff !important; /* 蓝色低等警告 */
 }
 </style>
