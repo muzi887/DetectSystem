@@ -24,13 +24,13 @@ const About = () => import('../views/user/About.vue')
 
 // 统一组装所有路由配置
 const routes: RouteRecordRaw[] = [
-  { path: '/', component: Home, name: 'Home' }, // 默认根路径
-  // {
-  //   path: '/home', // 对应：1. 首页
-  //   component: Home,
-  //   name: 'Home',
-  //   meta: { requireAuth: true, title: '首页' }
-  // },
+  { path: '/', redirect: '/home' }, // 默认根路径
+  {
+    path: '/home', // 对应：1. 首页
+    component: Home,
+    name: 'Home',
+    meta: { requireAuth: false, title: '首页' }
+  },
   {
     path: '/related-data', // 对应：2.相关数据
     component: RelatedData,
@@ -81,16 +81,20 @@ const router = createRouter({
 })
 
 // =========================================================
-// 全局前置守卫（仅检查是否已登录，无角色认证）
+// 全局前置守卫（仅检查是否已登录，针对 Pinia ref 的正确用法）
 // =========================================================
 router.beforeEach((to) => {
   // 从 pinia store 获取 token / role
   const userStore = useUserStore()
-  const token = userStore.token
+
+  // userStore.token 是 pinia 的 ref，必须读 .value（防止把 ref 本身当成真值）
+  const tokenRef = (userStore as any).token
+  const token = tokenRef ? tokenRef.value : ''
 
   // 认证检查：如果路由需要认证（meta.requireAuth为true），但用户未登录（没有token），
   // 就强制跳转到登录页面。
-  if (to.meta.requireAuth && !token) {
+  const requireAuth = Boolean((to.meta as any)?.requireAuth)
+  if (requireAuth && !token) {
     return { name: 'Home', replace: true }
   }
 
