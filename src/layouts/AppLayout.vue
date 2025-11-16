@@ -21,40 +21,41 @@
     <!-- 导航栏 (使用 vue-router 的链接) -->
     <nav class="nav-bar">
       <router-link
-        to="/"
+        to="/home"
         class="nav-item">
         首页
       </router-link>
+
       <router-link
         to="/related-data"
         class="nav-item">
         相关数据
       </router-link>
       <router-link
-        to="/monitor"
+        to="/map"
         class="nav-item">
         灾害实时监测
       </router-link>
       <router-link
-        to="/alerts"
+        to="/analysis"
+        class="nav-item">
+        智能分析
+      </router-link>
+      <router-link
+        to="/warnings"
         class="nav-item">
         灾害预警
       </router-link>
-      <a
-        href="#"
-        class="nav-item">
-        智能分析
-      </a>
-      <a
-        href="#"
+      <router-link
+        to="/decision"
         class="nav-item">
         智慧决策
-      </a>
-      <a
-        href="#"
+      </router-link>
+      <router-link
+        to="/about"
         class="nav-item">
         关于我们
-      </a>
+      </router-link>
     </nav>
 
     <!-- 这是一个插槽，不同页面的具体内容会在这里显示 -->

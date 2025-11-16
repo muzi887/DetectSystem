@@ -1,64 +1,7 @@
 <!-- src/views/user/Home.vue-->
 <template>
-  <div class="app-layout-container">
-    <!-- 顶部 Header -->
-    <header class="header">
-      <div class="logo-area">
-        <img
-          src="@/assets/logo.jpg"
-          alt="Logo"
-          class="logo-img" />
-        <span class="title">AI技术赋能下的作物灾害智慧监测预警系统</span>
-      </div>
-      <div class="search-area">
-        <a-input-search
-          placeholder="输入关键字..."
-          style="width: 250px"
-          enter-button="搜索" />
-      </div>
-    </header>
-
-    <!-- 导航栏  -->
-    <nav class="nav-bar">
-      <!-- 注意：在真正的 Home 页面，可以将当前页面设为 active -->
-      <router-link
-        to="/home"
-        class="nav-item active">
-        首页
-      </router-link>
-
-      <router-link
-        to="/related-data"
-        class="nav-item">
-        相关数据
-      </router-link>
-      <router-link
-        to="/map"
-        class="nav-item">
-        灾害实时监测
-      </router-link>
-      <router-link
-        to="/analysis"
-        class="nav-item">
-        智能分析
-      </router-link>
-      <router-link
-        to="/warnings"
-        class="nav-item">
-        灾害预警
-      </router-link>
-      <router-link
-        to="/decision"
-        class="nav-item">
-        智慧决策
-      </router-link>
-      <router-link
-        to="/about"
-        class="nav-item">
-        关于我们
-      </router-link>
-    </nav>
-
+  <!-- 1. 直接使用布局组件，无需重复编写 Header 和 Nav -->
+  <AppLayout>
     <!-- 主体内容 (首页仪表盘内容) -->
     <main class="main-content">
       <div class="dashboard-panel welcome">
@@ -73,12 +16,12 @@
           <router-link
             to="/warnings"
             class="quick-btn">
-            最新预警
+            处理预警
           </router-link>
           <router-link
             to="/analysis"
             class="quick-btn">
-            查看报告
+            智能分析
           </router-link>
         </div>
       </div>
@@ -87,16 +30,22 @@
         <h3>核心指标概览</h3>
         <div class="stat-grid">
           <div class="stat-card">
-            <h4>监测区域</h4>
-            <p class="value">230,000 亩</p>
+            <h4>监测点总数</h4>
+            <!-- 动态数据：监测点数量 -->
+            <p class="value">{{ monitorPointsCount }} 个</p>
           </div>
           <div class="stat-card">
-            <h4>当前预警</h4>
-            <p class="value alert">5 条</p>
+            <h4>当前待处理</h4>
+            <!-- 动态数据：未处理的预警数量 -->
+            <p class="value alert">{{ unhandledAlertsCount }} 条</p>
           </div>
           <div class="stat-card">
-            <h4>数据更新</h4>
-            <p class="value">10 分钟前</p>
+            <h4>系统状态</h4>
+            <p
+              class="value"
+              style="color: #4caf50">
+              正常
+            </p>
           </div>
         </div>
       </div>
@@ -105,157 +54,115 @@
         <h3>最新预警动态</h3>
         <a-list
           item-layout="horizontal"
-          :data-source="recentAlerts">
+          :data-source="recentAlerts"
+          :loading="dataStore.loadingAlerts">
           <template #renderItem="{ item }">
             <a-list-item>
-              <a-list-item-meta :description="item.time">
+              <!-- 使用真实数据的时间戳 -->
+              <a-list-item-meta :description="formatTime(item.time)">
                 <template #title>
-                  <a :class="item.type">{{ item.title }}</a>
+                  <!-- 使用真实数据的级别和消息 -->
+                  <a :class="getLevelClass(item.level)">
+                    监测点 #{{ item.pointId }}: {{ item.message }}
+                  </a>
                 </template>
               </a-list-item-meta>
             </a-list-item>
           </template>
+          <template #empty>
+            <a-empty
+              description="暂无预警信息"
+              style="color: white; padding-top: 20px" />
+          </template>
         </a-list>
       </div>
     </main>
-  </div>
+  </AppLayout>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue'
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { useDataStore, type AlertLevel } from '@/stores/data'
+// 2. 引入 AppLayout 组件
+import AppLayout from '@/layouts/AppLayout.vue'
 
-export default defineComponent({
-  setup() {
-    // 模拟最新预警数据
-    const recentAlerts = ref([
-      {
-        title: '霜冻预警：黄淮平原小麦区有低温风险',
-        time: '2024-05-15 09:30',
-        type: 'level-high'
-      },
-      {
-        title: '病虫害监测：部分玉米出现蚜虫侵染',
-        time: '2024-05-14 16:45',
-        type: 'level-medium'
-      },
-      {
-        title: '干旱趋势：华北地区未来一周降水不足',
-        time: '2024-05-14 10:00',
-        type: 'level-low'
-      }
-    ])
+// 初始化 Pinia store
+const dataStore = useDataStore()
 
-    return {
-      recentAlerts
-    }
-  }
+// --- 计算属性，用于动态展示数据 (保持不变) ---
+
+// 计算未处理的预警数量
+const unhandledAlertsCount = computed(() => {
+  return dataStore.alerts.filter((alert) => !alert.handled).length
+})
+
+// 获取监测点总数
+const monitorPointsCount = computed(() => dataStore.monitorPoints.length)
+
+// 获取最新的3条预警信息
+const recentAlerts = computed(() => {
+  // store中已按时间排序，直接取前几个即可
+  return dataStore.alerts.slice(0, 3)
+})
+
+// --- 方法 (保持不变) ---
+
+// 格式化时间戳
+const formatTime = (t?: number) => {
+  if (!t) return '-'
+  const d = new Date(t)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${dd} ${hh}:${mi}`
+}
+
+// 根据预警级别返回对应的 CSS class
+const getLevelClass = (level: AlertLevel) => {
+  return `level-${level}`
+}
+
+// --- 生命周期钩子 (保持不变) ---
+
+// 组件加载时，从服务器获取最新数据
+onMounted(() => {
+  dataStore.fetchAlerts()
+  dataStore.fetchMonitorPoints()
 })
 </script>
 
 <style scoped>
-/* ---------------------------------------------------- */
+/* 3. 移除所有布局（.app-layout-container, .header, .nav-bar, etc.）相关的 CSS */
 
-/* 基础布局和颜色变量 */
-
-/* ---------------------------------------------------- */
-.app-layout-container {
-  width: 100vw;
-  min-height: 100vh; /* 允许内容撑开 */
-  background-image: url('@/assets/bg.webp'); /* 统一背景 */
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  flex-direction: column;
-  color: #fff;
-  font-family:
-    'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
-    Arial, sans-serif;
-
-  /* 颜色变量 */
+/* 由于 AppLayout.vue 没有定义 --glass-bg，我们需要在这里定义所有 dashboard 需要的变量 */
+:root {
   --primary-green: #677662;
   --dark-green: #4a5c43;
   --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%); /* 玻璃背景色 */
-}
-
-/* 顶部 Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 40px;
-  background-color: rgb(103 118 98 / 80%);
-  backdrop-filter: blur(5px);
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-}
-
-.logo-img {
-  height: 40px;
-  margin-right: 15px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.search-area :deep(.ant-input-search-button) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-  color: white !important;
-}
-
-.search-area :deep(.ant-input) {
-  background-color: var(--light-green) !important;
-}
-
-/* 导航栏 */
-.nav-bar {
-  display: flex;
-  justify-content: center;
-  background-color: rgb(135 149 128 / 90%);
-  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
-}
-
-.nav-item {
-  padding: 12px 25px;
-  color: #fff;
-  text-decoration: none;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.nav-item:hover {
-  background-color: rgb(0 0 0 / 10%);
-}
-
-.nav-item.active {
-  background-color: var(--dark-green); /* 当前页面的激活状态 */
-  font-weight: bold;
+  --glass-bg: rgb(255 255 255 / 10%);
 }
 
 /* ---------------------------------------------------- */
 
-/*  Home 页面（仪表盘）内容样式 */
+/* Home 页面（仪表盘）内容样式 */
 
 /* ---------------------------------------------------- */
 .main-content {
   flex-grow: 1;
   display: grid;
-  grid-template-columns: 2fr 1fr; /* 两栏布局 */
+  grid-template-columns: 2fr 1fr;
   grid-template-rows: auto 1fr;
-  gap: 20px;
-  padding: 40px;
-  max-width: 1200px;
+  gap: 24px;
+
+  /* 4. 调整 padding 和 margin，因为 AppLayout 的 content-slot 已经提供了外层 padding */
+  padding: 0;
+  max-width: 1300px;
   width: 100%;
-  margin: 20px auto; /* 居中显示 */
+  margin: 0 auto; /* 仅用于居中 */
 }
 
-/* 玻璃感面板通用样式  */
+/* 玻璃感面板通用样式 (保留) */
 .dashboard-panel {
   background-color: var(--glass-bg);
   border-radius: 16px;
@@ -264,14 +171,16 @@ export default defineComponent({
   backdrop-filter: blur(12px);
   border: 1px solid rgb(255 255 255 / 20%);
   color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 欢迎面板 */
+/* 欢迎面板 (保留) */
 .welcome {
-  grid-column: 1 / 3; /* 跨越两列 */
+  grid-column: 1 / 3;
   padding: 30px;
   text-align: center;
-  background-color: rgb(74 92 67 / 50%); /* 更浓的背景色 */
+  background-color: rgb(74 92 67 / 50%);
 }
 
 .welcome h2 {
@@ -305,20 +214,30 @@ export default defineComponent({
   background-color: #5d7454;
 }
 
-/* 统计面板 */
+/* 统计面板 (保留) */
 .stats {
   grid-column: 1 / 2;
+}
+
+.stats h3,
+.recent-alerts h3 {
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgb(255 255 255 / 20%);
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: var(--light-green);
 }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-top: 15px;
+  gap: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .stat-card {
-  padding: 15px;
+  padding: 20px;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 8px;
   text-align: center;
@@ -328,7 +247,8 @@ export default defineComponent({
 .stat-card h4 {
   color: var(--light-green);
   font-size: 14px;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  font-weight: normal;
 }
 
 .stat-card .value {
@@ -337,27 +257,29 @@ export default defineComponent({
 }
 
 .stat-card .alert {
-  color: #f90; /* 预警数字高亮 */
-}
+  color: #ff9800;
+} /* 橙色高亮 */
 
-/* 最新预警面板 */
+/* 最新预警面板 (保留) */
 .recent-alerts {
   grid-column: 2 / 3;
 }
 
 .recent-alerts :deep(.ant-list) {
   color: white;
+  flex-grow: 1;
 }
 
 .recent-alerts :deep(.ant-list-item) {
-  border-block-end: 1px solid rgb(255 255 255 / 20%);
-  padding-block: 10px;
+  border-block-end: 1px solid rgb(255 255 255 / 20%) !important;
+  padding-block: 12px;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a) {
   color: white;
   font-weight: normal;
   transition: color 0.3s;
+  font-size: 14px;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a:hover) {
@@ -369,16 +291,32 @@ export default defineComponent({
   font-size: 12px;
 }
 
-.level-high {
-  color: #ff4d4f !important; /* 红色警告 */
+.recent-alerts :deep(.ant-empty-description) {
+  color: rgb(255 255 255 / 60%) !important;
+}
+
+/* --- 预警级别样式 (保留) --- */
+.level-critical {
+  color: #a70000 !important;
   font-weight: bold !important;
 }
 
+.level-high {
+  color: #ff4d4f !important;
+  font-weight: bold !important;
+}
+
+.level-warning {
+  color: #ffc53d !important;
+}
+
 .level-medium {
-  color: #faad14 !important; /* 黄色中等警告 */
+  color: #faad14 !important;
 }
 
 .level-low {
-  color: #1890ff !important; /* 蓝色低等警告 */
+  color: #1890ff !important;
 }
 </style>
+
+Evaluate Compare 9,230 个 token 自动清除

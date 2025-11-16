@@ -6,7 +6,7 @@ import http from '@/utils/http'
 
 // 类型定义
 // 定义预警级别
-export type AlertLevel = 'low' | 'medium' | 'high' | 'critical'
+export type AlertLevel = 'low' | 'medium' | 'high' | 'critical' | 'warning'
 
 // 定义预警数据结构
 export interface Alert {
@@ -22,7 +22,7 @@ export type CreateAlertPayload = Omit<Alert, 'id'>
 
 export const useDataStore = defineStore('data', () => {
   const monitorPoints = ref<Array<any>>([])
-  const alerts = ref<Array<any>>([])
+  const alerts = ref<Array<any>>([]) //
   const loadingPoints = ref(false)
   const loadingAlerts = ref(false)
 

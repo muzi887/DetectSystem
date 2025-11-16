@@ -1,7 +1,7 @@
 <!-- src/views/user/WarningSystem.vue -->
 <template>
   <div class="app-layout-container">
-    <!-- 顶部 Header -->
+    <!-- Header 和 Nav 保持不变 -->
     <header class="header">
       <div class="logo-area">
         <img
@@ -17,16 +17,12 @@
           enter-button="搜索" />
       </div>
     </header>
-
-    <!-- 导航栏  -->
     <nav class="nav-bar">
-      <!-- 注意：在真正的 Home 页面，可以将当前页面设为 active -->
       <router-link
         to="/home"
-        class="nav-item active">
+        class="nav-item">
         首页
       </router-link>
-
       <router-link
         to="/related-data"
         class="nav-item">
@@ -44,7 +40,7 @@
       </router-link>
       <router-link
         to="/warnings"
-        class="nav-item">
+        class="nav-item active">
         灾害预警
       </router-link>
       <router-link
@@ -59,10 +55,13 @@
       </router-link>
     </nav>
 
-    <!-- 主体内容 (首页仪表盘内容) -->
+    <!-- 主体内容 -->
     <main class="main-content">
-      <div style="max-width: 900px; margin: 24px auto">
-        <a-card title="预警管理">
+      <div class="content-wrapper">
+        <a-card>
+          <template #title>
+            <div class="card-title">预警管理</div>
+          </template>
           <template #extra>
             <a-button
               type="primary"
@@ -71,6 +70,7 @@
               新建预警
             </a-button>
             <a-button
+              class="refresh-btn"
               size="small"
               style="margin-left: 8px"
               @click="fetchAlerts">
@@ -78,48 +78,34 @@
             </a-button>
           </template>
 
+          <!-- ***** 修改：dataSource 使用处理后的 enrichedAlerts ***** -->
           <a-list
-            :dataSource="dataStore.alerts"
+            class="alert-list"
+            :dataSource="enrichedAlerts"
             :loading="dataStore.loadingAlerts"
-            :pagination="{ pageSize: 5, showSizeChanger: false, showQuickJumper: false }"
-            bordered
-            style="margin-top: 12px">
+            :pagination="{ pageSize: 5, showSizeChanger: false, showQuickJumper: false }">
             <template #renderItem="{ item }">
               <a-list-item>
                 <a-list-item-meta>
                   <template #title>
-                    <div
-                      style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        width: 100%;
-                      ">
-                      <div>
+                    <div class="alert-title-wrapper">
+                      <div class="alert-info">
                         <a-tag :color="getLevelColor(item.level)">
                           {{ getLevelText(item.level) }}
                         </a-tag>
-                        <span style="margin-left: 8px; margin-right: 8px">
-                          监测点 #{{ item.pointId }}
-                        </span>
+                        <!-- ***** 修改：显示监测点名称而不是 ID ***** -->
+                        <span class="point-name">{{ item.pointName }}</span>
                         <a-tag :color="item.handled ? 'green' : 'red'">
                           {{ item.handled ? '已处理' : '待处理' }}
                         </a-tag>
                       </div>
-                      <span
-                        style="color: #909399; font-size: 12px; flex-shrink: 0; margin-left: 16px">
-                        {{ formatTime(item.time) }}
-                      </span>
+                      <span class="alert-time">{{ formatTime(item.time) }}</span>
                     </div>
                   </template>
-
                   <template #description>
-                    <div style="white-space: pre-wrap; word-break: break-word; margin-top: 4px">
-                      {{ item.message }}
-                    </div>
+                    <div class="alert-message">{{ item.message }}</div>
                   </template>
                 </a-list-item-meta>
-
                 <template #actions>
                   <a
                     v-if="!item.handled"
@@ -132,14 +118,13 @@
                     标记未处理
                   </a>
                   <a
-                    style="color: #ff4d4f"
+                    class="delete-action"
                     @click="handleDelete(item.id)">
                     删除
                   </a>
                 </template>
               </a-list-item>
             </template>
-
             <template #empty>
               <a-empty description="暂无预警信息" />
             </template>
@@ -147,6 +132,8 @@
         </a-card>
       </div>
     </main>
+
+    <!-- Modal 弹窗 -->
     <a-modal
       v-model:open="createModalVisible"
       title="新建预警"
@@ -156,13 +143,22 @@
       <a-form
         :model="createFormModal"
         layout="vertical">
+        <!-- ***** 修改：将输入框改为下拉选择框 ***** -->
         <a-form-item
-          label="监测点ID"
+          label="监测点"
           required>
-          <a-input-number
+          <a-select
             v-model:value="createFormModal.pointId"
-            :min="1"
-            style="width: 100%" />
+            placeholder="请选择监测点"
+            show-search
+            :filter-option="filterOption">
+            <a-select-option
+              v-for="point in dataStore.monitorPoints"
+              :key="point.id"
+              :value="point.id">
+              {{ point.name }}
+            </a-select-option>
+          </a-select>
         </a-form-item>
         <a-form-item
           label="预警级别"
@@ -189,14 +185,26 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+// ***** 修改：引入 computed *****
+import { reactive, ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { useDataStore } from '@/stores/data' // 假设 store 路径
+import { useDataStore } from '@/stores/data'
 
 const dataStore = useDataStore()
 
+// ***** 修改：将 computed 属性用于关联数据 *****
+const enrichedAlerts = computed(() => {
+  // 创建一个监测点ID到名称的快速查找映射，提高性能
+  const pointsMap = new Map(dataStore.monitorPoints.map((p) => [p.id, p.name]))
+  return dataStore.alerts.map((alert) => ({
+    ...alert,
+    // 从映射中获取名称，如果找不到则提供一个回退显示
+    pointName: pointsMap.get(alert.pointId) || `未知监测点 #${alert.pointId}`
+  }))
+})
+
 const createFormModal = reactive({
-  pointId: 1,
+  pointId: null as number | null, // 初始值设为 null
   level: 'medium' as 'low' | 'medium' | 'high',
   message: ''
 })
@@ -205,12 +213,16 @@ const createModalVisible = ref(false)
 const levelColors: Record<string, string> = {
   low: 'blue',
   medium: 'orange',
-  high: 'red'
+  high: 'red',
+  warning: 'gold',
+  critical: '#a70000'
 }
 const levelText: Record<string, string> = {
   low: '低',
   medium: '中',
-  high: '高'
+  high: '高',
+  warning: '警告',
+  critical: '危急'
 }
 
 function getLevelColor(level: string | undefined) {
@@ -225,25 +237,29 @@ const fetchAlerts = async () => {
     await dataStore.fetchAlerts()
   } catch (e) {
     message.error('获取预警失败')
-    console.error(e)
   }
 }
 
 const showCreateModal = () => {
-  createFormModal.pointId = 1
+  createFormModal.pointId =
+    dataStore.monitorPoints.length > 0 ? dataStore.monitorPoints[0].id : null // 默认选中第一个
   createFormModal.level = 'medium'
   createFormModal.message = ''
   createModalVisible.value = true
 }
 
 const handleCreateModalOk = async () => {
+  if (!createFormModal.pointId) {
+    message.warning('请选择一个监测点')
+    return
+  }
   if (!createFormModal.message.trim()) {
     message.warning('请输入预警信息')
     return
   }
   try {
     await dataStore.createAlert({
-      pointId: Number(createFormModal.pointId),
+      pointId: createFormModal.pointId,
       level: createFormModal.level,
       message: createFormModal.message.trim()
     })
@@ -252,7 +268,6 @@ const handleCreateModalOk = async () => {
     await fetchAlerts()
   } catch (e) {
     message.error('创建失败')
-    console.error(e)
   }
 }
 
@@ -260,10 +275,9 @@ const handleToggle = async (alert: any) => {
   try {
     await dataStore.updateAlert(alert.id, { handled: !alert.handled })
     message.success('状态已更新')
-    await fetchAlerts()
+    // 无需手动刷新，Pinia 的状态更新会自动触发 computed 属性重新计算
   } catch (e) {
     message.error('更新失败')
-    console.error(e)
   }
 }
 
@@ -271,10 +285,8 @@ const handleDelete = async (id: number) => {
   try {
     await dataStore.deleteAlert(id)
     message.success('已删除')
-    await fetchAlerts()
   } catch (e) {
     message.error('删除失败')
-    console.error(e)
   }
 }
 
@@ -288,38 +300,118 @@ const formatTime = (t?: number) => {
   return `${d.getFullYear()}-${mm}-${dd} ${hh}:${mi}`
 }
 
+// ***** 新增：为 Select 组件提供搜索功能 *****
+const filterOption = (input: string, option: any) => {
+  return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+}
+
+// ***** 修改：页面加载时同时获取监测点数据 *****
 onMounted(() => {
+  dataStore.fetchMonitorPoints()
   fetchAlerts()
 })
 </script>
 
+<!-- 全局样式与 Scoped 样式保持不变 -->
+<style>
+:root {
+  --primary-green: #677662;
+  --dark-green: #4a5c43;
+  --light-green: #eef1ea;
+  --glass-bg: rgb(255 255 255 / 10%);
+}
+
+.warning-modal .ant-modal-content {
+  background-color: rgb(40 50 38 / 85%) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgb(255 255 255 / 20%);
+  color: var(--light-green);
+}
+
+.warning-modal .ant-modal-header {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgb(255 255 255 / 20%) !important;
+}
+
+.warning-modal .ant-modal-title {
+  color: white !important;
+}
+
+.warning-modal .ant-modal-close-x {
+  color: rgb(255 255 255 / 70%);
+}
+
+.warning-modal .ant-form-item-label > label {
+  color: var(--light-green) !important;
+}
+
+.warning-modal .ant-input,
+.warning-modal .ant-input-number,
+.warning-modal .ant-select-selector {
+  background-color: rgb(255 255 255 / 10%) !important;
+  border: 1px solid rgb(255 255 255 / 30%) !important;
+  color: white !important;
+}
+
+.warning-modal .ant-input-number-handler-wrap {
+  background-color: rgb(255 255 255 / 10%) !important;
+}
+
+.warning-modal .ant-input-number-handler-down-inner,
+.warning-modal .ant-input-number-handler-up-inner {
+  color: white !important;
+}
+
+.warning-modal .ant-modal-footer {
+  border-top: 1px solid rgb(255 255 255 / 20%) !important;
+}
+
+.warning-modal .ant-btn-primary {
+  background-color: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+}
+
+.warning-modal .ant-btn-default {
+  background-color: rgb(255 255 255 / 15%) !important;
+  border-color: rgb(255 255 255 / 30%) !important;
+  color: white !important;
+}
+
+.ant-select-dropdown {
+  background-color: rgb(40 50 38 / 95%) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgb(255 255 255 / 20%);
+}
+
+.ant-select-dropdown .ant-select-item {
+  color: var(--light-green) !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+  background-color: var(--dark-green) !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-selected {
+  background-color: var(--primary-green) !important;
+  color: white !important;
+}
+</style>
 <style scoped>
-/* ---------------------------------------------------- */
-
-/* 基础布局和颜色变量 */
-
-/* ---------------------------------------------------- */
 .app-layout-container {
   width: 100vw;
-  min-height: 100vh; /* 允许内容撑开 */
-  background-image: url('@/assets/bg.webp'); /* 统一背景 */
+  min-height: 100vh;
+  background-image: url('@/assets/bg.webp');
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
   display: flex;
   flex-direction: column;
   color: #fff;
   font-family:
     'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
     Arial, sans-serif;
-
-  /* 颜色变量 */
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%); /* 玻璃背景色 */
 }
 
-/* 顶部 Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -327,6 +419,7 @@ onMounted(() => {
   padding: 10px 40px;
   background-color: rgb(103 118 98 / 80%);
   backdrop-filter: blur(5px);
+  border-bottom: 1px solid rgb(255 255 255 / 20%);
 }
 
 .logo-area {
@@ -352,9 +445,9 @@ onMounted(() => {
 
 .search-area :deep(.ant-input) {
   background-color: var(--light-green) !important;
+  color: #333 !important;
 }
 
-/* 导航栏 */
 .nav-bar {
   display: flex;
   justify-content: center;
@@ -375,59 +468,43 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background-color: var(--dark-green); /* 当前页面的激活状态 */
+  background-color: var(--dark-green);
   font-weight: bold;
 }
-
-/* ---------------------------------------------------- */
-
-/* WarningSystem 页面专属样式 */
-
-/* ---------------------------------------------------- */
 
 .main-content {
   flex-grow: 1;
-  padding: 40px;
+  padding: 24px;
+  overflow-y: auto;
   display: flex;
   justify-content: center;
-  overflow-y: auto; /* 允许内容区滚动 */
 }
 
-/* 预警面板 */
-.warning-panel {
+.content-wrapper {
   width: 100%;
   max-width: 900px;
+}
+
+.content-wrapper :deep(.ant-card) {
   background-color: var(--glass-bg);
-  border-radius: 16px;
-  padding: 25px 30px;
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-  backdrop-filter: blur(12px);
+  border-radius: 12px;
   border: 1px solid rgb(255 255 255 / 20%);
-  display: flex;
-  flex-direction: column;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
 }
 
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+.content-wrapper :deep(.ant-card-head) {
   border-bottom: 1px solid rgb(255 255 255 / 20%);
+  padding: 0 24px;
 }
 
-.panel-title {
+.card-title {
   color: var(--light-green);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
 }
 
-.panel-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.panel-actions :deep(.ant-btn-primary) {
+.content-wrapper :deep(.ant-card-extra .ant-btn-primary) {
   background-color: var(--dark-green) !important;
   border-color: var(--dark-green) !important;
 }
@@ -438,21 +515,20 @@ onMounted(() => {
   color: white !important;
 }
 
-/* 预警列表 */
+.content-wrapper :deep(.ant-card-body) {
+  padding: 12px 24px 24px;
+}
+
 .alert-list {
   color: white;
 }
 
 .alert-list :deep(.ant-list-item) {
-  padding: 16px 8px;
+  padding: 16px 0;
   border-block-end: 1px solid rgb(255 255 255 / 20%) !important;
 }
 
-.alert-list :deep(.ant-list-item-meta) {
-  align-items: center;
-}
-
-.alert-title {
+.alert-title-wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -465,15 +541,18 @@ onMounted(() => {
   gap: 12px;
 }
 
-.point-id {
+/* ***** 修改：样式类名从 point-id 改为 point-name ***** */
+.point-name {
   color: var(--light-green);
   font-size: 15px;
+  font-weight: 500;
 }
 
 .alert-time {
   color: rgb(255 255 255 / 70%);
   font-size: 13px;
   flex-shrink: 0;
+  margin-left: 16px;
 }
 
 .alert-message {
@@ -497,18 +576,18 @@ onMounted(() => {
   color: white;
 }
 
-.delete-action {
+.delete-action,
+.delete-action:hover {
   color: #ff7875 !important;
 }
 
-.delete-action:hover {
-  color: #ff4d4f !important;
-}
-
-/* 列表分页器样式 */
 .alert-list :deep(.ant-pagination) {
   text-align: right;
   margin-top: 20px;
+}
+
+.alert-list :deep(.ant-pagination-item a) {
+  color: var(--light-green);
 }
 
 .alert-list :deep(.ant-pagination-item),
@@ -516,10 +595,7 @@ onMounted(() => {
 .alert-list :deep(.ant-pagination-next .ant-pagination-item-link) {
   background-color: transparent !important;
   border-color: rgb(255 255 255 / 30%) !important;
-}
-
-.alert-list :deep(.ant-pagination-item a) {
-  color: var(--light-green);
+  color: white;
 }
 
 .alert-list :deep(.ant-pagination-item-active) {
@@ -531,100 +607,7 @@ onMounted(() => {
   color: white !important;
 }
 
-.alert-list
-  :deep(.ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-ellipsis),
-.alert-list
-  :deep(.ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-ellipsis) {
-  color: rgb(255 255 255 / 50%) !important;
-}
-
-/* 空状态 */
 .alert-list :deep(.ant-empty-description) {
   color: rgb(255 255 255 / 70%);
-}
-
-/* ---------------------------------------------------- */
-
-/* Modal 弹窗样式穿透 */
-
-/* ---------------------------------------------------- */
-:global(.warning-modal .ant-modal-content) {
-  background-color: rgb(40 50 38 / 80%) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgb(255 255 255 / 20%);
-  color: var(--light-green);
-}
-
-:global(.warning-modal .ant-modal-header) {
-  background-color: transparent !important;
-  border-bottom: 1px solid rgb(255 255 255 / 20%) !important;
-}
-
-:global(.warning-modal .ant-modal-title) {
-  color: white !important;
-}
-
-:global(.warning-modal .ant-modal-close-x) {
-  color: rgb(255 255 255 / 70%);
-}
-
-:global(.warning-modal .ant-modal-body) {
-  padding-top: 20px;
-}
-
-:global(.warning-modal .ant-form-item-label > label) {
-  color: var(--light-green) !important;
-}
-
-:global(.warning-modal .ant-input),
-:global(.warning-modal .ant-input-number),
-:global(.warning-modal .ant-select-selector) {
-  background-color: rgb(255 255 255 / 10%) !important;
-  border: 1px solid rgb(255 255 255 / 30%) !important;
-  color: white !important;
-}
-
-:global(.warning-modal .ant-input-number-handler-wrap) {
-  background-color: rgb(255 255 255 / 10%) !important;
-}
-
-:global(.warning-modal .ant-input-number-handler-down-inner),
-:global(.warning-modal .ant-input-number-handler-up-inner) {
-  color: white !important;
-}
-
-:global(.warning-modal .ant-modal-footer) {
-  border-top: 1px solid rgb(255 255 255 / 20%) !important;
-}
-
-:global(.warning-modal .ant-btn-primary) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-}
-
-:global(.warning-modal .ant-btn-default) {
-  background-color: rgb(255 255 255 / 15%) !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  color: white !important;
-}
-
-/* 解决 Select 下拉菜单的样式问题 */
-:global(.ant-select-dropdown) {
-  background-color: rgb(40 50 38 / 95%) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgb(255 255 255 / 20%);
-}
-
-:global(.ant-select-dropdown .ant-select-item) {
-  color: var(--light-green) !important;
-}
-
-:global(.ant-select-dropdown .ant-select-item-option-active) {
-  background-color: var(--dark-green) !important;
-}
-
-:global(.ant-select-dropdown .ant-select-item-option-selected) {
-  background-color: var(--primary-green) !important;
-  color: white !important;
 }
 </style>
