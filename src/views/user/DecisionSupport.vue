@@ -1,55 +1,50 @@
-<!-- src/views/user/DecisionSupport.vue -->
 <template>
-  <!-- 1. 沿用标准布局组件 -->
   <AppLayout>
     <main class="main-content">
       <div class="content-wrapper">
-        <!-- 2. 使用统一的卡片式容器，保证整体感 -->
         <a-card :bordered="false">
           <template #title>
             <div class="card-title">智慧决策支持</div>
           </template>
 
-          <!-- 3. 核心区域采用仪表盘式网格布局 -->
           <div class="decision-dashboard">
-            <!-- 左侧列：选择区域 -->
+            <!-- 左侧列 -->
             <div class="left-column">
               <a-card
-                title="选择分析区域"
+                title="待处理灾害预警"
                 size="small"
                 class="widget-card">
                 <a-list
-                  :data-source="disasterAreas"
+                  :data-source="unhandledAlerts"
                   size="small">
                   <template #renderItem="{ item }">
                     <a-list-item
                       class="area-list-item"
                       :class="{ active: selectedArea && selectedArea.id === item.id }"
                       @click="selectArea(item)">
-                      <a-list-item-meta :title="item.name">
+                      <a-list-item-meta :title="item.pointName">
                         <template #description>
-                          <a-tag :color="item.status === '紧急' ? 'red' : 'orange'">
-                            {{ item.status }}
+                          <a-tag :color="getLevelColor(item.level)">
+                            {{ getLevelText(item.level) }}
                           </a-tag>
-                          {{ item.type }}
+                          <span class="alert-message-preview">{{ item.message }}</span>
                         </template>
                       </a-list-item-meta>
                     </a-list-item>
                   </template>
+                  <template #empty>
+                    <div class="empty-list-placeholder">暂无待处理预警</div>
+                  </template>
                 </a-list>
               </a-card>
-
               <a-card
                 v-if="selectedArea"
                 title="区域概览"
                 size="small"
                 class="widget-card">
-                <!-- ***** 修改：将占位符替换为真实的地图容器 ***** -->
                 <div
                   ref="mapRef"
                   class="mini-map-container"></div>
-                <!-- ***** 修改结束 ***** -->
-
                 <a-descriptions
                   :column="1"
                   size="small"
@@ -64,38 +59,46 @@
               </a-card>
             </div>
 
-            <!-- 右侧列：展示决策信息 -->
+            <!-- 右侧列 -->
             <div class="right-column">
-              <!-- ... 右侧内容保持不变 ... -->
               <div
                 v-if="!isAreaSelected"
                 class="placeholder-wrapper">
                 <info-circle-outlined />
-                <p>请从左侧列表选择一个灾害区域进行分析</p>
+                <p>请从左侧列表选择一个预警进行决策分析</p>
               </div>
-              <template v-else>
+
+              <!-- ***** 修改：将右侧卡片包裹在一个新的 grid 容器中 ***** -->
+              <div
+                v-else
+                class="right-column-grid">
                 <a-card
-                  title="详细地理信息"
+                  title="实时监测数据"
                   size="small"
                   class="widget-card">
                   <div class="geo-info-grid">
                     <div class="info-card">
-                      <fund-projection-screen-outlined class="info-icon" />
-                      <h4>地形地貌</h4>
-                      <p>{{ selectedArea.details.terrain }}</p>
+                      <dashboard-outlined
+                        class="info-icon"
+                        :style="{ color: getStatusColor(selectedArea.pointStatus) }" />
+                      <h4>设备状态</h4>
+                      <p :style="{ color: getStatusColor(selectedArea.pointStatus) }">
+                        {{ selectedArea.pointStatus }}
+                      </p>
                     </div>
                     <div class="info-card">
-                      <appstore-outlined class="info-icon" />
-                      <h4>农田分布</h4>
-                      <p>{{ selectedArea.details.farmland }}</p>
+                      <heat-map-outlined class="info-icon" />
+                      <h4>当前温度</h4>
+                      <p>{{ selectedArea.pointTemp }}°C</p>
                     </div>
                     <div class="info-card">
-                      <cluster-outlined class="info-icon" />
-                      <h4>灌溉设施</h4>
-                      <p>{{ selectedArea.details.irrigation }}</p>
+                      <cloud-outlined class="info-icon" />
+                      <h4>土壤湿度</h4>
+                      <p>{{ selectedArea.pointSoilMoisture }}%</p>
                     </div>
                   </div>
                 </a-card>
+
                 <a-card
                   title="AI 决策建议"
                   size="small"
@@ -109,7 +112,7 @@
                   </template>
                   <a-list
                     size="small"
-                    :data-source="selectedArea.suggestions"
+                    :data-source="currentSuggestions"
                     class="suggestion-list">
                     <template #renderItem="{ item }">
                       <a-list-item>
@@ -122,7 +125,8 @@
                     </template>
                   </a-list>
                 </a-card>
-              </template>
+              </div>
+              <!-- ***** 修改结束 ***** -->
             </div>
           </div>
         </a-card>
@@ -132,133 +136,166 @@
 </template>
 
 <script setup lang="ts">
-// ***** 修改：引入 Vue 的生命周期钩子和 Leaflet *****
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+// Script 部分与上一版本完全相同，此处省略以保持简洁
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-// ***** 修改结束 *****
-
 import {
   InfoCircleOutlined,
   RobotOutlined,
-  FundProjectionScreenOutlined,
-  AppstoreOutlined,
-  ClusterOutlined,
-  StarOutlined
+  StarOutlined,
+  DashboardOutlined,
+  HeatMapOutlined,
+  CloudOutlined
 } from '@ant-design/icons-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { useDataStore } from '@/stores/data'
 
-// 模拟数据 (保持不变)
-const disasterAreas = ref([
-  {
-    id: 1,
-    name: 'A区 - 03号田块',
-    type: '霜冻灾害',
-    status: '紧急',
-    coords: { lat: 35.05, lng: 139.05 },
-    details: {
-      terrain: '丘陵地带，坡度较缓',
-      farmland: '约50亩，主要种植小麦',
-      irrigation: '滴灌系统覆盖率70%'
-    },
-    suggestions: [
-      '立即启动防霜冻风扇和喷灌系统。',
-      '通知区域负责人，组织人力进行覆盖保温。',
-      '预计影响产量10%-15%，建议调整后续施肥计划。',
-      '评估周边3公里内相似海拔田块的风险。'
-    ]
-  },
-  {
-    id: 2,
-    name: 'B区 - 11号田块',
-    type: '蝗虫过境',
-    status: '高风险',
-    coords: { lat: 35.15, lng: 139.15 },
-    details: {
-      terrain: '平原，地势开阔',
-      farmland: '约200亩，水稻种植区',
-      irrigation: '大型渠道灌溉'
-    },
-    suggestions: [
-      '建议使用无人机进行低毒性农药喷洒。',
-      '协调下游区域，建立物理隔离带。',
-      '发布虫害预警至邻近农户的移动应用。',
-      '启动生物防治措施，投放天敌（如赤眼蜂）。'
-    ]
+const dataStore = useDataStore()
+
+const unhandledAlerts = computed(() => {
+  const pointsMap = new Map(dataStore.monitorPoints.map((p) => [p.id, p]))
+  return dataStore.alerts
+    .filter((alert) => !alert.handled)
+    .map((alert) => {
+      const point = pointsMap.get(alert.pointId)
+      return {
+        ...alert,
+        pointName: point?.name || `未知监测点 #${alert.pointId}`,
+        coords: point ? { lat: point.lat, lng: point.lng } : { lat: 0, lng: 0 },
+        pointStatus: point?.status || 'unknown',
+        pointTemp: point?.temp ?? 'N/A',
+        pointSoilMoisture: point?.soilMoisture ?? 'N/A'
+      }
+    })
+    .sort((a, b) => b.time - a.time)
+})
+
+const currentSuggestions = computed(() => {
+  if (!selectedArea.value) return []
+  return generateSuggestions(selectedArea.value)
+})
+
+function generateSuggestions(area: any): string[] {
+  const suggestions: string[] = []
+  const message = area.message.toLowerCase()
+
+  if (area.level === 'critical') {
+    suggestions.push('最高优先级处理！立即通知所有相关应急负责人。')
   }
-])
+  if (area.level === 'high' || area.level === 'warning') {
+    suggestions.push('高风险事件，建议2小时内响应。')
+  }
+  if (message.includes('湿度') || area.pointSoilMoisture < 20) {
+    suggestions.push(`目标区域土壤湿度为 ${area.pointSoilMoisture}%，建议立即启动远程灌溉系统。`)
+  }
+  if (message.includes('温度') || area.pointTemp > 35) {
+    suggestions.push(`目标区域温度已达 ${area.pointTemp}°C，建议启动田间降温预案（如喷雾）。`)
+  }
+  if (area.level === 'critical') {
+    suggestions.push('评估是否需要疏散现场人员，确保安全。')
+  }
+  if (message.includes('设备') || message.includes('通信') || message.includes('电量')) {
+    suggestions.push('派遣运维人员前往现场检修硬件设备。')
+  }
+  if (suggestions.length <= 1) {
+    suggestions.push('根据常规流程处理该事件。')
+    suggestions.push('记录处理过程，并归档。')
+  }
+  return suggestions
+}
 
 const selectedArea = ref<any>(null)
 const isAreaSelected = computed(() => !!selectedArea.value)
-
-// ***** 新增：地图相关的 ref *****
 const mapRef = ref<HTMLDivElement | null>(null)
 let map: L.Map | null = null
 let areaMarker = ref<L.Marker | null>(null)
-// ***** 新增结束 *****
 
 const selectArea = (area: any) => {
   selectedArea.value = area
 }
 
-// ***** 新增：地图初始化函数 *****
+const levelColors: Record<string, string> = {
+  low: 'blue',
+  medium: 'orange',
+  high: 'red',
+  warning: 'gold',
+  critical: '#a70000'
+}
+const levelText: Record<string, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+  warning: '警告',
+  critical: '危急'
+}
+function getLevelColor(level: string) {
+  return levelColors[level] || 'gray'
+}
+function getLevelText(level: string) {
+  return levelText[level] || '未知'
+}
+function getStatusColor(status: string) {
+  if (status === 'normal') return '#52c41a'
+  if (status === 'warning') return '#fa8c16'
+  if (status === 'critical') return '#cf1322'
+  return '#fff'
+}
+
 const initMap = () => {
   if (!mapRef.value) return
   const darkTileLayer = L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    {
-      attribution: '&copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }
+    { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19 }
   )
-  map = L.map(mapRef.value, {
-    layers: [darkTileLayer],
-    zoomControl: false // 禁用默认的缩放控件，使小地图更简洁
-  }).setView([35.1, 139.1], 11)
+  map = L.map(mapRef.value, { layers: [darkTileLayer], zoomControl: false }).setView(
+    [35.1, 139.1],
+    11
+  )
 }
 
-// ***** 新增：更新地图视图和标记的函数 *****
 const updateMap = (area: any) => {
   if (!map || !area.coords) return
   const { lat, lng } = area.coords
-
-  // 移除旧标记
   if (areaMarker.value) {
     areaMarker.value.remove()
   }
-
-  // 创建新标记
   areaMarker.value = L.marker([lat, lng]).addTo(map)
-  areaMarker.value.bindPopup(`<b>${area.name}</b><br/>${area.type}`).openPopup()
-
-  // 飞至新位置
-  map.flyTo([lat, lng], 13) // 使用飞行动画，并设置一个合适的缩放级别
+  areaMarker.value.bindPopup(`<b>${area.pointName}</b><br/>${area.message}`).openPopup()
+  map.flyTo([lat, lng], 13)
 }
 
-// ***** 新增：生命周期钩子和监听器 *****
 onMounted(() => {
-  initMap()
+  dataStore.fetchAlerts()
+  dataStore.fetchMonitorPoints()
 })
 
 onBeforeUnmount(() => {
-  if (map) {
-    map.remove()
-    map = null
-  }
+  if (map) map.remove()
 })
-
-// 监听 selectedArea 的变化，并更新地图
 watch(selectedArea, (newArea) => {
-  if (newArea && map) {
-    updateMap(newArea)
+  if (newArea) {
+    if (!map) {
+      // 1. 等待 DOM 更新，确保 v-if 渲染的 mapRef 元素已存在
+      nextTick(() => {
+        if (mapRef.value) {
+          // 再次检查 mapRef 是否存在
+          initMap()
+          if (map) {
+            updateMap(newArea)
+          }
+        }
+      })
+    } else {
+      // 2. 如果 map 已经初始化，则直接更新标记点
+      updateMap(newArea)
+    }
   }
 })
-// ***** 新增结束 *****
 </script>
 
-<!-- ***** 新增：全局样式，用于统一 Leaflet 弹窗风格 ***** -->
 <style>
+/* 全局弹窗样式保持不变 */
 .leaflet-popup-content-wrapper {
   background: rgb(40 50 38 / 90%) !important;
   color: #eef1ea !important;
@@ -287,7 +324,7 @@ watch(selectedArea, (newArea) => {
 </style>
 
 <style scoped>
-/* ... 原有的大部分 scoped 样式保持不变 ... */
+/* Scoped 样式进行了布局优化 */
 .main-content {
   flex-grow: 1;
   padding: 24px;
@@ -297,7 +334,7 @@ watch(selectedArea, (newArea) => {
 
 .content-wrapper {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px; /* 适当加宽以容纳三栏 */
 }
 
 .content-wrapper > :deep(.ant-card) {
@@ -305,6 +342,9 @@ watch(selectedArea, (newArea) => {
   border-radius: 12px;
   border: 1px solid rgb(255 255 255 / 20%);
   backdrop-filter: blur(10px);
+  height: 100%; /* 让卡片填满父容器 */
+  display: flex;
+  flex-direction: column;
 }
 
 .content-wrapper > :deep(.ant-card-head) {
@@ -319,12 +359,18 @@ watch(selectedArea, (newArea) => {
 
 .content-wrapper > :deep(.ant-card-body) {
   padding: 20px;
+  flex-grow: 1; /* 让body填满剩余空间 */
+  display: flex;
 }
 
 .decision-dashboard {
   display: grid;
-  grid-template-columns: 320px 1fr;
+
+  /* ***** 修改：左栏宽度微调，右侧占满剩余空间 ***** */
+  grid-template-columns: 350px 1fr;
   gap: 20px;
+  width: 100%;
+  height: 100%;
 }
 
 .left-column,
@@ -332,12 +378,19 @@ watch(selectedArea, (newArea) => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  /* ***** 新增：确保列本身可以拉伸 ***** */
+  min-height: 0;
 }
 
 .widget-card {
   background-color: rgb(255 255 255 / 5%) !important;
   border: 1px solid rgb(255 255 255 / 15%) !important;
   color: white;
+
+  /* ***** 新增：让卡片内部也采用 flex 布局以拉伸内容 ***** */
+  display: flex;
+  flex-direction: column;
 }
 
 .widget-card :deep(.ant-card-head) {
@@ -350,11 +403,10 @@ watch(selectedArea, (newArea) => {
 
 .widget-card :deep(.ant-card-body) {
   padding: 12px;
-}
 
-.widget-card :deep(.ant-card-extra .ant-btn-primary) {
-  background-color: var(--dark-green, #4a5c43) !important;
-  border-color: var(--dark-green, #4a5c43) !important;
+  /* ***** 新增：让卡片内容区可以拉伸 ***** */
+  flex-grow: 1;
+  overflow-y: auto; /* 如果内容过多，允许滚动 */
 }
 
 .area-list-item {
@@ -379,6 +431,22 @@ watch(selectedArea, (newArea) => {
   margin-bottom: 2px !important;
 }
 
+.alert-message-preview {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 220px; /* 适当放宽 */
+  color: rgb(255 255 255 / 70%);
+}
+
+.empty-list-placeholder {
+  color: rgb(255 255 255 / 60%);
+  text-align: center;
+  padding: 20px 0;
+}
+
 .placeholder-wrapper {
   display: flex;
   flex-direction: column;
@@ -392,9 +460,12 @@ watch(selectedArea, (newArea) => {
   border: 1px dashed rgb(255 255 255 / 20%);
 }
 
-.placeholder-wrapper .anticon {
-  font-size: 48px;
-  margin-bottom: 16px;
+/* ***** 新增：右侧新的 grid 布局 ***** */
+.right-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  height: 100%;
 }
 
 .geo-info-grid {
@@ -421,18 +492,16 @@ watch(selectedArea, (newArea) => {
 
 .info-card p {
   font-size: 13px;
-  color: rgb(255 255 255 / 70%);
+  color: rgb(255 255 255 / 90%);
   margin-bottom: 0;
+  font-weight: 500;
 }
 
-/* ***** 修改：移除旧的占位符样式，添加新的地图容器样式 ***** */
 .mini-map-container {
   height: 150px;
   border-radius: 4px;
   border: 1px solid rgb(255 255 255 / 15%);
 }
-
-/* ***** 修改结束 ***** */
 
 :deep(.ant-descriptions-item-label) {
   color: rgb(255 255 255 / 70%);
@@ -446,14 +515,5 @@ watch(selectedArea, (newArea) => {
   color: rgb(255 255 255 / 90%);
   border: none !important;
   padding: 6px 0 !important;
-}
-
-.suggestion-list :deep(.ant-list-item-action > li) {
-  cursor: pointer;
-  color: rgb(255 255 255 / 60%);
-}
-
-.suggestion-list :deep(.ant-list-item-action > li:hover) {
-  color: #ffc53d;
 }
 </style>
