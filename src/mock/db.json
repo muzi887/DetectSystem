@@ -157,6 +157,14 @@
       "level": "medium",
       "message": "温度异常升高，超过阈值",
       "id": 9
+    },
+    {
+      "time": 1763529972309,
+      "handled": false,
+      "pointId": 2,
+      "level": "medium",
+      "message": "手动触发：监测站B - 丘陵 状态异常",
+      "id": 10
     }
   ]
 }
