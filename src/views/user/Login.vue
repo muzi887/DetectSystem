@@ -1,26 +1,24 @@
 <template>
   <AppLayout>
-    <div class="login-content-wrapper">
-      <!-- 左侧：纯图片展示 (宽一点) -->
-      <div class="left-card">
+    <div class="login-viewport">
+      <!-- 左侧：独立的图片卡片 (宽、矮) -->
+      <div class="image-card">
         <img
           src="@/assets/wheat.jpg"
           class="wheat-img"
           alt="Wheat" />
       </div>
 
-      <!-- 右侧：登录表单 (高一点，长一点，独立分开) -->
-      <div class="right-card">
+      <!-- 右侧：独立的登录卡片 (窄、高、悬浮感) -->
+      <div class="login-card">
         <h3 class="login-title">密码登录</h3>
-        <div class="title-line"></div>
+        <div class="title-underline"></div>
 
         <a-form
           class="login-form"
           :model="form"
           @finish="onSubmit">
-          <a-form-item
-            name="phone"
-            :rules="[{ required: true, message: '请输入手机号!' }]">
+          <a-form-item name="phone">
             <div class="input-label">账号</div>
             <a-input
               v-model:value="form.phone"
@@ -28,9 +26,7 @@
               class="custom-input" />
           </a-form-item>
 
-          <a-form-item
-            name="password"
-            :rules="[{ required: true, message: '请输入密码!' }]">
+          <a-form-item name="password">
             <div class="input-label">密码</div>
             <a-input-password
               v-model:value="form.password"
@@ -57,13 +53,13 @@
         <div class="form-footer">
           <a
             href="#"
-            class="link-text">
-            忘记密码?
+            class="footer-link">
+            忘记密码
           </a>
           <span class="divider">|</span>
           <a
             href="#"
-            class="link-text">
+            class="footer-link">
             去注册
           </a>
         </div>
@@ -105,165 +101,139 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-/* 引入宋体 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
 
-.login-content-wrapper {
+.login-viewport {
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 
-  /* 增加卡片之间的间距 */
-  gap: 60px;
+  /* 使用 clamp 函数让间距在 40px 到 100px 之间根据屏幕宽度自动伸缩 */
+  gap: clamp(40px, 8vw, 100px);
   padding: 0 40px;
-
-  /* 确保在小屏幕高度下也能滚动，防止被截断 */
   overflow-y: auto;
 }
 
-/* === 左侧卡片：图片 (大幅加大) === */
-.left-card {
-  /* 宽度加大 */
-  width: 750px;
+/* === 左侧：图片卡片 === */
+.image-card {
+  width: 1000px;
+  height: 500px;
+  border-radius: 20px;
 
-  /* 高度加大 */
-  height: 550px;
-  border-radius: 24px;
+  /* 给图片加框，像画廊里的画 */
+  border: 4px solid rgb(255 255 255 / 20%);
+  box-shadow: 0 20px 40px rgb(0 0 0 / 50%);
   overflow: hidden;
-
-  /* 阴影加深，更有立体感 */
-  box-shadow: 0 20px 50px rgb(0 0 0 / 40%);
-  border: 3px solid rgb(255 255 255 / 15%);
-  flex-shrink: 0;
+  flex-shrink: 0; /* 防止被挤压 */
+  position: relative;
 }
 
 .wheat-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-
-  /* 稍微降低亮度，让图片更有质感，不刺眼 */
-  filter: brightness(0.95) contrast(1.1);
+  object-fit: cover; /* 关键：保证图片铺满且不变形 */
+  filter: brightness(0.9) contrast(1.1);
+  transition: transform 0.5s ease;
 }
 
-/* === 右侧卡片：登录框 (大幅加高、加宽) === */
-.right-card {
-  /* 宽度加大 */
-  width: 460px;
+.image-card:hover .wheat-img {
+  transform: scale(1.05); /* 鼠标悬停微动效果 */
+}
 
-  /* 高度大幅拉高，形成修长的视觉效果 */
-  height: 700px;
+/* === 右侧：登录卡片 === */
+.login-card {
+  width: 350px;
+  height: 600px;
 
-  /* 玻璃拟态背景 */
+  /* 独立的玻璃拟态 */
   background: rgb(255 255 255 / 10%);
-  backdrop-filter: blur(25px);
-  backdrop-filter: blur(25px);
-  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   border: 1px solid rgb(255 255 255 / 20%);
   box-shadow: 0 20px 50px rgb(0 0 0 / 30%);
   display: flex;
   flex-direction: column;
-
-  /* 让内容在垂直方向分散对齐，填满高度 */
   justify-content: center;
-
-  /* 增加内部内边距 */
-  padding: 60px 50px;
-  position: relative;
+  padding: 50px 40px; /* 内部留白 */
 }
 
-/* 标题样式 */
+/* 标题 */
 .login-title {
   font-family: 'Noto Serif SC', serif;
-
-  /* 字体放大 */
-  font-size: 36px;
+  font-size: 30px;
   color: #fff;
-  margin-bottom: 15px;
-  font-weight: bold;
-  letter-spacing: 3px;
-}
-
-.title-line {
-  width: 60px;
-  height: 5px;
-  background-color: #4a5c43;
-  margin-bottom: 40px;
-  border-radius: 3px;
-}
-
-/* 输入框上方的文字 Label */
-.input-label {
-  color: rgb(255 255 255 / 90%);
-
-  /* 字体放大 */
-  font-size: 16px;
   margin-bottom: 10px;
-  font-family: 'Noto Serif SC', serif;
   font-weight: bold;
+  letter-spacing: 2px;
 }
 
-/* === 输入框深度定制 === */
+.title-underline {
+  width: 50px;
+  height: 4px;
+  background-color: #4a5c43;
+  margin-bottom: 35px;
+  border-radius: 2px;
+}
+
+/* 表单 Label */
+.input-label {
+  color: rgb(255 255 255 / 80%);
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* === 输入框样式 (保持深绿色风格) === */
 .custom-input {
-  /* 输入框高度加大 */
-  height: 55px;
+  height: 50px;
   background-color: rgb(55 75 50 / 60%) !important;
   border: 1px solid rgb(255 255 255 / 20%) !important;
-  border-radius: 8px;
+  border-radius: 6px;
   color: white !important;
-
-  /* 输入文字放大 */
-  font-size: 18px;
-  padding-left: 15px;
+  font-size: 16px;
+  padding-left: 12px;
 }
 
 :deep(.ant-input) {
   background-color: transparent !important;
   color: white !important;
-  font-size: 18px; /* 确保输入文字也是大号 */
 }
 
 :deep(.ant-input-password-icon) {
-  color: rgb(255 255 255 / 80%) !important;
-  font-size: 18px;
+  color: rgb(255 255 255 / 70%) !important;
 }
 
-/* 复选框区域调整 */
+/* 表单间距 */
 :deep(.ant-form-item) {
-  /* 增加表单项之间的间距 */
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
+/* 复选框 */
 .custom-checkbox {
-  color: rgb(255 255 255 / 80%);
+  color: rgb(255 255 255 / 70%);
   font-family: 'Noto Serif SC', serif;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 :deep(.ant-checkbox-inner) {
-  width: 18px;
-  height: 18px;
-  background-color: rgb(55 75 50 / 70%);
-  border-color: rgb(255 255 255 / 40%);
+  background-color: rgb(55 75 50 / 60%);
+  border-color: rgb(255 255 255 / 30%);
 }
 
-/* === 按钮样式 === */
+/* === 按钮 === */
 .submit-btn {
-  /* 按钮高度加大 */
-  height: 60px;
+  height: 54px;
   background-color: #3d5238 !important;
   border: none !important;
-  border-radius: 8px;
-
-  /* 按钮文字放大 */
-  font-size: 22px;
+  border-radius: 6px;
+  font-size: 18px;
   font-family: 'Noto Serif SC', serif;
-  letter-spacing: 6px;
-  box-shadow: 0 6px 15px rgb(0 0 0 / 40%);
-  margin-top: 10px;
+  letter-spacing: 4px;
+  box-shadow: 0 4px 15px rgb(0 0 0 / 30%);
   font-weight: bold;
+  margin-top: 5px;
 }
 
 .submit-btn:hover {
@@ -271,61 +241,46 @@ async function onSubmit() {
   transform: translateY(-2px);
 }
 
-/* === 底部链接 === */
+/* 底部链接 */
 .form-footer {
   text-align: center;
-  margin-top: 30px;
-  font-size: 16px;
+  margin-top: 20px;
 }
 
-.link-text {
-  color: rgb(255 255 255 / 70%);
+.footer-link {
+  color: rgb(255 255 255 / 60%);
   text-decoration: none;
-  transition: color 0.3s;
   font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  transition: color 0.3s;
 }
 
-.link-text:hover {
+.footer-link:hover {
   color: #fff;
-  text-decoration: underline;
 }
 
 .divider {
-  margin: 0 15px;
-  color: rgb(255 255 255 / 30%);
+  margin: 0 12px;
+  color: rgb(255 255 255 / 20%);
 }
 
-/* 响应式适配：防止大屏设计在笔记本上溢出 */
-@media (height <= 900px) {
-  .left-card {
-    height: 450px;
-    width: 600px;
-  }
-
-  .right-card {
-    height: 600px;
-    padding: 40px 30px;
-  }
-}
-
-/* 移动端适配 */
-@media (width <= 1200px) {
-  .login-content-wrapper {
+/* === 响应式 === */
+@media (width <= 1100px) {
+  .login-viewport {
     flex-direction: column;
     gap: 30px;
-    padding: 40px 20px;
-    height: auto; /* 允许滚动 */
+    padding: 30px 0;
   }
 
-  .left-card {
-    width: 100%;
-    max-width: 600px;
+  .image-card {
+    width: 90%;
+    max-width: 500px;
     height: 300px;
   }
 
-  .right-card {
-    width: 100%;
-    max-width: 500px;
+  .login-card {
+    width: 90%;
+    max-width: 400px;
     height: auto;
     padding: 40px 30px;
   }
