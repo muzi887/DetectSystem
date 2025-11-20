@@ -118,15 +118,17 @@ async function onSubmit() {
 
 /* === 左侧：图片卡片 === */
 .image-card {
-  width: 1000px;
-  height: 500px;
-  border-radius: 20px;
+  /* 让宽度自动填充剩余空间，但最大不超过 1000px */
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1000px;
 
-  /* 给图片加框，像画廊里的画 */
+  /* 随屏幕高度变化 */
+  height: 50vh;
+  border-radius: 20px;
   border: 4px solid rgb(255 255 255 / 20%);
   box-shadow: 0 20px 40px rgb(0 0 0 / 50%);
   overflow: hidden;
-  flex-shrink: 0; /* 防止被挤压 */
   position: relative;
 }
 
@@ -146,6 +148,9 @@ async function onSubmit() {
 .login-card {
   width: 350px;
   height: 600px;
+
+  /* 新增：防止登录框被压缩，始终保持 350px */
+  flex-shrink: 0;
 
   /* 独立的玻璃拟态 */
   background: rgb(255 255 255 / 10%);
@@ -265,23 +270,28 @@ async function onSubmit() {
 }
 
 /* === 响应式 === */
-@media (width <= 1100px) {
+
+/* 建议把断点稍微调大一点（比如1200px），因为你的卡片比较宽，
+   这样在中型屏幕（笔记本）上能更早切换为上下结构，体验更好 */
+@media (width <= 1200px) {
   .login-viewport {
     flex-direction: column;
     gap: 30px;
-    padding: 30px 0;
+    padding: 40px 20px; /* 稍微减少移动端的左右内边距 */
+    height: auto; /* 允许内容撑开高度 */
+    min-height: 100%; /* 保证背景铺满 */
   }
 
   .image-card {
-    width: 90%;
-    max-width: 500px;
+    width: 100%;
+    max-width: 600px; /* 移动端限制一下图片最大宽度 */
     height: 300px;
   }
 
   .login-card {
-    width: 90%;
+    width: 100%;
     max-width: 400px;
-    height: auto;
+    height: auto; /* 高度自适应 */
     padding: 40px 30px;
   }
 }

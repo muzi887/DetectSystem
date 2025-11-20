@@ -164,9 +164,9 @@ const handleLogout = () => {
   box-sizing: border-box;
   overflow: hidden;
 
-  /* 2. 颜色变量更新：与登录页保持一致的深沉色调 */
+  /* 深沉色调 */
   --primary-green: #677662;
-  --dark-green: #344e31; /* 更新：使用登录页按钮的深森林绿 */
+  --dark-green: #344e31; /* 深森林绿 */
   --light-green: #eef1ea;
   --glass-border: rgb(255 255 255 / 20%);
 }
@@ -213,7 +213,7 @@ const handleLogout = () => {
   /* 3. 字体应用：衬线体 */
   font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
   font-weight: bold;
-  letter-spacing: 2px; /* 增加字间距，更有气势 */
+  letter-spacing: 2px;
   text-shadow: 0 2px 4px rgb(0 0 0 / 50%);
 }
 
