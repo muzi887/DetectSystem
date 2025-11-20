@@ -105,7 +105,7 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-/* 引入宋体，还原图片质感 */
+/* 引入宋体 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
 
 .login-content-wrapper {
@@ -115,19 +115,27 @@ async function onSubmit() {
   justify-content: center;
   align-items: center;
 
-  /* 左右卡片之间的间距 */
-  gap: 30px;
+  /* 增加卡片之间的间距 */
+  gap: 60px;
   padding: 0 40px;
+
+  /* 确保在小屏幕高度下也能滚动，防止被截断 */
+  overflow-y: auto;
 }
 
-/* === 左侧卡片：图片 === */
+/* === 左侧卡片：图片 (大幅加大) === */
 .left-card {
-  width: 550px; /* 宽一点 */
-  height: 400px; /* 比右边矮一点 */
-  border-radius: 20px;
+  /* 宽度加大 */
+  width: 750px;
+
+  /* 高度加大 */
+  height: 550px;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
-  border: 2px solid rgb(255 255 255 / 20%);
+
+  /* 阴影加深，更有立体感 */
+  box-shadow: 0 20px 50px rgb(0 0 0 / 40%);
+  border: 3px solid rgb(255 255 255 / 15%);
   flex-shrink: 0;
 }
 
@@ -136,126 +144,142 @@ async function onSubmit() {
   height: 100%;
   object-fit: cover;
 
-  /* 稍微调暗一点图片，显得更有质感 */
-  filter: brightness(0.9);
+  /* 稍微降低亮度，让图片更有质感，不刺眼 */
+  filter: brightness(0.95) contrast(1.1);
 }
 
-/* === 右侧卡片：登录框 === */
+/* === 右侧卡片：登录框 (大幅加高、加宽) === */
 .right-card {
-  width: 380px;
-  height: 520px; /* 关键点：这里设置得比左边高，形成“长一点”的效果 */
+  /* 宽度加大 */
+  width: 460px;
+
+  /* 高度大幅拉高，形成修长的视觉效果 */
+  height: 700px;
 
   /* 玻璃拟态背景 */
   background: rgb(255 255 255 / 10%);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
+  backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  border-radius: 24px;
   border: 1px solid rgb(255 255 255 / 20%);
-  box-shadow: 0 15px 40px rgb(0 0 0 / 20%);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 30%);
   display: flex;
   flex-direction: column;
+
+  /* 让内容在垂直方向分散对齐，填满高度 */
   justify-content: center;
-  padding: 40px 35px;
+
+  /* 增加内部内边距 */
+  padding: 60px 50px;
   position: relative;
 }
 
 /* 标题样式 */
 .login-title {
   font-family: 'Noto Serif SC', serif;
-  font-size: 28px;
+
+  /* 字体放大 */
+  font-size: 36px;
   color: #fff;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
 }
 
 .title-line {
-  width: 40px;
-  height: 4px;
-  background-color: #4a5c43; /* 深绿色装饰条 */
-  margin-bottom: 30px;
-  border-radius: 2px;
+  width: 60px;
+  height: 5px;
+  background-color: #4a5c43;
+  margin-bottom: 40px;
+  border-radius: 3px;
 }
 
 /* 输入框上方的文字 Label */
 .input-label {
-  color: rgb(255 255 255 / 80%);
-  font-size: 14px;
-  margin-bottom: 6px;
+  color: rgb(255 255 255 / 90%);
+
+  /* 字体放大 */
+  font-size: 16px;
+  margin-bottom: 10px;
   font-family: 'Noto Serif SC', serif;
+  font-weight: bold;
 }
 
-/* === 输入框深度定制 (还原图片中的深绿条) === */
+/* === 输入框深度定制 === */
 .custom-input {
-  height: 45px;
-
-  /* 图片里那种深墨绿色背景 */
-  background-color: rgb(55 75 50 / 70%) !important;
-  border: 1px solid rgb(255 255 255 / 15%) !important;
-  border-radius: 6px;
+  /* 输入框高度加大 */
+  height: 55px;
+  background-color: rgb(55 75 50 / 60%) !important;
+  border: 1px solid rgb(255 255 255 / 20%) !important;
+  border-radius: 8px;
   color: white !important;
-  font-size: 15px;
+
+  /* 输入文字放大 */
+  font-size: 18px;
+  padding-left: 15px;
 }
 
 :deep(.ant-input) {
-  background-color: transparent !important; /* 让 input 继承外层颜色 */
+  background-color: transparent !important;
   color: white !important;
+  font-size: 18px; /* 确保输入文字也是大号 */
 }
 
 :deep(.ant-input-password-icon) {
-  color: rgb(255 255 255 / 70%) !important;
+  color: rgb(255 255 255 / 80%) !important;
+  font-size: 18px;
 }
 
-/* 占位符颜色 */
-:deep(input::placeholder) {
-  color: rgb(255 255 255 / 40%);
+/* 复选框区域调整 */
+:deep(.ant-form-item) {
+  /* 增加表单项之间的间距 */
+  margin-bottom: 30px;
 }
 
-/* 聚焦效果 */
-:deep(.ant-input-affix-wrapper-focused),
-:deep(.ant-input:focus) {
-  box-shadow: 0 0 0 2px rgb(255 255 255 / 20%) !important;
-  border-color: rgb(255 255 255 / 50%) !important;
-}
-
-/* 复选框 */
 .custom-checkbox {
-  color: rgb(255 255 255 / 70%);
+  color: rgb(255 255 255 / 80%);
   font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
 }
 
 :deep(.ant-checkbox-inner) {
+  width: 18px;
+  height: 18px;
   background-color: rgb(55 75 50 / 70%);
-  border-color: rgb(255 255 255 / 30%);
+  border-color: rgb(255 255 255 / 40%);
 }
 
 /* === 按钮样式 === */
 .submit-btn {
-  height: 48px;
-
-  /* 纯深绿色，不透明，还原图片 */
+  /* 按钮高度加大 */
+  height: 60px;
   background-color: #3d5238 !important;
   border: none !important;
-  border-radius: 6px;
-  font-size: 18px;
+  border-radius: 8px;
+
+  /* 按钮文字放大 */
+  font-size: 22px;
   font-family: 'Noto Serif SC', serif;
-  letter-spacing: 4px;
-  box-shadow: 0 4px 10px rgb(0 0 0 / 30%);
+  letter-spacing: 6px;
+  box-shadow: 0 6px 15px rgb(0 0 0 / 40%);
   margin-top: 10px;
+  font-weight: bold;
 }
 
 .submit-btn:hover {
   background-color: #4f6848 !important;
+  transform: translateY(-2px);
 }
 
 /* === 底部链接 === */
 .form-footer {
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: 30px;
+  font-size: 16px;
 }
 
 .link-text {
-  color: rgb(255 255 255 / 60%);
+  color: rgb(255 255 255 / 70%);
   text-decoration: none;
   transition: color 0.3s;
   font-family: 'Noto Serif SC', serif;
@@ -263,33 +287,47 @@ async function onSubmit() {
 
 .link-text:hover {
   color: #fff;
+  text-decoration: underline;
 }
 
 .divider {
-  margin: 0 10px;
-  color: rgb(255 255 255 / 20%);
+  margin: 0 15px;
+  color: rgb(255 255 255 / 30%);
 }
 
-/* 响应式：小屏幕变垂直排列 */
-@media (width <= 1000px) {
+/* 响应式适配：防止大屏设计在笔记本上溢出 */
+@media (height <= 900px) {
+  .left-card {
+    height: 450px;
+    width: 600px;
+  }
+
+  .right-card {
+    height: 600px;
+    padding: 40px 30px;
+  }
+}
+
+/* 移动端适配 */
+@media (width <= 1200px) {
   .login-content-wrapper {
     flex-direction: column;
-    gap: 20px;
-    height: auto;
+    gap: 30px;
     padding: 40px 20px;
+    height: auto; /* 允许滚动 */
   }
 
   .left-card {
     width: 100%;
-    max-width: 400px;
-    height: 250px;
+    max-width: 600px;
+    height: 300px;
   }
 
   .right-card {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
     height: auto;
-    padding: 30px 20px;
+    padding: 40px 30px;
   }
 }
 </style>
