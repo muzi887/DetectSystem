@@ -1,20 +1,19 @@
-<!-- src/views/user/Login.vue -->
 <template>
-  <!-- 1. 使用 AppLayout 包裹，复用头部和导航 -->
   <AppLayout>
-    <!-- 2. 内容容器：负责在剩余空间内居中显示内容 -->
     <div class="login-content-wrapper">
-      <!-- 左侧麦穗图片面板 (装饰性) -->
-      <div class="info-panel">
+      <!-- 左侧：纯图片展示 (宽一点) -->
+      <div class="left-card">
         <img
           src="@/assets/wheat.jpg"
-          class="info-panel-img"
-          alt="Welcome" />
+          class="wheat-img"
+          alt="Wheat" />
       </div>
 
-      <!-- 右侧登录表单 (核心功能) -->
-      <div class="login-panel">
+      <!-- 右侧：登录表单 (高一点，长一点，独立分开) -->
+      <div class="right-card">
         <h3 class="login-title">密码登录</h3>
+        <div class="title-line"></div>
+
         <a-form
           class="login-form"
           :model="form"
@@ -22,23 +21,25 @@
           <a-form-item
             name="phone"
             :rules="[{ required: true, message: '请输入手机号!' }]">
+            <div class="input-label">账号</div>
             <a-input
               v-model:value="form.phone"
               placeholder="手机号/用户名"
-              size="large" />
+              class="custom-input" />
           </a-form-item>
 
           <a-form-item
             name="password"
             :rules="[{ required: true, message: '请输入密码!' }]">
+            <div class="input-label">密码</div>
             <a-input-password
               v-model:value="form.password"
-              placeholder="密码"
-              size="large" />
+              placeholder="请输入密码"
+              class="custom-input" />
           </a-form-item>
 
           <a-form-item>
-            <a-checkbox class="white-checkbox">记住登录状态与用户协议</a-checkbox>
+            <a-checkbox class="custom-checkbox">我已阅读并同意用户协议</a-checkbox>
           </a-form-item>
 
           <a-form-item>
@@ -47,14 +48,24 @@
               html-type="submit"
               :loading="loading"
               block
-              size="large">
+              class="submit-btn">
               立即登录
             </a-button>
           </a-form-item>
         </a-form>
 
-        <div class="login-extra">
-          <a href="#">忘记密码?</a>
+        <div class="form-footer">
+          <a
+            href="#"
+            class="link-text">
+            忘记密码?
+          </a>
+          <span class="divider">|</span>
+          <a
+            href="#"
+            class="link-text">
+            去注册
+          </a>
         </div>
       </div>
     </div>
@@ -66,7 +77,6 @@ import { reactive, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-// 引入布局组件
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const form = reactive({ phone: '', password: '' })
@@ -78,20 +88,16 @@ const route = useRoute()
 async function onSubmit() {
   loading.value = true
   try {
-    // 调用登录函数
     const res = await store.loginApi(form.phone, form.password)
-
     if (res && res.token) {
       message.success('登录成功！')
-      // 跳转到目标页面
       const redirect = (route.query.redirect as string) || '/home'
       await router.push(redirect)
     } else {
-      message.error(res?.message || '登录失败，请检查手机号或密码')
+      message.error(res?.message || '登录失败')
     }
   } catch (err: any) {
-    message.error('登录失败，请检查手机号或密码')
-    console.error('Login API request failed:', err)
+    message.error('登录失败，请检查网络')
   } finally {
     loading.value = false
   }
@@ -99,131 +105,191 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-/* 
-  因为 AppLayout 使用了 scoped 样式，这里的变量需要重新定义。
-  或者将其放入 assets/main.css 全局样式中。
-*/
+/* 引入宋体，还原图片质感 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+
 .login-content-wrapper {
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-
-  /* 核心布局：让内容在 AppLayout 提供的插槽中居中 */
   width: 100%;
-  height: 100%; /* 填满父容器高度 */
+  height: 100%;
   display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-  gap: 50px; /* 图片和登录框之间的间距 */
-}
-
-/* 玻璃感面板通用样式 */
-.info-panel,
-.login-panel {
-  background-color: rgb(255 255 255 / 10%);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(255 255 255 / 20%);
-}
-
-/* 左侧图片区域 */
-.info-panel {
-  width: 55%;
-  height: 65%; /* 稍微调高一点 */
-  max-width: 800px;
-  min-width: 400px;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+
+  /* 左右卡片之间的间距 */
+  gap: 30px;
+  padding: 0 40px;
 }
 
-.info-panel-img {
+/* === 左侧卡片：图片 === */
+.left-card {
+  width: 550px; /* 宽一点 */
+  height: 400px; /* 比右边矮一点 */
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+  border: 2px solid rgb(255 255 255 / 20%);
+  flex-shrink: 0;
+}
+
+.wheat-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+
+  /* 稍微调暗一点图片，显得更有质感 */
+  filter: brightness(0.9);
 }
 
-/* 右侧登录框区域 */
-.login-panel {
-  width: 360px; /* 稍微宽一点点 */
-  padding: 30px;
+/* === 右侧卡片：登录框 === */
+.right-card {
+  width: 380px;
+  height: 520px; /* 关键点：这里设置得比左边高，形成“长一点”的效果 */
+
+  /* 玻璃拟态背景 */
+  background: rgb(255 255 255 / 10%);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  box-shadow: 0 15px 40px rgb(0 0 0 / 20%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 35px;
+  position: relative;
 }
 
+/* 标题样式 */
 .login-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 28px;
   color: #fff;
-  text-align: left;
-  margin-bottom: 25px;
-  font-size: 22px;
+  margin-bottom: 10px;
   font-weight: bold;
-  padding-bottom: 10px;
-  border-bottom: 3px solid var(--primary-green);
-  display: inline-block;
+  letter-spacing: 2px;
 }
 
-/* Ant Design 样式覆盖 */
-.login-form :deep(.ant-input-affix-wrapper),
-.login-form :deep(.ant-input) {
-  background-color: rgb(255 255 255 / 80%) !important;
+.title-line {
+  width: 40px;
+  height: 4px;
+  background-color: #4a5c43; /* 深绿色装饰条 */
+  margin-bottom: 30px;
+  border-radius: 2px;
+}
+
+/* 输入框上方的文字 Label */
+.input-label {
+  color: rgb(255 255 255 / 80%);
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* === 输入框深度定制 (还原图片中的深绿条) === */
+.custom-input {
+  height: 45px;
+
+  /* 图片里那种深墨绿色背景 */
+  background-color: rgb(55 75 50 / 70%) !important;
+  border: 1px solid rgb(255 255 255 / 15%) !important;
   border-radius: 6px;
-  border: none;
+  color: white !important;
+  font-size: 15px;
 }
 
-.login-form :deep(.ant-btn-primary) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-  height: 45px; /* 按钮高一点 */
-  font-size: 16px;
+:deep(.ant-input) {
+  background-color: transparent !important; /* 让 input 继承外层颜色 */
+  color: white !important;
+}
+
+:deep(.ant-input-password-icon) {
+  color: rgb(255 255 255 / 70%) !important;
+}
+
+/* 占位符颜色 */
+:deep(input::placeholder) {
+  color: rgb(255 255 255 / 40%);
+}
+
+/* 聚焦效果 */
+:deep(.ant-input-affix-wrapper-focused),
+:deep(.ant-input:focus) {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 20%) !important;
+  border-color: rgb(255 255 255 / 50%) !important;
+}
+
+/* 复选框 */
+.custom-checkbox {
+  color: rgb(255 255 255 / 70%);
+  font-family: 'Noto Serif SC', serif;
+}
+
+:deep(.ant-checkbox-inner) {
+  background-color: rgb(55 75 50 / 70%);
+  border-color: rgb(255 255 255 / 30%);
+}
+
+/* === 按钮样式 === */
+.submit-btn {
+  height: 48px;
+
+  /* 纯深绿色，不透明，还原图片 */
+  background-color: #3d5238 !important;
+  border: none !important;
+  border-radius: 6px;
+  font-size: 18px;
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 4px;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 30%);
   margin-top: 10px;
 }
 
-.login-form :deep(.ant-btn-primary:hover) {
-  background-color: #5d7454 !important;
+.submit-btn:hover {
+  background-color: #4f6848 !important;
 }
 
-.white-checkbox {
-  color: #eef1ea;
-}
-
-.login-form :deep(.ant-checkbox-wrapper) {
-  color: #eef1ea;
-}
-
-.login-extra {
-  margin-top: 15px;
+/* === 底部链接 === */
+.form-footer {
   text-align: center;
-}
-
-.login-extra a {
-  color: var(--light-green);
+  margin-top: 20px;
   font-size: 14px;
-  text-decoration: underline;
-  opacity: 0.8;
 }
 
-.login-extra a:hover {
-  opacity: 1;
+.link-text {
+  color: rgb(255 255 255 / 60%);
+  text-decoration: none;
+  transition: color 0.3s;
+  font-family: 'Noto Serif SC', serif;
 }
 
-/* 响应式调整：当屏幕较窄时，上下排列 */
-@media (width <= 900px) {
+.link-text:hover {
+  color: #fff;
+}
+
+.divider {
+  margin: 0 10px;
+  color: rgb(255 255 255 / 20%);
+}
+
+/* 响应式：小屏幕变垂直排列 */
+@media (width <= 1000px) {
   .login-content-wrapper {
     flex-direction: column;
+    gap: 20px;
     height: auto;
-    padding: 20px 0;
+    padding: 40px 20px;
   }
 
-  .info-panel {
-    width: 100%;
-    height: 200px; /* 变矮 */
-    display: none; /* 手机端如果不想要图片可以隐藏，或者保留 */
-  }
-
-  .login-panel {
+  .left-card {
     width: 100%;
     max-width: 400px;
+    height: 250px;
+  }
+
+  .right-card {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    padding: 30px 20px;
   }
 }
 </style>
