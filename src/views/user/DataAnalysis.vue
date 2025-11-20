@@ -23,7 +23,7 @@
                   class="avatar-uploader"
                   :show-upload-list="false"
                   :before-upload="beforeUpload"
-                  action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+                  :customRequest="customUpload"
                   @change="handleChange">
                   <img
                     v-if="imageUrl"
@@ -147,6 +147,26 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   }
   return isJpgOrPng && isLt2M
 }
+
+// 不做任何网络请求，直接告诉组件“上传成功了”。
+const customUpload = (options: any) => {
+  const { onSuccess, file, onProgress } = options
+
+  // 模拟上传进度（可选，为了视觉效果）
+  const config = {
+    headers: { 'content-type': 'multipart/form-data' },
+    percent: 0
+  }
+
+  // 既然是本地预览，我们可以直接假装马上成功
+  // 或者用 setTimeout 模拟一点点延迟让用户看到 loading 效果
+  setTimeout(() => {
+    // 调用 onSuccess 告诉组件上传成功了
+    onSuccess('Ok', file)
+    console.log('前端模拟上传成功，未发送网络请求')
+  }, 100)
+}
+
 // 前端UI
 const handleChange = (info: UploadChangeParam) => {
   // 将 info.fileList 赋值给我们的 ref，保持同步

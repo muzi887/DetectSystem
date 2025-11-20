@@ -1,111 +1,54 @@
-<!-- src/views/user/MapVisualization.vue -->
 <template>
-  <div class="app-layout-container">
-    <!-- 顶部 Header -->
-    <header class="header">
-      <div class="logo-area">
-        <img
-          src="@/assets/logo.jpg"
-          alt="Logo"
-          class="logo-img" />
-        <span class="title">AI技术赋能下的作物灾害智慧监测预警系统</span>
-      </div>
-      <div class="search-area">
-        <a-input-search
-          placeholder="输入关键字..."
-          style="width: 250px"
-          enter-button="搜索" />
-      </div>
-    </header>
+  <!-- 使用 AppLayout 包裹内容 -->
+  <AppLayout>
+    <div class="content-wrapper">
+      <!-- 地图容器卡片 -->
+      <a-card
+        class="map-card"
+        :bordered="false">
+        <template #title>
+          <div class="card-title">地图 - 监测点实时分布</div>
+        </template>
+        <div
+          ref="mapRef"
+          class="map-container"></div>
+      </a-card>
 
-    <!-- 导航栏 -->
-    <nav class="nav-bar">
-      <router-link
-        to="/home"
-        class="nav-item">
-        首页
-      </router-link>
-      <router-link
-        to="/related-data"
-        class="nav-item">
-        相关数据
-      </router-link>
-      <router-link
-        to="/map"
-        class="nav-item active">
-        灾害实时监测
-      </router-link>
-      <router-link
-        to="/analysis"
-        class="nav-item">
-        智能分析
-      </router-link>
-      <router-link
-        to="/warnings"
-        class="nav-item">
-        灾害预警
-      </router-link>
-      <router-link
-        to="/decision"
-        class="nav-item">
-        智慧决策
-      </router-link>
-      <router-link
-        to="/about"
-        class="nav-item">
-        关于我们
-      </router-link>
-    </nav>
-
-    <!-- 主体内容 -->
-    <main class="main-content">
-      <div class="content-wrapper">
-        <!-- 地图容器卡片 -->
-        <a-card
-          class="map-card"
-          :bordered="false">
-          <template #title>
-            <div class="card-title">地图 - 监测点实时分布</div>
-          </template>
-          <div
-            ref="mapRef"
-            class="map-container"></div>
-        </a-card>
-
-        <!-- 操作面板卡片 -->
-        <a-card
-          class="actions-card"
-          :bordered="false">
-          <template #title>
-            <div class="card-title">地图操作</div>
-          </template>
-          <a-space>
-            <a-button
-              type="primary"
-              @click="zoomToAll">
-              缩放至全部
-            </a-button>
-            <a-button
-              class="refresh-btn"
-              @click="refreshData">
-              刷新数据
-            </a-button>
-          </a-space>
-        </a-card>
-      </div>
-    </main>
-  </div>
+      <!-- 操作面板卡片 -->
+      <a-card
+        class="actions-card"
+        :bordered="false">
+        <template #title>
+          <div class="card-title">地图操作</div>
+        </template>
+        <a-space>
+          <a-button
+            type="primary"
+            @click="zoomToAll">
+            缩放至全部
+          </a-button>
+          <a-button
+            class="refresh-btn"
+            @click="refreshData">
+            刷新数据
+          </a-button>
+        </a-space>
+      </a-card>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
+// 引入布局组件
+import AppLayout from '@/layouts/AppLayout.vue'
 import * as L from 'leaflet'
 import 'leaflet.markercluster'
-import 'leaflet/dist/leaflet.css' // 引入 Leaflet 默认 CSS
-import 'leaflet.markercluster/dist/MarkerCluster.css' // 聚合插件 CSS
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css' // 聚合插件默认主题
+import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 // --- 响应式引用和状态管理 ---
 const dataStore = useDataStore()
@@ -117,15 +60,13 @@ const markersById = new Map<number, L.Marker>()
 
 // --- 样式与内容生成函数 ---
 
-// 1. 根据 status 返回颜色的函数
 function statusColor(status: string) {
-  if (status === 'normal') return '#52c41a' // 绿色
-  if (status === 'warning') return '#fa8c16' // 橙色
-  if (status === 'critical') return '#cf1322' // 红色
-  return '#1890ff' // 默认蓝色
+  if (status === 'normal') return '#52c41a'
+  if (status === 'warning') return '#fa8c16'
+  if (status === 'critical') return '#cf1322'
+  return '#1890ff'
 }
 
-// 2. 创建自定义的 HTML 图标
 function createDivIcon(point: any) {
   const color = statusColor(point.status)
   const html = `
@@ -136,14 +77,13 @@ function createDivIcon(point: any) {
   `
   return L.divIcon({
     html,
-    className: 'leaflet-custom-icon', // 使用一个不冲突的类名
-    iconSize: [80, 40], // 调整尺寸以适应内容
-    iconAnchor: [40, 20], // 锚点居中
+    className: 'leaflet-custom-icon',
+    iconSize: [80, 40],
+    iconAnchor: [40, 20],
     popupAnchor: [0, -20]
   })
 }
 
-// 3. 为每个 marker 创建弹窗的 HTML 内容 (应用主题样式)
 function buildPopupHtml(point: any) {
   const unhandled = dataStore.alerts.find((a) => a.pointId === point.id && !a.handled)
   const alertInfo = unhandled
@@ -165,7 +105,6 @@ function buildPopupHtml(point: any) {
   `
 }
 
-// 4. 渲染所有 markers
 function renderMarkers() {
   if (!markerCluster || !map) return
   markerCluster.clearLayers()
@@ -192,7 +131,7 @@ function renderMarkers() {
               level: 'medium',
               message: `手动触发：${p.name} 状态异常`
             })
-            marker.setPopupContent(buildPopupHtml(p)) // 原地刷新弹窗
+            marker.setPopupContent(buildPopupHtml(p))
           } catch (err) {
             message.error('触发预警失败')
           } finally {
@@ -211,7 +150,7 @@ function renderMarkers() {
           closeBtn.disabled = true
           try {
             await dataStore.updateAlert(unhandled.id, { handled: true })
-            marker.setPopupContent(buildPopupHtml(p)) // 原地刷新弹窗
+            marker.setPopupContent(buildPopupHtml(p))
           } catch (err) {
             message.error('关闭预警失败')
           } finally {
@@ -227,10 +166,8 @@ function renderMarkers() {
   zoomToAll()
 }
 
-// 5. 地图初始化与控制函数
 async function initMap() {
   if (!mapRef.value) return
-  // 使用深色瓦片图层
   const darkTileLayer = L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     {
@@ -242,11 +179,16 @@ async function initMap() {
   )
 
   map = L.map(mapRef.value, {
-    layers: [darkTileLayer] // 默认加载深色图层
+    layers: [darkTileLayer]
   }).setView([35.05, 139.05], 9)
 
   markerCluster = L.markerClusterGroup()
   markerCluster.addTo(map)
+
+  // 修复 Leaflet 在 Flex 布局中可能出现的渲染大小问题
+  setTimeout(() => {
+    map?.invalidateSize()
+  }, 100)
 }
 
 async function refreshData() {
@@ -292,12 +234,12 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<!-- 全局样式，用于覆盖 Leaflet 默认样式 -->
+<!-- 全局样式：Leaflet 覆盖 -->
 <style>
 /* 自定义 Leaflet 弹窗样式 */
 .leaflet-popup-content-wrapper {
   background: rgb(40 50 38 / 90%) !important;
-  color: var(--light-green) !important;
+  color: #eef1ea !important;
   border: 1px solid rgb(255 255 255 / 20%);
   border-radius: 8px !important;
   box-shadow: 0 4px 30px rgb(0 0 0 / 20%) !important;
@@ -316,7 +258,7 @@ onBeforeUnmount(() => {
 }
 
 .leaflet-popup-close-button {
-  color: var(--light-green) !important;
+  color: #eef1ea !important;
   padding: 8px 8px 0 0 !important;
 }
 
@@ -325,7 +267,7 @@ onBeforeUnmount(() => {
 .marker-cluster-medium,
 .marker-cluster-large {
   background-color: rgb(74 92 67 / 60%) !important;
-  border: 2px solid var(--primary-green);
+  border: 2px solid #677662;
 }
 
 .marker-cluster-small div,
@@ -337,99 +279,11 @@ onBeforeUnmount(() => {
 </style>
 
 <style scoped>
-/* 基础布局和颜色变量 (与其它页面保持一致) */
-.app-layout-container {
-  width: 100vw;
-  min-height: 100vh;
-  background-image: url('@/assets/bg.webp');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  display: flex;
-  flex-direction: column;
-  color: #fff;
-  font-family:
-    'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
-    Arial, sans-serif;
-
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%);
-}
-
-/* Header 和 Nav (与其它页面保持一致) */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 40px;
-  background-color: rgb(103 118 98 / 80%);
-  backdrop-filter: blur(5px);
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-}
-
-.logo-img {
-  height: 40px;
-  margin-right: 15px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.search-area :deep(.ant-input-search-button) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-  color: white !important;
-}
-
-.search-area :deep(.ant-input) {
-  background-color: var(--light-green) !important;
-  color: #333 !important;
-}
-
-.nav-bar {
-  display: flex;
-  justify-content: center;
-  background-color: rgb(135 149 128 / 90%);
-  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
-}
-
-.nav-item {
-  padding: 12px 25px;
-  color: #fff;
-  text-decoration: none;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.nav-item:hover {
-  background-color: rgb(0 0 0 / 10%);
-}
-
-.nav-item.active {
-  background-color: var(--dark-green);
-  font-weight: bold;
-}
-
-/* 主体内容区域 */
-.main-content {
-  flex-grow: 1;
-  padding: 24px;
-  display: flex;
-  justify-content: center;
-}
-
+/* 变量定义 (如果 AppLayout 样式没穿透，这里可能需要，但通常不需要了) */
 .content-wrapper {
+  /* 关键修改：让内容区域填满 AppLayout 留下的空间 */
   width: 100%;
-  max-width: 1400px; /* 地图页面可以更宽 */
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -438,7 +292,7 @@ onBeforeUnmount(() => {
 /* 卡片通用玻璃样式 */
 .map-card,
 .actions-card {
-  background-color: var(--glass-bg);
+  background-color: rgb(255 255 255 / 10%);
   border-radius: 12px;
   border: 1px solid rgb(255 255 255 / 20%);
   backdrop-filter: blur(10px);
@@ -450,7 +304,7 @@ onBeforeUnmount(() => {
 }
 
 .card-title {
-  color: var(--light-green);
+  color: #eef1ea;
   font-size: 18px;
   font-weight: bold;
 }
@@ -460,24 +314,36 @@ onBeforeUnmount(() => {
 }
 
 .map-card {
+  /* 关键修改：使用 flex: 1 占据剩余所有垂直空间 */
   flex: 1;
-  min-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 .map-card :deep(.ant-card-body) {
   padding: 0 !important;
-  height: 100%;
-} /* 让地图充满卡片内容区 */
+  flex: 1; /* 让 body 填满卡片 */
+  position: relative; /* 为地图绝对定位做准备（可选，视leaflet行为而定） */
+  height: 100%; /* 确保高度传递 */
+}
+
 .map-container {
-  height: 100%;
   width: 100%;
-  border-radius: 0 0 12px 12px; /* 底部圆角 */
+  height: 100%; /* 必须设置高度，否则 leaflet 无法渲染 */
+  min-height: 400px; /* 防止极端情况下高度为0 */
+  border-radius: 0 0 12px 12px;
+  z-index: 1; /* 确保地图在最下层 */
 }
 
 /* 操作区按钮样式 */
+.actions-card {
+  flex-shrink: 0; /* 防止操作栏被压缩 */
+}
+
 .actions-card :deep(.ant-btn-primary) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
+  background-color: #4a5c43 !important;
+  border-color: #4a5c43 !important;
 }
 
 .refresh-btn {
@@ -551,7 +417,7 @@ onBeforeUnmount(() => {
 }
 
 .popup-btn.close {
-  background-color: var(--dark-green);
+  background-color: #4a5c43;
 }
 
 .popup-btn:hover {

@@ -2,8 +2,9 @@
 <template>
   <!-- 1. 直接使用布局组件，无需重复编写 Header 和 Nav -->
   <AppLayout>
-    <!-- 主体内容 (首页仪表盘内容) -->
-    <main class="main-content">
+    <!-- 内容区域：不需要再写 main 标签，直接用 div -->
+    <div class="dashboard-container">
+      <!-- 欢迎面板 -->
       <div class="dashboard-panel welcome">
         <h2>欢迎！</h2>
         <p>AI作物灾害智慧监测预警系统为您提供最新、最准确的农情数据和预警信息。</p>
@@ -26,6 +27,7 @@
         </div>
       </div>
 
+      <!-- 核心指标面板 -->
       <div class="dashboard-panel stats">
         <h3>核心指标概览</h3>
         <div class="stat-grid">
@@ -50,6 +52,7 @@
         </div>
       </div>
 
+      <!-- 最新预警面板 -->
       <div class="dashboard-panel recent-alerts">
         <h3>最新预警动态</h3>
         <a-list
@@ -76,21 +79,19 @@
           </template>
         </a-list>
       </div>
-    </main>
+    </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useDataStore, type AlertLevel } from '@/stores/data'
-// 2. 引入 AppLayout 组件
 import AppLayout from '@/layouts/AppLayout.vue'
 
 // 初始化 Pinia store
 const dataStore = useDataStore()
 
-// --- 计算属性，用于动态展示数据 (保持不变) ---
-
+// --- 计算属性，用于动态展示数据---
 // 计算未处理的预警数量
 const unhandledAlertsCount = computed(() => {
   return dataStore.alerts.filter((alert) => !alert.handled).length
@@ -105,8 +106,7 @@ const recentAlerts = computed(() => {
   return dataStore.alerts.slice(0, 3)
 })
 
-// --- 方法 (保持不变) ---
-
+// --- 方法 ---
 // 格式化时间戳
 const formatTime = (t?: number) => {
   if (!t) return '-'
@@ -123,8 +123,7 @@ const getLevelClass = (level: AlertLevel) => {
   return `level-${level}`
 }
 
-// --- 生命周期钩子 (保持不变) ---
-
+// --- 生命周期钩子  ---
 // 组件加载时，从服务器获取最新数据
 onMounted(() => {
   dataStore.fetchAlerts()
@@ -133,31 +132,26 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 3. 移除所有布局（.app-layout-container, .header, .nav-bar, etc.）相关的 CSS */
-
-/* 由于 AppLayout.vue 没有定义 --glass-bg，我们需要在这里定义所有 dashboard 需要的变量 */
-:root {
+/* 定义本地变量，确保颜色正确 (因为父组件 styles 是 scoped 的) */
+.dashboard-container {
   --primary-green: #677662;
   --dark-green: #4a5c43;
   --light-green: #eef1ea;
   --glass-bg: rgb(255 255 255 / 10%);
-}
 
-/* ---------------------------------------------------- */
-
-/* Home 页面（仪表盘）内容样式 */
-
-/* ---------------------------------------------------- */
-.main-content {
-  flex-grow: 1;
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 24px;
-  padding: 0;
-  max-width: 1300px;
+  /* 布局控制 */
   width: 100%;
-  margin: 0 auto; /* 仅用于居中 */
+  max-width: 1300px;
+  margin: 0 auto; /* 水平居中 */
+
+  /* 使用 Grid 布局 */
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* 左边宽，右边窄 */
+  grid-template-rows: auto 1fr; /* 第一行自适应，第二行撑满 */
+  gap: 24px;
+
+  /* 确保高度撑满视口剩余空间，看起来更饱满 */
+  min-height: 100%;
 }
 
 /* 玻璃感面板通用样式 */
@@ -173,23 +167,27 @@ onMounted(() => {
   flex-direction: column;
 }
 
-/* 欢迎面板  */
+/* 欢迎面板 (跨两列) */
 .welcome {
   grid-column: 1 / 3;
-  padding: 30px;
+  padding: 40px;
   text-align: center;
-  background-color: rgb(74 92 67 / 50%);
+  background-color: rgb(74 92 67 / 40%); /* 稍微加深一点背景 */
+  align-items: center;
+  justify-content: center;
 }
 
 .welcome h2 {
   color: var(--light-green);
-  font-size: 28px;
-  margin-bottom: 10px;
+  font-size: 32px;
+  margin-bottom: 15px;
+  font-weight: bold;
 }
 
 .welcome p {
-  margin-bottom: 20px;
-  font-size: 16px;
+  margin-bottom: 30px;
+  font-size: 18px;
+  color: rgb(255 255 255 / 90%);
 }
 
 .quick-links {
@@ -199,20 +197,23 @@ onMounted(() => {
 }
 
 .quick-btn {
-  display: inline-block;
-  padding: 10px 20px;
+  padding: 12px 30px;
   background-color: var(--dark-green);
   color: white;
   border-radius: 8px;
   text-decoration: none;
-  transition: background-color 0.3s;
+  font-size: 16px;
+  transition: all 0.3s;
+  border: 1px solid transparent;
 }
 
 .quick-btn:hover {
   background-color: #5d7454;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
 }
 
-/* 统计面板  */
+/* 统计面板 (左下) */
 .stats {
   grid-column: 1 / 2;
 }
@@ -224,57 +225,68 @@ onMounted(() => {
   margin-bottom: 20px;
   font-size: 18px;
   color: var(--light-green);
+  font-weight: bold;
 }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  margin-top: auto;
-  margin-bottom: auto;
+  flex-grow: 1; /* 让 grid 填满剩余高度 */
+  align-content: center; /* 内容垂直居中 */
 }
 
 .stat-card {
-  padding: 20px;
+  padding: 25px 15px;
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
   background-color: rgb(255 255 255 / 5%);
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  background-color: rgb(255 255 255 / 8%);
 }
 
 .stat-card h4 {
-  color: var(--light-green);
+  color: rgb(255 255 255 / 80%);
   font-size: 14px;
-  margin-bottom: 8px;
-  font-weight: normal;
+  margin-bottom: 10px;
 }
 
 .stat-card .value {
   font-size: 28px;
   font-weight: bold;
+  margin: 0;
+  color: #fff;
 }
 
 .stat-card .alert {
   color: #ff9800;
-} /* 橙色高亮 */
+}
 
-/* 最新预警面板  */
+/* 最新预警面板 (右下) */
 .recent-alerts {
   grid-column: 2 / 3;
+
+  /* 确保列表过长时只在卡片内部滚动，不撑破布局 (可选) */
+  overflow: hidden;
 }
 
 .recent-alerts :deep(.ant-list) {
   color: white;
   flex-grow: 1;
+  overflow-y: auto; /* 允许列表内部滚动 */
 }
 
 .recent-alerts :deep(.ant-list-item) {
-  border-block-end: 1px solid rgb(255 255 255 / 20%) !important;
-  padding-block: 12px;
+  border-block-end: 1px solid rgb(255 255 255 / 15%) !important;
+  padding: 16px 0;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a) {
-  color: white;
+  color: rgb(255 255 255 / 95%);
   font-weight: normal;
   transition: color 0.3s;
   font-size: 14px;
@@ -282,20 +294,18 @@ onMounted(() => {
 
 .recent-alerts :deep(.ant-list-item-meta-title a:hover) {
   color: var(--light-green);
+  text-decoration: underline;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-description) {
-  color: rgb(255 255 255 / 70%);
+  color: rgb(255 255 255 / 60%);
   font-size: 12px;
-}
-
-.recent-alerts :deep(.ant-empty-description) {
-  color: rgb(255 255 255 / 60%) !important;
+  margin-top: 4px;
 }
 
 /* --- 预警级别样式 --- */
 .level-critical {
-  color: #a70000 !important;
+  color: #cf1322 !important;
   font-weight: bold !important;
 }
 
@@ -305,7 +315,7 @@ onMounted(() => {
 }
 
 .level-warning {
-  color: #ffc53d !important;
+  color: #faad14 !important;
 }
 
 .level-medium {
@@ -313,6 +323,6 @@ onMounted(() => {
 }
 
 .level-low {
-  color: #1890ff !important;
+  color: #52c41a !important;
 }
 </style>
