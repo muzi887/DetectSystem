@@ -33,6 +33,13 @@
                   v-for="tech in techStack"
                   :key="tech.name"
                   class="tech-item">
+                  <!-- ==================== TEMPLATE 修改部分 START ==================== -->
+                  <!-- 如果 icon 是 'img', 就渲染 <img> 标签 -->
+                  <img
+                    v-if="tech.icon === 'img'"
+                    :src="tech.src"
+                    alt="tech.name" />
+                  <!-- 否则，就渲染 Ant Design 的组件图标 -->
                   <component
                     :is="tech.icon"
                     class="tech-icon"
@@ -99,7 +106,7 @@
                 联系与支持
               </h2>
               <p>
-                本项目为第X届“挑战杯”大学生创业计划竞赛参赛作品，由 **[你的大学名称]** 提供支持。
+                本项目为第X届“挑战杯”大学生创业计划竞赛参赛作品，由河北地质大学提供支持。
                 <br />
                 如果您对我们的项目感兴趣或有任何建议，欢迎联系我们：
                 <a href="mailto:project-email@your-school.edu">project-email@your-school.edu</a>
@@ -128,6 +135,8 @@ import {
   DatabaseOutlined
 } from '@ant-design/icons-vue'
 
+import vueIcon from '@/assets/icons/vue.svg'
+
 // --- 请在这里填充你的真实信息 ---
 
 // 技术栈数据
@@ -139,9 +148,8 @@ const techStack = ref([
     src: 'https://gw.alipayobjects.com/zos/rmsportal/rlpTLlbMzTNYuZGGCVYM.png',
     color: '#1890ff'
   },
-  { name: 'Python', icon: 'img', src: pythonIcon, color: '#3776ab' },
   { name: 'TensorFlow/PyTorch', icon: RobotOutlined, color: '#ff6f00' },
-  { name: 'Flask/Django', icon: CloudServerOutlined, color: '#ffffff' },
+  { name: 'Flask/Django', icon: CloudServerOutlined, color: '#000000' },
   { name: 'MySQL/PostgreSQL', icon: DatabaseOutlined, color: '#00758f' },
   { name: 'ECharts/D3.js', icon: AreaChartOutlined, color: '#c23531' },
   {

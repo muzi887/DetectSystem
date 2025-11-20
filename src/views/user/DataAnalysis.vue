@@ -101,12 +101,12 @@
 </template>
 
 <script setup lang="ts">
-// --- script 部分与您提供的完全相同，此处省略以保持简洁 ---
 import { ref, reactive } from 'vue'
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import type { UploadChangeParam, UploadProps } from 'ant-design-vue'
+import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { analyzeImage } from '@/api/analysis.ts'
 
 const formState = reactive({
   cropType: 'peach',
@@ -119,17 +119,24 @@ const categories = [
   { key: 'other', name: '其他' }
 ]
 const selectedCategory = ref('disaster')
-const fileList = ref([])
+
+// v-model:file-list 需要绑定一个符合 UploadFile[] 类型的 ref
+const fileList = ref<UploadFile[]>([])
 const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
 const uploadProgress = ref<number>(0)
 const imageUrl = ref<string>('')
+
 function getBase64(img: Blob, callback: (base64Url: string) => void) {
   const reader = new FileReader()
   reader.addEventListener('load', () => callback(reader.result as string))
   reader.readAsDataURL(img)
 }
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
+  // 打印文件类型，这是最好的调试方法！
+  console.log('上传的文件类型是:', file.type)
+
+  // 类型判断
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng) {
     message.error('只能上传 JPG/PNG 格式的图片!')
@@ -140,10 +147,14 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   }
   return isJpgOrPng && isLt2M
 }
+// 前端UI
 const handleChange = (info: UploadChangeParam) => {
+  // 将 info.fileList 赋值给我们的 ref，保持同步
+  fileList.value = info.fileList
+
   if (info.file.status === 'uploading') {
-    loading.value = true
-    uploading.value = true
+    loading.value = true // 这会让上传框里显示一个加载中的图标 (LoadingOutlined)。
+    uploading.value = true // 这会显示一个半透明的遮罩层 (.upload-progress-overlay)。
     uploadProgress.value = 0
     const interval = setInterval(() => {
       uploadProgress.value += Math.floor(Math.random() * 10) + 5
@@ -154,13 +165,15 @@ const handleChange = (info: UploadChangeParam) => {
     }, 200)
     return
   }
+  // 上传“成功”
   if (info.file.status === 'done') {
     uploadProgress.value = 100
     setTimeout(() => {
       uploading.value = false
       loading.value = false
+      // 将用户上传的图片文件转换为 Base64 格式的字符串。
       getBase64(info.file.originFileObj as Blob, (base64Url: string) => {
-        imageUrl.value = base64Url
+        imageUrl.value = base64Url // <img>标签可以直接在浏览器中预览用户上传的图片
       })
     }, 500)
   }
@@ -170,33 +183,62 @@ const handleChange = (info: UploadChangeParam) => {
     message.error('上传失败')
   }
 }
-const handleIdentify = () => {
-  if (!imageUrl.value) {
+
+const handleConfirm = async () => {
+  // 检查图片和文件对象是否存在
+  if (!imageUrl.value || !fileList.value[0]?.originFileObj) {
     message.warning('请先上传一张图片！')
     return
   }
-  message.success(`开始识别...`)
-}
-const handleConfirm = () => {
-  if (!imageUrl.value) {
-    message.warning('请先上传一张图片！')
-    return
+  // 显示加载提示
+  message.loading({ content: '正在智能分析中...', key: 'analyzing' })
+
+  try {
+    // 准备要发送的数据
+    const dataToAnalyze = {
+      file: fileList.value[0].originFileObj, // 获取原始文件对象
+      cropType: formState.cropType,
+      category: selectedCategory.value,
+      additionalInfo: formState.additionalInfo
+    }
+
+    // 调用 API 函数，并等待结果
+    const response = await analyzeImage(dataToAnalyze)
+
+    // 请求成功，处理后端返回的结果
+    message.success({ content: `分析完成：${response.data.result}`, key: 'analyzing', duration: 3 })
+    console.log('分析结果:', response.data)
+
+    // 在这里，你可以把 response.data 的内容展示到页面的其他地方
+    // 例如：const analysisResult = ref(response.data)
+  } catch (error) {
+    // 请求失败，处理错误
+    message.error({ content: '分析失败，请稍后重试。', key: 'analyzing', duration: 3 })
+    console.error('API Error:', error)
   }
-  message.success('已提交分析请求！')
 }
+
+// handleIdentify 可以保留或与 handleConfirm 合并
+const handleIdentify = () => handleConfirm()
+
+// const handleIdentify = () => {
+//   if (!imageUrl.value) {
+//     message.warning('请先上传一张图片！')
+//     return
+//   }
+//   message.success(`开始识别...`)
+// }
 </script>
 
 <style scoped>
-/* 定义与 MapVisualization.vue 相同的颜色变量，确保主题统一 */
 .main-content {
+  /* 主题变量 */
   --primary-green: #677662;
   --dark-green: #4a5c43;
   --light-green: #eef1ea;
   --glass-bg: rgb(255 255 255 / 10%);
-}
 
-/* 4. 复用核心布局样式 */
-.main-content {
+  /* 核心布局样式 */
   flex-grow: 1;
   padding: 24px;
   overflow-y: auto;

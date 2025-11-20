@@ -154,15 +154,13 @@ onMounted(() => {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: auto 1fr;
   gap: 24px;
-
-  /* 4. 调整 padding 和 margin，因为 AppLayout 的 content-slot 已经提供了外层 padding */
   padding: 0;
   max-width: 1300px;
   width: 100%;
   margin: 0 auto; /* 仅用于居中 */
 }
 
-/* 玻璃感面板通用样式 (保留) */
+/* 玻璃感面板通用样式 */
 .dashboard-panel {
   background-color: var(--glass-bg);
   border-radius: 16px;
@@ -175,7 +173,7 @@ onMounted(() => {
   flex-direction: column;
 }
 
-/* 欢迎面板 (保留) */
+/* 欢迎面板  */
 .welcome {
   grid-column: 1 / 3;
   padding: 30px;
@@ -214,7 +212,7 @@ onMounted(() => {
   background-color: #5d7454;
 }
 
-/* 统计面板 (保留) */
+/* 统计面板  */
 .stats {
   grid-column: 1 / 2;
 }
@@ -260,7 +258,7 @@ onMounted(() => {
   color: #ff9800;
 } /* 橙色高亮 */
 
-/* 最新预警面板 (保留) */
+/* 最新预警面板  */
 .recent-alerts {
   grid-column: 2 / 3;
 }
@@ -295,7 +293,7 @@ onMounted(() => {
   color: rgb(255 255 255 / 60%) !important;
 }
 
-/* --- 预警级别样式 (保留) --- */
+/* --- 预警级别样式 --- */
 .level-critical {
   color: #a70000 !important;
   font-weight: bold !important;
@@ -318,5 +316,3 @@ onMounted(() => {
   color: #1890ff !important;
 }
 </style>
-
-Evaluate Compare 9,230 个 token 自动清除
