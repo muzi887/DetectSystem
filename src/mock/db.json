@@ -152,7 +152,7 @@
     },
     {
       "time": 1762949548866,
-      "handled": false,
+      "handled": true,
       "pointId": 7,
       "level": "medium",
       "message": "温度异常升高，超过阈值",
@@ -173,6 +173,22 @@
       "level": "medium",
       "message": "手动触发：监测站E - 森林 状态异常",
       "id": 11
+    },
+    {
+      "time": 1763658723193,
+      "handled": true,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 88.0%)",
+      "id": 12
+    },
+    {
+      "time": 1763714262825,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 96.0%)",
+      "id": 13
     }
   ]
 }

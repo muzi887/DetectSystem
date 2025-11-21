@@ -107,6 +107,11 @@ import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { analyzeImage } from '@/api/analysis.ts'
+import { useDataStore } from '@/stores/data'
+import { useRouter } from 'vue-router' // <--- 可选：如果你想跳转去查看
+
+const store = useDataStore()
+const router = useRouter()
 
 const formState = reactive({
   cropType: 'peach',
@@ -214,7 +219,7 @@ const handleConfirm = async () => {
   message.loading({ content: '正在智能分析中...', key: 'analyzing' })
 
   try {
-    // 准备要发送的数据
+    // 请求 Python 后端进行分析
     const dataToAnalyze = {
       file: fileList.value[0].originFileObj, // 获取原始文件对象
       cropType: formState.cropType,
@@ -224,17 +229,37 @@ const handleConfirm = async () => {
 
     // 调用 API 函数，并等待结果
     const response = await analyzeImage(dataToAnalyze)
+    // ---------------------------------------------------------
+    // 新增代码：处理结果并保存到 json-server
+    // ---------------------------------------------------------
+    const aiResult = response.data.result // 例如 "桃疮痂病"
+    const aiConfidence = response.data.confidence // 例如 0.92
 
-    // 请求成功，处理后端返回的结果
-    message.success({ content: `分析完成：${response.data.result}`, key: 'analyzing', duration: 3 })
-    console.log('分析结果:', response.data)
+    // 2. 决定预警级别 (简单的逻辑：如果不是"健康"，就是"high"级别预警)
+    const isHealthy = aiResult.includes('健康')
+    const alertLevel = isHealthy ? 'low' : 'high'
 
-    // 在这里，你可以把 response.data 的内容展示到页面的其他地方
-    // 例如：const analysisResult = ref(response.data)
+    // 3. 调用 Store 的 createAlert 方法保存数据
+    await store.createAlert({
+      pointId: 1, // 暂时写死，或者你在表单里加一个下拉框选择监测点
+      level: alertLevel,
+      message: `[AI识别] 监测到 ${formState.cropType} - ${aiResult} (置信度: ${(aiConfidence * 100).toFixed(1)}%)`,
+      handled: false
+    })
+    // ---------------------------------------------------------
+
+    message.success({
+      content: `分析完成！结果已自动存入预警列表。`,
+      key: 'analyzing',
+      duration: 3
+    })
+
+    // 可选：清空表单，方便下一次上传
+    // fileList.value = []
+    // imageUrl.value = ''
   } catch (error) {
-    // 请求失败，处理错误
-    message.error({ content: '分析失败，请稍后重试。', key: 'analyzing', duration: 3 })
-    console.error('API Error:', error)
+    message.error({ content: '分析或保存失败，请重试。', key: 'analyzing', duration: 3 })
+    console.error('Error:', error)
   }
 }
 

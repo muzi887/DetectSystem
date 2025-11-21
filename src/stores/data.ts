@@ -31,7 +31,38 @@ export const useDataStore = defineStore('data', () => {
     loadingPoints.value = true
     try {
       const res = await http.get('/monitorPoints')
-      monitorPoints.value = res.data || []
+      const rawData = res.data || []
+
+      monitorPoints.value = rawData
+        // 1. 数据清洗：过滤掉 ID 无效或状态缺失的数据
+        .filter((item: any) => item.id && item.status)
+        .map((item: any) => {
+          // 2. 格式转换：确保温度和湿度是数字类型，保留1位小数
+          let fixedTemp = parseFloat(item.temp)
+          const fixedMoisture = parseFloat(item.soilMoisture)
+
+          // 3. 数据清洗（异常值处理）：如果温度异常（如-999），重置为0或标记异常
+          if (fixedTemp < -50 || fixedTemp > 100) {
+            fixedTemp = 0 // 或者设置为 null
+            item.status = 'warning' // 自动标记为警告
+          }
+
+          // 4. 坐标校准：模拟纠偏（假设原始数据是WGS84，这里加一点偏移量模拟校准）
+          // 在实际项目中，这里会是复杂的 proj4 转换算法
+          const calibratedLat = item.lat + 0.00001
+          const calibratedLng = item.lng + 0.00001
+
+          // 返回“清洗、转换、校准”后的新对象
+          return {
+            ...item,
+            temp: fixedTemp.toFixed(1), // 格式化
+            soilMoisture: fixedMoisture.toFixed(1),
+            lat: calibratedLat,
+            lng: calibratedLng,
+            // 5. 数据融合：如果有其他数据源（比如天气），可以在这里 merge 进去
+            processedTime: new Date().toLocaleString() // 增加处理时间戳
+          }
+        })
     } catch (e) {
       console.error('fetchMonitorPoints error', e)
       throw e

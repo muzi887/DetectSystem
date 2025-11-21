@@ -58,11 +58,21 @@ export default defineConfig(({ command, mode }) => {
       }
     },
     server: {
+      port: 5173,
       proxy: {
+        // 1. 先匹配最长、最具体的路径：智能分析接口 -> 转发给 Flask
+        '/api/analysis': {
+          target: 'http://127.0.0.1:5000',
+          changeOrigin: true
+          // 只要你的 Flask 路由是 @app.route('/api/analysis/image')，这里就不需要 rewrite
+        },
+
+        // 2. 再匹配剩下的通用路径：其他数据接口 -> 转发给 json-server
         '/api': {
-          target: 'http://localhost:3000', // mock 服务器地址
-          changeOrigin: true, // 改变请求头中的 Origin
-          rewrite: (path) => path.replace(/^\/api/, '') // 去掉 /api 前缀
+          target: 'http://localhost:3000', // 假设你的 json-server 在 3000
+          changeOrigin: true,
+          // 【重要】json-server 通常没有 /api 前缀，需要把它去掉
+          rewrite: (path) => path.replace(/^\/api/, '')
         }
       }
     }

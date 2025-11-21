@@ -1,5 +1,4 @@
 // src / api / analysis.ts
-
 import http from '@/utils/http'
 
 // 定义分析请求需要携带的数据类型
@@ -30,12 +29,6 @@ export const analyzeImage = (data: AnalysisData) => {
   // 3. 发起 POST 请求
   // 注意：URL是 '/analysis/image'，它会自动与 http.ts 中的 baseURL: '/api' 拼接
   // 最终请求的地址是 /api/analysis/image
-  return http.post('/analysis/image', formData, {
-    // 必须设置正确的 Content-Type，浏览器通常会自动处理 FormData
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-    // 对于大图片分析，可能需要更长的超时时间
-    // timeout: 30000, // 例如，覆盖默认的5秒，设置为30秒
-  })
+  // 让 axios 自动处理 Header
+  return http.post('/analysis/image', formData)
 }

@@ -74,6 +74,6 @@ server.use(router)
 //路由器启动
 const PORT = Number(process.env.MOCK_PORT || 3000) //从环境变量读取端口号，如果没有设置则使用 3000
 //启动服务器监听指定端口
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`JSON Server is running on http://localhost:${PORT}`)
 })
