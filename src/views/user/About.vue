@@ -3,41 +3,51 @@
   <AppLayout>
     <main class="main-content">
       <div class="content-wrapper">
-        <a-card :bordered="false">
+        <a-card
+          :bordered="false"
+          class="main-card">
           <template #title>
-            <div class="card-title">关于我们</div>
+            <div class="card-header">
+              <span class="header-title">关于我们</span>
+              <span class="header-subtitle">青禾智匠 · 坤灵智巡</span>
+            </div>
           </template>
 
           <div class="about-us-content">
             <!-- 1. 项目愿景 -->
             <section class="about-section">
-              <h2 class="section-title">
-                <AimOutlined />
-                我们的愿景：青禾智匠
-              </h2>
-              <div class="vision-highlight">
-                <h3>“AI守麦田，数据护粮仓 —— 坤灵智巡，让灾害预警'跑'在成灾前”</h3>
+              <div class="vision-banner">
+                <h2 class="vision-slogan">AI守麦田，数据护粮仓</h2>
+                <p class="vision-sub">—— 坤灵智巡，让灾害预警“跑”在成灾前</p>
               </div>
-              <p>
-                我们是来自河北地质大学的
-                <strong>坤灵智巡创工队</strong>
-                。本项目“青禾智匠”是一款人工智能技术赋能下的作物灾害智慧监测预警系统。
-              </p>
-              <div class="vision-details">
-                <ul>
-                  <li>
-                    <strong>技术维度：</strong>
-                    从卫星遥感到田间传感器，构建毫米级灾害监测网，实现AI智能监测、大数据分析与实时预警。
-                  </li>
-                  <li>
-                    <strong>社会价值：</strong>
-                    旨在每年减少20%农作物损失，守护8亿亩耕地安全，保障粮食安全，助力农业可持续发展。
-                  </li>
-                  <li>
-                    <strong>团队宣言：</strong>
-                    一人的算法守护亿万人的饭碗。科技赋能农业，守护每一寸麦田，创新驱动未来。
-                  </li>
-                </ul>
+
+              <div class="intro-text">
+                <p>
+                  我们是来自河北地质大学的
+                  <strong>坤灵智巡创工队</strong>
+                  。面对全球气候变化挑战，我们打造了
+                  <strong>“青禾智匠”</strong>
+                  —— 人工智能技术赋能下的作物灾害智慧监测预警系统。
+                </p>
+              </div>
+
+              <!-- 三大维度卡片 -->
+              <div class="vision-grid">
+                <div class="vision-item">
+                  <div class="vision-icon tech"><RocketOutlined /></div>
+                  <h3>技术维度</h3>
+                  <p>从卫星遥感到田间传感器，构建毫米级灾害监测网。</p>
+                </div>
+                <div class="vision-item">
+                  <div class="vision-icon social"><HeartOutlined /></div>
+                  <h3>社会价值</h3>
+                  <p>每年减少20%农作物损失，守护8亿亩耕地安全。</p>
+                </div>
+                <div class="vision-item">
+                  <div class="vision-icon team"><BulbOutlined /></div>
+                  <h3>团队宣言</h3>
+                  <p>一人的算法守护亿万人的饭碗，创新驱动未来。</p>
+                </div>
               </div>
             </section>
 
@@ -46,14 +56,14 @@
             <!-- 2. 技术栈 -->
             <section class="about-section">
               <h2 class="section-title">
-                <CodeOutlined />
+                <CodeOutlined class="icon-prefix" />
                 技术栈
               </h2>
-              <div class="tech-stack-grid">
+              <div class="tech-stack-wrapper">
                 <div
                   v-for="tech in techStack"
                   :key="tech.name"
-                  class="tech-item">
+                  class="tech-pill">
                   <img
                     v-if="tech.icon === 'img'"
                     :src="tech.src"
@@ -61,7 +71,7 @@
                   <component
                     :is="tech.icon"
                     v-else
-                    class="tech-icon"
+                    class="tech-icon-svg"
                     :style="{ color: tech.color }" />
                   <span>{{ tech.name }}</span>
                 </div>
@@ -73,30 +83,39 @@
             <!-- 3. 团队成员 -->
             <section class="about-section">
               <h2 class="section-title">
-                <TeamOutlined />
-                坤灵智巡 · 核心团队
+                <TeamOutlined class="icon-prefix" />
+                核心团队
               </h2>
-              <p class="team-intro">
-                学科交融，优势互补。我们是一支集计算机、地信、测绘、土管、会计等多学科背景的复合型创新团队。
-              </p>
+              <div class="team-intro-box">
+                学科交融，优势互补。我们是一支集
+                <strong>计算机、地信、测绘、土管、会计</strong>
+                等多学科背景的复合型创新团队。
+              </div>
+
               <div class="team-grid">
                 <div
                   v-for="member in teamMembers"
                   :key="member.name"
-                  class="team-member-card">
-                  <a-avatar
-                    :size="80"
-                    :src="member.avatar"
-                    class="team-avatar"
-                    :style="{ backgroundColor: getAvatarColor(member.name) }">
-                    {{ member.name.charAt(0) }}
-                  </a-avatar>
-                  <h4 class="member-name">{{ member.name }}</h4>
-                  <div class="member-tags">
-                    <span class="role-tag">{{ member.role }}</span>
+                  class="team-card">
+                  <div class="card-top">
+                    <a-avatar
+                      :size="72"
+                      :src="member.avatar"
+                      class="member-avatar">
+                      {{ member.name.charAt(0) }}
+                    </a-avatar>
+                    <div class="member-header">
+                      <h4 class="name">{{ member.name }}</h4>
+                      <span class="role-badge">{{ member.role }}</span>
+                    </div>
                   </div>
-                  <p class="member-major">{{ member.major }}</p>
-                  <p class="member-desc">{{ member.desc }}</p>
+                  <div class="card-body">
+                    <div class="major-info">
+                      <BookOutlined />
+                      {{ member.major }}
+                    </div>
+                    <p class="desc-text">{{ member.desc }}</p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -106,41 +125,53 @@
             <!-- 4. 指导老师 (保持不变) -->
             <section class="about-section">
               <h2 class="section-title">
-                <TrophyOutlined />
+                <TrophyOutlined class="icon-prefix" />
                 指导老师
               </h2>
-              <div class="team-grid advisor-grid">
-                <div class="team-member-card">
-                  <a-avatar
-                    :size="80"
-                    class="team-avatar">
-                    师
-                  </a-avatar>
-                  <h4 class="member-name">刘兴冉</h4>
-                  <p class="member-role">[老师职称], [研究方向]</p>
-                  <p class="member-quote">“寄语：脚踏实地，仰望星空。”</p>
+              <div class="advisor-wrapper">
+                <div class="team-card advisor-card">
+                  <div class="card-top">
+                    <a-avatar
+                      :size="72"
+                      class="member-avatar advisor-avatar">
+                      师
+                    </a-avatar>
+                    <div class="member-header">
+                      <h4 class="name">刘兴冉</h4>
+                      <span class="role-badge advisor-badge">指导教师</span>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="major-info">[老师职称] · [研究方向]</div>
+                    <p class="desc-text center-text">“寄语：脚踏实地，仰望星空。”</p>
+                  </div>
                 </div>
               </div>
             </section>
 
             <a-divider class="section-divider" />
 
-            <!-- 5. 联系与支持 -->
-            <section class="about-section">
+            <!-- 5. 联系我们 -->
+            <section class="about-section footer-section">
               <h2 class="section-title">
-                <MailOutlined />
+                <MailOutlined class="icon-prefix" />
                 联系与支持
               </h2>
-              <p>
-                本项目为
-                <strong>2025-2026年“挑战杯”大学生创业计划竞赛</strong>
-                参赛作品。
-                <br />
-                参赛学校：河北地质大学 | 团队名称：坤灵智巡创工队
-                <br />
-                如果您对我们的项目感兴趣，欢迎联系：
-                <a href="mailto:kunling-smart@hgu.edu.cn">kunling-smart@hgu.edu.cn</a>
-              </p>
+              <div class="footer-content">
+                <p>
+                  本项目为
+                  <strong>2025-2026年“挑战杯”大学生创业计划竞赛</strong>
+                  参赛作品
+                </p>
+                <p>参赛学校：河北地质大学 | 团队：坤灵智巡创工队</p>
+                <a-button
+                  type="primary"
+                  ghost
+                  href="mailto:kunling-smart@hgu.edu.cn">
+                  <template #icon><MailOutlined /></template>
+                  联系我们
+                </a-button>
+              </div>
             </section>
           </div>
         </a-card>
@@ -158,138 +189,151 @@ import {
   TeamOutlined,
   TrophyOutlined,
   MailOutlined,
+  RocketOutlined,
+  HeartOutlined,
+  BulbOutlined,
+  BookOutlined,
   CloudServerOutlined,
   RobotOutlined,
   AreaChartOutlined,
   DatabaseOutlined
 } from '@ant-design/icons-vue'
+import vueIcon from '@/assets/icons/vue.svg' // 确保你有这个路径，或者换成网络图
 
-import vueIcon from '@/assets/icons/vue.svg'
-
-// 为了让头像更有趣，随机分配背景色的辅助函数
-const getAvatarColor = (name: string) => {
-  const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#1890ff', '#52c41a']
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return colors[Math.abs(hash) % colors.length]
-}
-
-// 技术栈数据 (保持不变或微调)
+// 技术栈数据
 const techStack = ref([
   { name: 'Vue 3', icon: 'img', src: vueIcon, color: '#42b883' },
   {
-    name: 'Ant Design Vue',
+    name: 'Ant Design',
     icon: 'img',
     src: 'https://gw.alipayobjects.com/zos/rmsportal/rlpTLlbMzTNYuZGGCVYM.png',
     color: '#1890ff'
   },
   { name: 'AI深度学习', icon: RobotOutlined, color: '#ff6f00' },
-  { name: '物联网/传感器', icon: CloudServerOutlined, color: '#000000' },
-  { name: '大数据分析', icon: DatabaseOutlined, color: '#00758f' },
-  { name: '数据可视化', icon: AreaChartOutlined, color: '#c23531' },
+  { name: '物联网IoT', icon: CloudServerOutlined, color: '#000000' },
+  { name: '大数据', icon: DatabaseOutlined, color: '#00758f' },
+  { name: 'ECharts', icon: AreaChartOutlined, color: '#c23531' },
   {
-    name: 'GIS/遥感技术',
+    name: 'GIS遥感',
     icon: 'img',
     src: 'https://leafletjs.com/docs/images/logo.png',
     color: '#8cc427'
   }
 ])
 
-// 团队成员数据 - 根据图片及您的要求更新
-// 注意：请手动替换 avatar 字段为您团队成员的真实照片 URL
+// 团队成员数据
 const teamMembers = ref([
   {
     name: '王佳欢',
     role: '项目负责人',
-    major: '荣誉资质',
+    major: '荣誉资质', // PPT中此处为荣誉
     desc: '国家奖学金、国家励志奖学金获得者。多次获得国家级、省级荣誉，具有丰富的主持创新创业类赛事经验。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
-    // --- 您的位置 ---
-    name: '您（请替换姓名）',
-    role: '核心架构 / 技术攻坚',
+    // --- 您的位置：为您设计了符合计算机专业的“技术大拿”人设 ---
+    name: '我', // 请替换为您的真实姓名
+    role: '核心架构师',
     major: '计算机科学与技术专业',
-    desc: '负责系统底层架构设计与AI核心算法攻坚。以计算机科学之力驱动农业智能化转型，用代码编织智慧丰收的未来。',
+    desc: '负责系统底层架构设计与核心算法攻坚。以扎实的计算机科学理论，融合AI与物联网技术，构建高可用、高并发的智慧农业云平台。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '王子雪',
     role: '技术总监',
     major: '地理信息科学专业',
-    desc: '擅长系统开发，具有丰富的数据处理与应用能力。负责GIS空间分析与后端系统集成。',
+    desc: '擅长系统开发，具有丰富的数据处理、应用能力。精通GIS空间分析与地图可视化展示。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '刘金莎',
     role: '技术总监',
     major: '地理信息科学专业',
-    desc: '擅长系统开发测试与制定营销战略。保障平台稳定性，优化用户交互体验。',
+    desc: '擅长系统开发测试，制定营销战略。严谨把控软件质量，确保监测预警系统的精准运行。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '周艺恬',
     role: '技术总监',
     major: '测绘工程专业',
-    desc: '具有较强专业技术能力，擅长软件开发与编程。专注测绘数据与数字孪生技术的融合。',
+    desc: '具有较强专业技术能力，擅长软件开发、编程。专注于测绘数据与数字孪生技术的深度融合。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '柴雨润',
     role: '行政总监',
     major: '土地资源管理专业',
-    desc: '制定与执行公司行政战略，具有丰富的实践调研经验，统筹团队日常运营。',
+    desc: '制定与执行公司行政战略，具有丰富的实践调研经验，统筹团队建设与日常高效运营。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '鲍辰怡',
     role: '运营总监',
     major: '地理信息科学专业',
-    desc: '负责渠道推广、活动策划与内容生产。致力于运营本公司品牌价值，提升市场影响力。',
+    desc: '负责渠道推广、活动策划、内容生产。致力于运营本公司品牌价值，讲好“科技助农”故事。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '杨紫蓉',
     role: '市场总监',
     major: '土地资源管理专业',
-    desc: '具有丰富实践调研经验，负责系统的市场调研与拓展，精准定位用户需求。',
+    desc: '具有丰富实践调研经验，负责系统的市场调研与分析，精准定位痛点，拓展商业渠道。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '王婧蕾',
     role: '财务总监',
     major: '会计学专业',
-    desc: '分析经营活动情况，负责日常财务核算与资金动态分析，保障项目资金健康流转。',
+    desc: '分析经营活动情况，负责日常财务核算与分析资金动态，为项目可持续发展提供财务保障。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   }
 ])
 </script>
 
 <style scoped>
-/* 
-   保持原有的 style，这里添加一些针对新结构的微调 
-   你可以将这些 CSS 替换或合并到你现有的 <style> 标签中
-*/
+/* 全局布局与背景 */
 .main-content {
   padding: 24px;
-  background: #f0f2f5;
+  background: #f0f2f5; /* 浅灰底色衬托卡片 */
   min-height: calc(100vh - 64px);
 }
 
 .content-wrapper {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
-.card-title {
-  font-size: 24px;
-  font-weight: bold;
-  text-align: center;
-  color: #1890ff;
+.main-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
 }
 
+/* 标题区域 */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: 2px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #137333; /* 青禾绿 */
+  background: #e6f4ea;
+  padding: 2px 12px;
+  border-radius: 20px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* 通用 Section 标题 */
 .section-title {
   font-size: 20px;
   font-weight: 600;
@@ -297,137 +341,289 @@ const teamMembers = ref([
   margin-bottom: 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  position: relative;
+  padding-left: 12px;
 }
 
-.vision-highlight {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: #e6f7ff;
-  border-left: 4px solid #1890ff;
-  border-radius: 4px;
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(to bottom, #1890ff, #137333); /* 蓝绿渐变条 */
+  border-radius: 2px;
 }
 
-.vision-highlight h3 {
-  margin: 0;
-  color: #1890ff;
-  font-weight: bold;
-  font-size: 18px;
-}
-
-.vision-details ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.vision-details li {
-  margin-bottom: 10px;
-  font-size: 15px;
+.icon-prefix {
+  margin-right: 10px;
   color: #555;
-  line-height: 1.6;
 }
 
-.team-intro {
+/* 1. 愿景部分 */
+.vision-banner {
   text-align: center;
-  margin-bottom: 30px;
+  background: linear-gradient(135deg, #e6f7ff 0%, #e6f4ea 100%);
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.vision-slogan {
+  margin: 0;
+  font-size: 26px;
+  font-weight: bold;
+  color: #137333; /* 农业绿 */
+  text-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}
+
+.vision-sub {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #1890ff; /* 科技蓝 */
+  font-weight: 500;
+}
+
+.intro-text {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 30px;
+  color: #555;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.vision-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.vision-item {
+  text-align: center;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.vision-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
+  border-color: #b7eb8f;
+}
+
+.vision-icon {
+  font-size: 32px;
+  margin-bottom: 15px;
+}
+
+.vision-icon.tech {
+  color: #1890ff;
+}
+
+.vision-icon.social {
+  color: #fa8c16;
+}
+
+.vision-icon.team {
+  color: #52c41a;
+}
+
+.vision-item h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.vision-item p {
+  font-size: 13px;
   color: #666;
-  font-style: italic;
+  line-height: 1.5;
+}
+
+/* 2. 技术栈 Pill 风格 */
+.tech-stack-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.tech-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 50px; /* 圆角胶囊状 */
+  transition: all 0.3s;
+  cursor: default;
+}
+
+.tech-pill:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgb(24 144 255 / 15%);
+}
+
+.tech-pill img,
+.tech-icon-svg {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  object-fit: contain;
+}
+
+.tech-pill span {
+  font-weight: 500;
+  color: #333;
+}
+
+/* 3. 团队卡片 (重点优化) */
+.team-intro-box {
+  background: #f9f9f9;
+  padding: 12px;
+  text-align: center;
+  border-radius: 6px;
+  color: #666;
+  margin-bottom: 24px;
+  border-left: 4px solid #d9d9d9;
 }
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 响应式网格 */
   gap: 24px;
 }
 
-.team-member-card {
-  text-align: center;
-  padding: 24px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  transition: all 0.3s;
+.team-card {
   background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.team-member-card:hover {
-  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
-  transform: translateY(-5px);
+.team-card:hover {
+  box-shadow: 0 8px 24px rgb(0 0 0 / 8%);
+  border-color: #e6f7ff;
+  transform: translateY(-4px);
 }
 
-.team-avatar {
-  margin-bottom: 16px;
-  font-size: 32px;
+.card-top {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(to right, #fff, #fafafa);
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.member-name {
+.member-avatar {
+  background-color: #1890ff; /* 默认头像背景 */
+  flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+
+.member-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.member-header .name {
   font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 8px;
+  font-weight: 700;
+  margin: 0 0 6px;
   color: #333;
 }
 
-.member-tags {
-  margin-bottom: 8px;
-}
-
-.role-tag {
-  display: inline-block;
-  padding: 2px 10px;
-  background-color: #e6f7ff;
+.role-badge {
+  background: #e6f7ff;
   color: #1890ff;
-  border-radius: 12px;
   font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-weight: 600;
 }
 
-.member-major {
+.card-body {
+  padding: 15px 20px;
+  flex: 1; /* 让描述部分填满高度 */
+}
+
+.major-info {
   font-size: 13px;
   color: #888;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-weight: 500;
-}
-
-.member-desc {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.5;
-  text-align: left; /* 描述文字左对齐更易阅读 */
-  background: #fafafa;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.member-quote {
-  font-style: italic;
-  color: #888;
-  margin-top: 10px;
-}
-
-.tech-stack-grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-.tech-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 100px;
+  gap: 6px;
 }
 
-.tech-icon,
-.tech-item img {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
-  margin-bottom: 8px;
-  object-fit: contain;
+.desc-text {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  text-align: justify; /* 两端对齐 */
+  margin: 0;
 }
 
-.advisor-grid {
+/* 4. 指导老师特别样式 */
+.advisor-wrapper {
+  display: flex;
   justify-content: center;
+}
+
+.advisor-card {
+  width: 100%;
+  max-width: 350px;
+}
+
+.advisor-avatar {
+  background-color: #faad14;
+}
+
+.advisor-badge {
+  background: #fff7e6;
+  color: #faad14;
+}
+
+.center-text {
+  text-align: center;
+  font-style: italic;
+}
+
+/* 5. 底部联系 */
+.footer-section {
+  text-align: center;
+}
+
+.footer-content {
+  background: #f5f5f5;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.footer-content p {
+  margin-bottom: 10px;
+  color: #666;
+}
+
+/* 响应式微调 */
+@media (width <= 768px) {
+  .vision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
