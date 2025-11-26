@@ -58,6 +58,7 @@ export default defineConfig(({ command, mode }) => {
       }
     },
     server: {
+      allowedHosts: true,
       port: 5173,
       proxy: {
         // 1. 先匹配最长、最具体的路径：智能分析接口 -> 转发给 Flask

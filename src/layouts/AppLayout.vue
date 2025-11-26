@@ -67,7 +67,7 @@
       </div>
     </header>
 
-    <!-- 导航栏 (保持不变) -->
+    <!-- 导航栏 -->
     <nav class="nav-bar">
       <router-link
         to="/home"
