@@ -276,6 +276,74 @@ onBeforeUnmount(() => {
   background-color: rgb(42 60 35 / 80%) !important;
   color: white !important;
 }
+
+/* 弹窗内容与按钮样式（须在全局，因 Leaflet 动态注入的 HTML 不受 scoped 影响） */
+.leaflet-popup-content-themed .popup-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: white;
+  border-bottom: 1px solid rgb(255 255 255 / 20%);
+  padding-bottom: 8px;
+}
+
+.leaflet-popup-content-themed .popup-info {
+  margin-bottom: 4px;
+}
+
+.leaflet-popup-content-themed .popup-alert-info {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  background: rgb(207 19 34 / 30%);
+  color: #ffc2c2;
+  font-size: 13px;
+}
+
+.leaflet-popup-content-themed .popup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.leaflet-popup-content-themed .popup-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff !important;
+  border: 1px solid rgb(255 255 255 / 40%);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  -webkit-font-smoothing: antialiased;
+  white-space: nowrap;
+}
+
+/* 手动触发：橙色更醒目 */
+.leaflet-popup-content-themed .popup-btn.trigger {
+  background: linear-gradient(180deg, #f0a050 0%, #d67220 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* 标记解决：使用蓝绿色与弹窗背景区分 */
+.leaflet-popup-content-themed .popup-btn.close {
+  background: linear-gradient(180deg, #4a9fd4 0%, #2d7ab0 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.leaflet-popup-content-themed .popup-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.leaflet-popup-content-themed .popup-btn:disabled {
+  background: #555 !important;
+  border-color: #666;
+  cursor: not-allowed;
+  transform: none;
+}
 </style>
 
 <style scoped>
@@ -375,57 +443,4 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.leaflet-popup-content-themed .popup-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: white;
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-  padding-bottom: 8px;
-}
-
-.leaflet-popup-content-themed .popup-info {
-  margin-bottom: 4px;
-}
-
-.leaflet-popup-content-themed .popup-alert-info {
-  margin-top: 10px;
-  padding: 8px;
-  border-radius: 4px;
-  background: rgb(207 19 34 / 30%);
-  color: #ffc2c2;
-  font-size: 13px;
-}
-
-.leaflet-popup-content-themed .popup-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.popup-btn {
-  padding: 6px 10px;
-  border-radius: 4px;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.popup-btn.trigger {
-  background-color: #c4600c;
-}
-
-.popup-btn.close {
-  background-color: #4a5c43;
-}
-
-.popup-btn:hover {
-  opacity: 0.8;
-}
-
-.popup-btn:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-}
 </style>

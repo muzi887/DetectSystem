@@ -17,12 +17,59 @@
 
       <!-- 中间/右侧功能区 -->
       <div class="header-right">
-        <!-- 2. 搜索框 -->
-        <div class="search-area">
-          <a-input-search
-            placeholder="全局搜索..."
-            style="width: 200px"
-            class="custom-search" />
+        <!-- 2. 搜索框 + 全局搜索下拉 -->
+        <div class="search-area" ref="searchAreaRef">
+          <div class="search-input-wrap">
+            <input
+              ref="searchInputRef"
+              v-model="searchKeyword"
+              type="text"
+              class="search-input"
+              placeholder="全局搜索..."
+              @input="onSearchInput(($event.target as HTMLInputElement)?.value ?? '')"
+              @keydown.enter="onSearch(searchKeyword)" />
+            <button
+              type="button"
+              class="search-btn"
+              @click="onSearch(searchKeyword)"
+              aria-label="搜索">
+              <SearchOutlined />
+            </button>
+          </div>
+          <Teleport to="body">
+            <div
+              ref="searchDropdownRef"
+              v-show="searchVisible && searchKeyword.trim()"
+              class="global-search-dropdown"
+              :style="searchDropdownStyle"
+              @click.stop>
+              <div v-if="searchLoading" class="search-dropdown-loading">
+                <a-spin size="small" /> 搜索中...
+              </div>
+              <template v-else>
+                <div
+                  v-if="searchResults.length === 0"
+                  class="search-dropdown-empty">
+                  未找到与「{{ searchKeyword }}」相关的内容
+                </div>
+                <div v-else class="search-dropdown-list">
+                  <div
+                    v-for="r in searchResults"
+                    :key="r.id"
+                    class="search-dropdown-item"
+                    @click="selectSearchResult(r)">
+                    <span class="search-item-type" :class="r.type">
+                      {{ r.type === 'menu' ? '页面' : r.type === 'monitor' ? '监测点' : '预警' }}
+                    </span>
+                    <div class="search-item-content">
+                      <span class="search-item-title">{{ r.title }}</span>
+                      <span v-if="r.subtitle" class="search-item-subtitle">{{ r.subtitle }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </Teleport>
         </div>
 
         <!-- 3. 用户个人中心 -->
@@ -114,13 +161,88 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { message, Modal } from 'ant-design-vue'
-import { UserOutlined, DownOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, DownOutlined, LogoutOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { useGlobalSearch } from '@/composables/useGlobalSearch'
 
 const router = useRouter()
 const userStore = useUserStore()
+const searchAreaRef = ref<HTMLElement | null>(null)
+const searchDropdownRef = ref<HTMLElement | null>(null)
+
+const {
+  keyword: searchKeyword,
+  visible: searchVisible,
+  results: searchResults,
+  search,
+  selectResult: selectSearchResult,
+  close: closeSearch,
+  ensureData
+} = useGlobalSearch()
+
+const searchLoading = ref(false)
+const searchDropdownStyle = ref<Record<string, string>>({})
+
+async function onSearchInput(value: string) {
+  search(value)
+  if (value.trim()) {
+    searchLoading.value = true
+    await ensureData()
+    searchLoading.value = false
+  }
+}
+
+function onSearch(value: string) {
+  search(value)
+}
+
+function updateDropdownPosition() {
+  if (searchAreaRef.value) {
+    const rect = searchAreaRef.value.getBoundingClientRect()
+    searchDropdownStyle.value = {
+      position: 'fixed',
+      top: `${rect.bottom + 4}px`,
+      left: `${rect.left}px`,
+      width: `${Math.max(rect.width, 320)}px`,
+      zIndex: '1050'
+    }
+  }
+}
+
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as Node
+  const inSearch = searchAreaRef.value?.contains(target)
+  const inDropdown = searchDropdownRef.value?.contains(target)
+  if (!inSearch && !inDropdown) {
+    closeSearch()
+  }
+}
+
+watch([searchVisible, searchKeyword], () => {
+  if (searchVisible && searchKeyword.value.trim()) {
+    nextTick(updateDropdownPosition)
+  }
+})
+
+// 仅在搜索下拉展开时监听点击外部，避免在未展开时拦截输入框的点击/焦点
+watch(
+  searchVisible,
+  (visible) => {
+    if (visible) {
+      nextTick(() => document.addEventListener('click', handleClickOutside))
+    } else {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // 点击 Logo 回到首页
 const goHome = () => {
@@ -180,12 +302,14 @@ const handleLogout = () => {
   flex-direction: column;
 }
 
-/* Header 样式 */
+/* Header 样式：高 z-index 确保始终浮在页面内容之上，防止被覆盖 */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 40px;
+  position: relative;
+  z-index: 100;
 
   /* 背景稍微深一点，增加质感 */
   background-color: rgb(50 70 50 / 85%);
@@ -200,6 +324,9 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  flex-shrink: 1;
 }
 
 .logo-img {
@@ -217,34 +344,61 @@ const handleLogout = () => {
   text-shadow: 0 2px 4px rgb(0 0 0 / 50%);
 }
 
-/* Header 右侧区域 */
+/* Header 右侧区域：确保不被 logo 覆盖，始终可点击 */
 .header-right {
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
-/* 4. 搜索框深度美化：变成半透明深绿风格 */
-.header-right :deep(.ant-input-wrapper) {
+.search-area {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* 原生搜索框样式（替代 Ant Design 避免点击/输入被拦截） */
+.search-input-wrap {
+  display: inline-flex;
+  width: 260px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 10%);
+  border: 1px solid rgb(255 255 255 / 30%);
+}
+
+.search-input {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #fff;
   background: transparent;
+  border: none;
+  outline: none;
 }
 
-.header-right :deep(.ant-input) {
-  background-color: rgb(255 255 255 / 10%) !important; /* 半透明背景 */
-  border: 1px solid rgb(255 255 255 / 30%) !important;
-  color: white !important;
-  border-radius: 4px 0 0 4px;
-}
-
-.header-right :deep(.ant-input::placeholder) {
+.search-input::placeholder {
   color: rgb(255 255 255 / 60%);
 }
 
-.header-right :deep(.ant-input-search-button) {
-  background-color: var(--dark-green) !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  color: white !important;
-  border-radius: 0 4px 4px 0;
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: var(--dark-green);
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-left: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-btn:hover {
+  background: #3d5a3d;
 }
 
 /* 用户信息区域 */
@@ -314,5 +468,82 @@ const handleLogout = () => {
   background-color: rgb(0 0 0 / 20%);
   color: #fff;
   text-shadow: 0 0 10px rgb(255 255 255 / 50%);
+}
+
+/* 全局搜索下拉框（Teleport 到 body，需保证样式生效） */
+:deep(.global-search-dropdown) {
+  background: rgb(50 70 50 / 98%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+:deep(.search-dropdown-loading),
+:deep(.search-dropdown-empty) {
+  padding: 16px 20px;
+  color: rgb(255 255 255 / 80%);
+  font-size: 14px;
+  text-align: center;
+}
+
+:deep(.search-dropdown-list) {
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.search-dropdown-item) {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+:deep(.search-dropdown-item:hover) {
+  background: rgb(255 255 255 / 12%);
+}
+
+:deep(.search-item-type) {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 15%);
+  color: rgb(255 255 255 / 90%);
+}
+
+:deep(.search-item-type.menu) {
+  background: #677662;
+}
+
+:deep(.search-item-type.monitor) {
+  background: #1890ff;
+}
+
+:deep(.search-item-type.alert) {
+  background: #fa8c16;
+}
+
+:deep(.search-item-content) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+:deep(.search-item-title) {
+  color: #fff;
+  font-size: 14px;
+}
+
+:deep(.search-item-subtitle) {
+  color: rgb(255 255 255 / 65%);
+  font-size: 12px;
 }
 </style>
