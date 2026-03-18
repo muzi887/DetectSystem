@@ -96,37 +96,46 @@ def add_code_to_document(doc: Document, module_name: str, code_content: str):
     run.font.name = "Consolas"
 
 
-# 定义模块： (模块名, [(相对路径, 显示名), ...])
+# 定义模块：按网页功能细化分类
+# 1.相关数据 2.灾害实时监测 3.智能分析 4.灾害预警 5.智慧决策 6.数据可视化 7.用户权限管理
 MODULES = [
     ("模块一：入口与配置", [
         "src/main.ts",
         "src/App.vue",
         "vite.config.ts",
         "src/router/index.ts",
+        "src/utils/http.ts",
     ]),
-    ("模块二：布局组件", [
-        "src/layouts/AppLayout.vue",
-    ]),
-    ("模块三：视图组件", [
-        "src/views/user/About.vue",
-        "src/views/user/Home.vue",
-        "src/views/user/Login.vue",
-        "src/views/user/DataAnalysis.vue",
-        "src/views/user/MapVisualization.vue",
+    ("模块二：相关数据模块", [
         "src/views/user/RelatedData.vue",
+    ]),
+    ("模块三：灾害实时监测模块", [
+        "src/views/user/MapVisualization.vue",
+    ]),
+    ("模块四：智能分析模块", [
+        "src/views/user/DataAnalysis.vue",
+        "src/api/analysis.ts",
+        "server/app.py",
+    ]),
+    ("模块五：灾害预警模块", [
         "src/views/user/WarningSystem.vue",
+        "src/stores/data.ts",
+    ]),
+    ("模块六：智慧决策模块", [
         "src/views/user/DecisionSupport.vue",
     ]),
-    ("模块四：状态管理与接口", [
-        "src/stores/data.ts",
-        "src/stores/user.ts",
-        "src/utils/http.ts",
-        "src/api/analysis.ts",
-        "src/composables/useGlobalSearch.ts",
+    ("模块七：数据可视化模块", [
+        "src/views/user/Home.vue",
     ]),
-    ("模块五：Mock 与后端服务", [
+    ("模块八：用户权限管理", [
+        "src/views/user/Login.vue",
+        "src/stores/user.ts",
+        "src/composables/useGlobalSearch.ts",
+        "src/layouts/AppLayout.vue",
+        "src/views/user/About.vue",
+    ]),
+    ("模块九：Mock 与后端服务", [
         "src/mock/server.ts",
-        "server/app.py",
     ]),
 ]
 
@@ -173,8 +182,9 @@ def main():
     doc.add_page_break()
     doc.add_heading("源程序清单", level=1)
     doc.add_paragraph(
-        "以下按模块分别提交源程序。每页程序≥50行（不含空行）。"
-        "不足3000行的模块全部提交；超过3000行的模块提交前30页与后30页。"
+        "以下按网页功能细化分类提交源程序："
+        "1.相关数据 2.灾害实时监测 3.智能分析 4.灾害预警 5.智慧决策 6.数据可视化 7.用户权限管理。"
+        "每页程序≥50行（不含空行）；不足3000行的模块全部提交，超过3000行的模块提交前30页与后30页。"
     )
 
     for module_name, file_paths in MODULES:
