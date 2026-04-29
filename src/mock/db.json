@@ -224,7 +224,7 @@
     },
     {
       "time": 1773395103099,
-      "handled": false,
+      "handled": true,
       "pointId": 1,
       "level": "low",
       "message": "[AI识别] 监测到 apple - 健康 (置信度: 98.0%)",
@@ -237,6 +237,62 @@
       "level": "high",
       "message": "[AI识别] 监测到 apple - 苹果腐烂病 (置信度: 88.0%)",
       "id": 19
+    },
+    {
+      "time": 1775655763606,
+      "handled": true,
+      "pointId": 3,
+      "level": "medium",
+      "message": "手动触发：监测站C - 山谷 状态异常",
+      "id": 20
+    },
+    {
+      "time": 1775655768023,
+      "handled": false,
+      "pointId": 1,
+      "level": "medium",
+      "message": "手动触发：监测站A - 平原 状态异常",
+      "id": 21
+    },
+    {
+      "time": 1775655816039,
+      "handled": false,
+      "pointId": 1,
+      "level": "low",
+      "message": "[AI识别] 监测到 apple - 健康 (置信度: 88.0%)",
+      "id": 22
+    },
+    {
+      "time": 1775655925093,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 97.0%)",
+      "id": 23
+    },
+    {
+      "time": 1775655933407,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 peach - 桃疮痂病 (置信度: 98.0%)",
+      "id": 24
+    },
+    {
+      "time": 1775656061841,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 88.0%)",
+      "id": 25
+    },
+    {
+      "time": 1775656194645,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 wheat - 小麦赤霉病 (置信度: 89.0%)",
+      "id": 26
     }
   ]
 }
