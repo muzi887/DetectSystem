@@ -34,7 +34,7 @@
             class="loading-mask">
             <div class="loading-content">
               <a-spin size="large" />
-              <p>正在接入异构数据流...</p>
+              <p>正在加载数据...</p>
             </div>
           </div>
 

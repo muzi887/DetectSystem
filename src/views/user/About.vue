@@ -16,38 +16,40 @@
           <p class="slogan-sub">—— 坤灵智巡，让灾害预警“跑”在成灾前</p>
 
           <div class="vision-text">
-            我们是来自河北地质大学的
+            我们是河北地质大学
             <strong>坤灵智巡创工队</strong>
-            。 在人工智能与现代农业的交汇点，我们致力于打造智慧“大脑”，守护每一寸耕地。
+            ，参加 2025–2026 年「挑战杯」大学生创业计划竞赛。本 Web 监测系统由
+            <strong>张晓琳</strong>
+            （信息工程学院 · 计算机科学与技术）完成从 0 到 1 的搭建与线上部署；其余队员负责策划、调研、运营与赛事组织等工作。
           </div>
 
           <!-- 三个维度图标区 -->
           <div class="dimension-grid">
             <div class="dim-item">
               <RocketOutlined class="dim-icon" />
-              <h3>技术维度</h3>
+              <h3>系统实现</h3>
               <p>
-                毫米级监测网
+                Vue 3 前端
                 <br />
-                卫星遥感 + 地面传感
+                地图 / 图表 / 预警联动
               </p>
             </div>
             <div class="dim-item">
               <HeartOutlined class="dim-icon" />
-              <h3>社会价值</h3>
+              <h3>应用场景</h3>
               <p>
-                守护8亿亩耕地
+                农情监测演示
                 <br />
-                助力国家粮食安全
+                灾害预警与辅助决策
               </p>
             </div>
             <div class="dim-item">
               <BulbOutlined class="dim-icon" />
-              <h3>团队宣言</h3>
+              <h3>团队分工</h3>
               <p>
-                一人的算法
+                地信 / 测绘 / 土管
                 <br />
-                守护亿万人的饭碗
+                与计算机方向协同
               </p>
             </div>
           </div>
@@ -86,9 +88,9 @@
           核心团队
         </div>
         <p class="team-intro">
-          学科交融，优势互补。集
-          <strong>计算机、地信、测绘、土管、会计</strong>
-          等多学科背景的复合型创新团队。
+          以下为项目成员分工介绍。网站开发、接口联调与服务器部署由
+          <strong>张晓琳</strong>
+          负责；其他成员在地信、测绘、运营、市场等领域协作。
         </p>
 
         <div class="team-grid">
@@ -139,11 +141,11 @@
             </div>
             <div class="info-wrapper text-center">
               <div class="name-row center-row">
-                <span class="name">刘兴冉</span>
+                <span class="name">{{ advisor.name }}</span>
               </div>
-              <div class="major-row center-row">[老师职称] · [研究方向]</div>
+              <div class="major-row center-row">{{ advisor.title }} · {{ advisor.college }}</div>
               <div class="divider-line"></div>
-              <p class="desc-text center-text">“寄语：脚踏实地，仰望星空。”</p>
+              <p class="desc-text center-text">{{ advisor.message }}</p>
             </div>
           </div>
         </div>
@@ -212,68 +214,75 @@ const techStack = ref([
   }
 ])
 
+const advisor = {
+  name: '刘兴冉',
+  title: '讲师',
+  college: '土地科学与空间规划学院',
+  message: '寄语：脚踏实地，仰望星空。'
+}
+
 const teamMembers = ref([
   {
     name: '王佳欢',
     role: '项目负责人',
-    major: '荣誉资质',
-    desc: '国家奖学金、国家励志奖学金获得者。多次获得国家级、省级荣誉，具有丰富的主持创新创业类赛事经验。',
+    major: '地理信息科学专业',
+    desc: '国家奖学金、国家励志奖学金获得者；多次获得国家级、省级荣誉；主持过多项创新创业类赛事。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '张晓琳',
-    role: '核心架构师',
-    major: '计算机科学与技术专业',
-    desc: '负责系统底层架构设计与AI核心算法攻坚。以扎实的计算机科学理论，融合深度学习与边缘计算，构建智慧粮仓的数字基座。',
+    role: '技术总监',
+    major: '信息工程学院 · 计算机科学与技术（大三）',
+    desc: '河北地质大学信息工程学院计科大三学生，专业成绩扎实，熟悉 C++ 与 Vue 开发流程，对 Web 与人工智能应用有浓厚兴趣。在本项目中承担网站从 0 到 1 的搭建与线上部署，负责前后端联调，保障系统稳定运行。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '王子雪',
     role: '技术总监',
     major: '地理信息科学专业',
-    desc: '擅长系统开发，具有丰富的数据处理、应用能力。精通GIS空间分析与地图可视化展示。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
-  },
-  {
-    name: '刘金莎',
-    role: '技术总监',
-    major: '地理信息科学专业',
-    desc: '擅长系统开发测试，制定营销战略。严谨把控软件质量，确保监测预警系统的精准运行。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
-  },
-  {
-    name: '周艺恬',
-    role: '技术总监',
-    major: '测绘工程专业',
-    desc: '具有较强专业技术能力，擅长软件开发、编程。专注于测绘数据与数字孪生技术的深度融合。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
-  },
-  {
-    name: '柴雨润',
-    role: '行政总监',
-    major: '土地资源管理专业',
-    desc: '制定与执行公司行政战略，具有丰富的实践调研经验，统筹团队建设与日常高效运营。',
+    desc: '擅长系统开发，具有丰富的数据处理与应用能力。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '鲍辰怡',
     role: '运营总监',
     major: '地理信息科学专业',
-    desc: '负责渠道推广、活动策划、内容生产。致力于运营本公司品牌价值，讲好“科技助农”故事。',
+    desc: '负责渠道推广、活动策划与内容生产，运营项目品牌价值。',
+    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+  },
+  {
+    name: '周艺恬',
+    role: '技术总监',
+    major: '测绘工程专业',
+    desc: '具有较强专业技术能力，擅长软件开发与编程。',
+    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+  },
+  {
+    name: '柴雨润',
+    role: '行政总监',
+    major: '土地资源管理专业',
+    desc: '具有丰富的实践调研经验，制定与执行团队行政与日常运营安排。',
+    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+  },
+  {
+    name: '刘金莎',
+    role: '技术总监',
+    major: '地理信息科学专业',
+    desc: '擅长系统开发与测试，参与营销与推广策略制定。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '杨紫蓉',
     role: '市场总监',
     major: '土地资源管理专业',
-    desc: '具有丰富实践调研经验，负责系统的市场调研与分析，精准定位痛点，拓展商业渠道。',
+    desc: '具有丰富的实践调研经验，开展市场调研与渠道拓展。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   },
   {
     name: '王婧蕾',
     role: '财务总监',
     major: '会计学专业',
-    desc: '分析经营活动情况，负责日常财务核算与分析资金动态，为项目可持续发展提供财务保障。',
+    desc: '分析经营活动情况，负责日常财务核算与资金动态分析。',
     avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
   }
 ])

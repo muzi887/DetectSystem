@@ -8,7 +8,7 @@
           src="@/assets/logo.jpg"
           alt="Logo"
           class="logo-img" />
-        <span class="title">AI技术赋能下的作物灾害智慧监测预警系统</span>
+        <span class="title">青禾智匠 · 作物灾害监测预警系统</span>
       </div>
 
       <div class="header-right">
