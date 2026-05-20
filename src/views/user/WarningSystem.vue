@@ -1,7 +1,5 @@
-<!-- src/views/user/WarningSystem.vue -->
 <template>
   <AppLayout>
-    <!-- 主体内容由 AppLayout 包裹 -->
     <main class="main-content">
       <div class="content-wrapper">
         <a-card>
@@ -261,9 +259,6 @@ onMounted(() => {
 </style>
 
 <style scoped>
-/* ***** 修改：移除了 app-layout-container, header, nav-bar 等相关的所有样式 ***** */
-
-/* ***** 修改：调整 main-content 样式，移除内边距和拉伸属性，只负责居中 ***** */
 .main-content {
   display: flex;
   justify-content: center;
@@ -313,7 +308,6 @@ onMounted(() => {
   color: white;
 }
 
-/* ... (其余所有 .alert-list, .point-name, .alert-time 等样式均保持不变) ... */
 .alert-list :deep(.ant-list-item) {
   padding: 16px 0;
   border-block-end: 1px solid rgb(255 255 255 / 20%) !important;

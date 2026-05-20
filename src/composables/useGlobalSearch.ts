@@ -41,7 +41,6 @@ export function useGlobalSearch() {
     const k = q.toLowerCase()
     const list: SearchResult[] = []
 
-    // 1. 搜索菜单
     for (const item of MENU_ITEMS) {
       const match =
         item.title.toLowerCase().includes(k) ||
@@ -56,7 +55,6 @@ export function useGlobalSearch() {
       }
     }
 
-    // 2. 搜索监测点（需先加载数据）
     const points = dataStore.monitorPoints || []
     for (const p of points) {
       const name = (p.name || '').toString()
@@ -72,7 +70,6 @@ export function useGlobalSearch() {
       }
     }
 
-    // 3. 搜索预警信息
     const alerts = dataStore.alerts || []
     const pointMap = new Map(points.map((p: any) => [p.id, p]))
     for (const a of alerts) {

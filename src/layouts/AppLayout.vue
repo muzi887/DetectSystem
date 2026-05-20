@@ -1,10 +1,6 @@
-<!-- src/layouts/AppLayout.vue -->
-<!-- src/layouts/AppLayout.vue -->
 <template>
   <div class="app-layout-container">
-    <!-- 顶部 Header -->
     <header class="header">
-      <!-- 1. 左侧 Logo -->
       <div
         class="logo-area"
         @click="goHome">
@@ -15,9 +11,7 @@
         <span class="title">AI技术赋能下的作物灾害智慧监测预警系统</span>
       </div>
 
-      <!-- 中间/右侧功能区 -->
       <div class="header-right">
-        <!-- 2. 搜索框 + 全局搜索下拉 -->
         <div class="search-area" ref="searchAreaRef">
           <div class="search-input-wrap">
             <input
@@ -72,23 +66,18 @@
           </Teleport>
         </div>
 
-        <!-- 3. 用户个人中心 -->
         <div class="user-profile">
-          <!-- 使用 Ant Design 的下拉菜单 -->
           <a-dropdown placement="bottomRight">
             <div class="user-info-trigger">
-              <!-- 头像 -->
               <a-avatar
                 style="background-color: #87d068"
                 :size="32">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
-              <!-- 用户名 (如果没有则显示默认) -->
               <span class="username">{{ userStore.userInfo?.name || '管理员' }}</span>
               <DownOutlined class="arrow-icon" />
             </div>
 
-            <!-- 下拉菜单内容 -->
             <template #overlay>
               <a-menu>
                 <a-menu-item key="profile">
@@ -114,7 +103,6 @@
       </div>
     </header>
 
-    <!-- 导航栏 -->
     <nav class="nav-bar">
       <router-link
         to="/home"
@@ -153,7 +141,6 @@
       </router-link>
     </nav>
 
-    <!-- 内容插槽 -->
     <main class="content-slot">
       <slot></slot>
     </main>
@@ -227,7 +214,7 @@ watch([searchVisible, searchKeyword], () => {
   }
 })
 
-// 仅在搜索下拉展开时监听点击外部，避免在未展开时拦截输入框的点击/焦点
+// 下拉展开时才监听 document 点击，避免抢输入框焦点
 watch(
   searchVisible,
   (visible) => {
@@ -244,12 +231,10 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// 点击 Logo 回到首页
 const goHome = () => {
   router.push('/home')
 }
 
-// 处理退出登录
 const handleLogout = () => {
   Modal.confirm({
     title: '确认退出',
@@ -257,12 +242,8 @@ const handleLogout = () => {
     okText: '确认',
     cancelText: '取消',
     onOk: () => {
-      // 1. 调用 store 的 logout 方法 (清除 token 等)
       userStore.logout()
-
       message.success('已安全退出')
-
-      // 2. 跳转回登录页
       router.push('/login')
     }
   })
@@ -270,10 +251,8 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/* 1. @import 必须放在样式表的最第一行 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
 
-/* 容器基础样式 */
 .app-layout-container {
   width: 100%;
   height: 100vh;

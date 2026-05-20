@@ -1,10 +1,6 @@
-<!-- src/views/user/Home.vue-->
 <template>
-  <!-- 1. 直接使用布局组件，无需重复编写 Header 和 Nav -->
   <AppLayout>
-    <!-- 内容区域：不需要再写 main 标签，直接用 div -->
     <div class="dashboard-container">
-      <!-- 欢迎面板 -->
       <div class="dashboard-panel welcome">
         <h2>欢迎！</h2>
         <p>AI作物灾害智慧监测预警系统为您提供最新、最准确的农情数据和预警信息。</p>
@@ -27,18 +23,15 @@
         </div>
       </div>
 
-      <!-- 核心指标面板 -->
       <div class="dashboard-panel stats">
         <h3>核心指标概览</h3>
         <div class="stat-grid">
           <div class="stat-card">
             <h4>监测点总数</h4>
-            <!-- 动态数据：监测点数量 -->
             <p class="value">{{ monitorPointsCount }} 个</p>
           </div>
           <div class="stat-card">
             <h4>当前待处理</h4>
-            <!-- 动态数据：未处理的预警数量 -->
             <p class="value alert">{{ unhandledAlertsCount }} 条</p>
           </div>
           <div class="stat-card">
@@ -52,7 +45,6 @@
         </div>
       </div>
 
-      <!-- 最新预警面板 -->
       <div class="dashboard-panel recent-alerts">
         <h3>最新预警动态</h3>
         <a-list
@@ -61,10 +53,8 @@
           :loading="dataStore.loadingAlerts">
           <template #renderItem="{ item }">
             <a-list-item>
-              <!-- 使用真实数据的时间戳 -->
               <a-list-item-meta :description="formatTime(item.time)">
                 <template #title>
-                  <!-- 使用真实数据的级别和消息 -->
                   <a :class="getLevelClass(item.level)">
                     监测点 #{{ item.pointId }}: {{ item.message }}
                   </a>
@@ -88,26 +78,16 @@ import { computed, onMounted } from 'vue'
 import { useDataStore, type AlertLevel } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
 
-// 初始化 Pinia store
 const dataStore = useDataStore()
 
-// --- 计算属性，用于动态展示数据---
-// 计算未处理的预警数量
-const unhandledAlertsCount = computed(() => {
-  return dataStore.alerts.filter((alert) => !alert.handled).length
-})
+const unhandledAlertsCount = computed(() =>
+  dataStore.alerts.filter((alert) => !alert.handled).length
+)
 
-// 获取监测点总数
 const monitorPointsCount = computed(() => dataStore.monitorPoints.length)
 
-// 获取最新的3条预警信息
-const recentAlerts = computed(() => {
-  // store中已按时间排序，直接取前几个即可
-  return dataStore.alerts.slice(0, 3)
-})
+const recentAlerts = computed(() => dataStore.alerts.slice(0, 3))
 
-// --- 方法 ---
-// 格式化时间戳
 const formatTime = (t?: number) => {
   if (!t) return '-'
   const d = new Date(t)
@@ -118,13 +98,8 @@ const formatTime = (t?: number) => {
   return `${d.getFullYear()}-${mm}-${dd} ${hh}:${mi}`
 }
 
-// 根据预警级别返回对应的 CSS class
-const getLevelClass = (level: AlertLevel) => {
-  return `level-${level}`
-}
+const getLevelClass = (level: AlertLevel) => `level-${level}`
 
-// --- 生命周期钩子  ---
-// 组件加载时，从服务器获取最新数据
 onMounted(() => {
   dataStore.fetchAlerts()
   dataStore.fetchMonitorPoints()
@@ -132,19 +107,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 定义本地变量，确保颜色正确 (因为父组件 styles 是 scoped 的) */
 .dashboard-container {
   --primary-green: #677662;
   --dark-green: #4a5c43;
   --light-green: #eef1ea;
   --glass-bg: rgb(255 255 255 / 10%);
 
-  /* 布局控制 */
   width: 100%;
   max-width: 1300px;
   margin: 0 auto; /* 水平居中 */
 
-  /* 使用 Grid 布局 */
   display: grid;
   grid-template-columns: 2fr 1fr; /* 左边宽，右边窄 */
   grid-template-rows: auto 1fr; /* 第一行自适应，第二行撑满 */

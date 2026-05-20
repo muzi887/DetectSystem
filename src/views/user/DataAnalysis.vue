@@ -1,11 +1,7 @@
-<!-- src/views/user/DataAnalysis.vue -->
 <template>
-  <!-- 1. 使用 AppLayout 组件  -->
   <AppLayout>
-    <!-- 2. 采用 main -> wrapper 结构-->
     <main class="main-content">
       <div class="content-wrapper">
-        <!-- 3. 将所有功能包裹在一个 a-card 中 -->
         <a-card :bordered="false">
           <template #title>
             <div class="card-title">智能分析</div>
@@ -125,7 +121,6 @@ const categories = [
 ]
 const selectedCategory = ref('disaster')
 
-// v-model:file-list 需要绑定一个符合 UploadFile[] 类型的 ref
 const fileList = ref<UploadFile[]>([])
 const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
@@ -138,10 +133,6 @@ function getBase64(img: Blob, callback: (base64Url: string) => void) {
   reader.readAsDataURL(img)
 }
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
-  // 打印文件类型，这是最好的调试方法！
-  console.log('上传的文件类型是:', file.type)
-
-  // 类型判断
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng) {
     message.error('只能上传 JPG/PNG 格式的图片!')
@@ -153,33 +144,18 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   return isJpgOrPng && isLt2M
 }
 
-// 不做任何网络请求，直接告诉组件“上传成功了”。
+/** 仅本地预览，不实际上传；真正分析在 handleConfirm 调 Flask */
 const customUpload = (options: any) => {
-  const { onSuccess, file, onProgress } = options
-
-  // 模拟上传进度（可选，为了视觉效果）
-  const config = {
-    headers: { 'content-type': 'multipart/form-data' },
-    percent: 0
-  }
-
-  // 既然是本地预览，我们可以直接假装马上成功
-  // 或者用 setTimeout 模拟一点点延迟让用户看到 loading 效果
-  setTimeout(() => {
-    // 调用 onSuccess 告诉组件上传成功了
-    onSuccess('Ok', file)
-    console.log('前端模拟上传成功，未发送网络请求')
-  }, 100)
+  const { onSuccess, file } = options
+  setTimeout(() => onSuccess('Ok', file), 100)
 }
 
-// 前端UI
 const handleChange = (info: UploadChangeParam) => {
-  // 将 info.fileList 赋值给我们的 ref，保持同步
   fileList.value = info.fileList
 
   if (info.file.status === 'uploading') {
-    loading.value = true // 这会让上传框里显示一个加载中的图标 (LoadingOutlined)。
-    uploading.value = true // 这会显示一个半透明的遮罩层 (.upload-progress-overlay)。
+    loading.value = true
+    uploading.value = true
     uploadProgress.value = 0
     const interval = setInterval(() => {
       uploadProgress.value += Math.floor(Math.random() * 10) + 5
@@ -190,15 +166,13 @@ const handleChange = (info: UploadChangeParam) => {
     }, 200)
     return
   }
-  // 上传“成功”
   if (info.file.status === 'done') {
     uploadProgress.value = 100
     setTimeout(() => {
       uploading.value = false
       loading.value = false
-      // 将用户上传的图片文件转换为 Base64 格式的字符串。
       getBase64(info.file.originFileObj as Blob, (base64Url: string) => {
-        imageUrl.value = base64Url // <img>标签可以直接在浏览器中预览用户上传的图片
+        imageUrl.value = base64Url
       })
     }, 500)
   }
@@ -210,69 +184,44 @@ const handleChange = (info: UploadChangeParam) => {
 }
 
 const handleConfirm = async () => {
-  // 检查图片和文件对象是否存在
   if (!imageUrl.value || !fileList.value[0]?.originFileObj) {
     message.warning('请先上传一张图片！')
     return
   }
-  // 显示加载提示
   message.loading({ content: '正在智能分析中...', key: 'analyzing' })
 
   try {
-    // 请求 Python 后端进行分析
-    const dataToAnalyze = {
-      file: fileList.value[0].originFileObj, // 获取原始文件对象
+    const response = await analyzeImage({
+      file: fileList.value[0].originFileObj,
       cropType: formState.cropType,
       category: selectedCategory.value,
       additionalInfo: formState.additionalInfo
-    }
+    })
 
-    // 调用 API 函数，并等待结果
-    const response = await analyzeImage(dataToAnalyze)
-    // ---------------------------------------------------------
-    // 新增代码：处理结果并保存到 json-server
-    // ---------------------------------------------------------
-    const aiResult = response.data.result // 例如 "桃疮痂病"
-    const aiConfidence = response.data.confidence // 例如 0.92
-
-    // 2. 决定预警级别 (简单的逻辑：如果不是"健康"，就是"high"级别预警)
+    const aiResult = response.data.result
+    const aiConfidence = response.data.confidence
     const isHealthy = aiResult.includes('健康')
     const alertLevel = isHealthy ? 'low' : 'high'
 
-    // 3. 调用 Store 的 createAlert 方法保存数据
     await store.createAlert({
-      pointId: 1, // 暂时写死，或者你在表单里加一个下拉框选择监测点
+      pointId: 1,
       level: alertLevel,
       message: `[AI识别] 监测到 ${formState.cropType} - ${aiResult} (置信度: ${(aiConfidence * 100).toFixed(1)}%)`,
       handled: false
     })
-    // ---------------------------------------------------------
 
     message.success({
       content: `分析完成！结果已自动存入预警列表。`,
       key: 'analyzing',
       duration: 3
     })
-
-    // 可选：清空表单，方便下一次上传
-    // fileList.value = []
-    // imageUrl.value = ''
   } catch (error) {
     message.error({ content: '分析或保存失败，请重试。', key: 'analyzing', duration: 3 })
     console.error('Error:', error)
   }
 }
 
-// handleIdentify 可以保留或与 handleConfirm 合并
 const handleIdentify = () => handleConfirm()
-
-// const handleIdentify = () => {
-//   if (!imageUrl.value) {
-//     message.warning('请先上传一张图片！')
-//     return
-//   }
-//   message.success(`开始识别...`)
-// }
 </script>
 
 <style scoped>

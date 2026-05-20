@@ -1,12 +1,6 @@
-<!-- src/views/user/About.vue -->
 <template>
   <AppLayout>
-    <!-- 
-      注意：由于 AppLayout 已经处理了背景图和 flex 布局，
-      这里我们只需要关注内容区域的玻璃质感 
-    -->
     <div class="about-container">
-      <!-- 1. 顶部愿景卡片 -->
       <div class="glass-panel vision-panel">
         <div class="panel-header">
           <h1 class="main-title">关于我们</h1>
@@ -190,16 +184,14 @@ import {
   BookOutlined,
   TrophyOutlined,
   MailOutlined,
-  // Tech Icons
   CloudServerOutlined,
   RobotOutlined,
   AreaChartOutlined,
   DatabaseOutlined
 } from '@ant-design/icons-vue'
 
-import vueIcon from '@/assets/icons/vue.svg' // 确保路径存在，或者用网络图
+import vueIcon from '@/assets/icons/vue.svg'
 
-// 1. 技术栈数据
 const techStack = ref([
   { name: 'Vue 3', icon: 'img', src: vueIcon, color: '#42b883' },
   {
@@ -208,7 +200,7 @@ const techStack = ref([
     src: 'https://gw.alipayobjects.com/zos/rmsportal/rlpTLlbMzTNYuZGGCVYM.png',
     color: '#1890ff'
   },
-  { name: 'Deep Learning', icon: RobotOutlined, color: '#ff9c6e' }, // 调亮一点颜色以适应深色背景
+  { name: 'Deep Learning', icon: RobotOutlined, color: '#ff9c6e' },
   { name: 'IoT 物联网', icon: CloudServerOutlined, color: '#ffffff' },
   { name: 'Big Data', icon: DatabaseOutlined, color: '#5cdbd3' },
   { name: 'ECharts', icon: AreaChartOutlined, color: '#ff7875' },
@@ -220,7 +212,6 @@ const techStack = ref([
   }
 ])
 
-// 2. 团队成员数据 (9人)
 const teamMembers = ref([
   {
     name: '王佳欢',

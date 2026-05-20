@@ -8,7 +8,6 @@
           </template>
 
           <div class="decision-dashboard">
-            <!-- 左侧列 -->
             <div class="left-column">
               <a-card
                 title="待处理灾害预警"
@@ -59,7 +58,6 @@
               </a-card>
             </div>
 
-            <!-- 右侧列 -->
             <div class="right-column">
               <div
                 v-if="!isAreaSelected"
@@ -68,7 +66,6 @@
                 <p>请从左侧列表选择一个预警进行决策分析</p>
               </div>
 
-              <!-- ***** 修改：将右侧卡片包裹在一个新的 grid 容器中 ***** -->
               <div
                 v-else
                 class="right-column-grid">
@@ -126,7 +123,6 @@
                   </a-list>
                 </a-card>
               </div>
-              <!-- ***** 修改结束 ***** -->
             </div>
           </div>
         </a-card>
@@ -136,7 +132,6 @@
 </template>
 
 <script setup lang="ts">
-// Script 部分与上一版本完全相同，此处省略以保持简洁
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -276,10 +271,8 @@ onBeforeUnmount(() => {
 watch(selectedArea, (newArea) => {
   if (newArea) {
     if (!map) {
-      // 1. 等待 DOM 更新，确保 v-if 渲染的 mapRef 元素已存在
       nextTick(() => {
         if (mapRef.value) {
-          // 再次检查 mapRef 是否存在
           initMap()
           if (map) {
             updateMap(newArea)
@@ -287,7 +280,6 @@ watch(selectedArea, (newArea) => {
         }
       })
     } else {
-      // 2. 如果 map 已经初始化，则直接更新标记点
       updateMap(newArea)
     }
   }
@@ -366,7 +358,6 @@ watch(selectedArea, (newArea) => {
 .decision-dashboard {
   display: grid;
 
-  /* ***** 修改：左栏宽度微调，右侧占满剩余空间 ***** */
   grid-template-columns: 350px 1fr;
   gap: 20px;
   width: 100%;
@@ -379,7 +370,6 @@ watch(selectedArea, (newArea) => {
   flex-direction: column;
   gap: 20px;
 
-  /* ***** 新增：确保列本身可以拉伸 ***** */
   min-height: 0;
 }
 
@@ -388,7 +378,6 @@ watch(selectedArea, (newArea) => {
   border: 1px solid rgb(255 255 255 / 15%) !important;
   color: white;
 
-  /* ***** 新增：让卡片内部也采用 flex 布局以拉伸内容 ***** */
   display: flex;
   flex-direction: column;
 }
@@ -404,7 +393,6 @@ watch(selectedArea, (newArea) => {
 .widget-card :deep(.ant-card-body) {
   padding: 12px;
 
-  /* ***** 新增：让卡片内容区可以拉伸 ***** */
   flex-grow: 1;
   overflow-y: auto; /* 如果内容过多，允许滚动 */
 }
@@ -460,7 +448,6 @@ watch(selectedArea, (newArea) => {
   border: 1px dashed rgb(255 255 255 / 20%);
 }
 
-/* ***** 新增：右侧新的 grid 布局 ***** */
 .right-column-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

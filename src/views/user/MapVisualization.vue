@@ -1,5 +1,4 @@
 <template>
-  <!-- 使用 AppLayout 包裹内容 -->
   <AppLayout>
     <div class="content-wrapper">
       <!-- 地图容器卡片 -->
@@ -42,7 +41,6 @@
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
-// 引入布局组件
 import AppLayout from '@/layouts/AppLayout.vue'
 import * as L from 'leaflet'
 import 'leaflet.markercluster'
@@ -50,15 +48,12 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-// --- 响应式引用和状态管理 ---
 const dataStore = useDataStore()
 const mapRef = ref<HTMLDivElement | null>(null)
 
 let map: L.Map | null = null
 let markerCluster: L.MarkerClusterGroup | null = null
 const markersById = new Map<number, L.Marker>()
-
-// --- 样式与内容生成函数 ---
 
 function statusColor(status: string) {
   if (status === 'normal') return '#52c41a'
@@ -185,8 +180,8 @@ async function initMap() {
   markerCluster = L.markerClusterGroup()
   markerCluster.addTo(map)
 
-  // 修复 Leaflet 在 Flex 布局中可能出现的渲染大小问题
   setTimeout(() => {
+    // Leaflet 在 flex 容器内需 invalidateSize
     map?.invalidateSize()
   }, 100)
 }
@@ -206,7 +201,6 @@ function zoomToAll() {
   }
 }
 
-// 6. 生命周期钩子
 onMounted(async () => {
   await initMap()
   await refreshData()

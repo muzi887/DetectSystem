@@ -1,8 +1,6 @@
-<!-- src/views/RelatedData.vue -->
 <template>
   <AppLayout>
     <div class="data-page-content">
-      <!-- 左侧图表面板 -->
       <div class="chart-panel glass-panel">
         <div class="panel-header">
           <div class="header-left">
@@ -140,7 +138,6 @@ import { message } from 'ant-design-vue'
 const dataStore = useDataStore()
 const loading = ref(false)
 
-// --- Tab 逻辑 ---
 const currentTab = ref('sensor')
 const tabs = [
   {
@@ -168,20 +165,17 @@ const currentTitle = computed(() => tabs.find((t) => t.key === currentTab.value)
 const currentSubtitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.subtitle)
 const currentTabName = computed(() => tabs.find((t) => t.key === currentTab.value)?.label)
 
-// --- 核心修改：基于真实数据的 AI 分析 ---
+/** 传感器 Tab：根据 alerts 生成结论文案；其余 Tab 为固定演示文案 */
 const aiConclusion = computed(() => {
   if (currentTab.value === 'sensor') {
-    // 1. 统计高风险预警
     const alerts = dataStore.alerts || []
     const criticalCount = alerts.filter(
       (a: any) => a.level === 'critical' || a.level === 'high'
     ).length
 
-    // 2. 获取最新一条未处理的消息
     const latestAlert = alerts.find((a: any) => !a.handled)
     const latestMsg = latestAlert ? latestAlert.message : '目前设备运行平稳'
 
-    // 3. 动态生成文案
     if (criticalCount > 0) {
       return `系统分析检测到 ${criticalCount} 次高风险异常！最新问题为："${latestMsg}"，建议立即派人排查 pointId-${latestAlert?.pointId}。`
     } else {
@@ -189,7 +183,6 @@ const aiConclusion = computed(() => {
     }
   }
 
-  // 其他 Tab 暂时保持模拟（因为你还没给我那些数据）
   const otherConclusions: Record<string, string> = {
     drone: '区域 A3 出现轻微缺氮光谱特征，建议针对该地块进行无人机变量施肥。',
     weather: '未来 3 天无明显降雨，蒸腾作用强烈，请注意保墒。',
@@ -198,11 +191,10 @@ const aiConclusion = computed(() => {
   return otherConclusions[currentTab.value] || '数据分析中...'
 })
 
-// --- ECharts 逻辑 (仅 Sensor 使用) ---
 const sensorChartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 
-// 核心修改：真实数据构建函数
+/** 按日统计 alerts 数量，供折线图 */
 function buildTrendSeries() {
   const now = Date.now()
   const dayMs = 24 * 60 * 60 * 1000
@@ -210,17 +202,13 @@ function buildTrendSeries() {
   const counts: number[] = []
   const alerts = dataStore.alerts || []
 
-  // 循环过去 7 天
   for (let i = 6; i >= 0; i--) {
     const start = new Date(now - i * dayMs)
-    const label = `${start.getMonth() + 1}/${start.getDate()}` // 生成如 "11/20"
+    const label = `${start.getMonth() + 1}/${start.getDate()}`
     labels.push(label)
 
-    // 计算当天的其实和结束时间戳
     const dayStart = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()
     const dayEnd = dayStart + dayMs
-
-    // 真实统计：筛选出这24小时内的报警数量
     const c = alerts.filter((a: any) => a.time >= dayStart && a.time < dayEnd).length
     counts.push(c)
   }
@@ -231,19 +219,18 @@ function renderSensorChart() {
   if (!sensorChartRef.value) return
   if (!chartInstance) chartInstance = echarts.init(sensorChartRef.value)
 
-  // 调用上面的真实数据函数
   const { labels, counts } = buildTrendSeries()
 
   chartInstance.setOption({
     backgroundColor: 'transparent',
     grid: { top: '15%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    tooltip: { trigger: 'axis', formatter: '{b} <br/> 报警数量: {c} 次' }, // 优化 Tooltip 显示
+    tooltip: { trigger: 'axis', formatter: '{b} <br/> 报警数量: {c} 次' },
     xAxis: { type: 'category', boundaryGap: false, data: labels, axisLabel: { color: '#fff' } },
     yAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
       axisLabel: { color: '#fff' },
-      minInterval: 1 // 保证y轴不出现小数（报警次数只能是整数）
+      minInterval: 1
     },
     series: [
       {
@@ -253,34 +240,31 @@ function renderSensorChart() {
         data: counts,
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(255, 80, 80, 0.5)' }, // 换个红色系，代表警报，更有冲击力
+            { offset: 0, color: 'rgba(255, 80, 80, 0.5)' },
             { offset: 1, color: 'rgba(84,112,198,0.05)' }
           ])
         },
-        lineStyle: { width: 3, color: '#ff7875' }, // 红色线条
+        lineStyle: { width: 3, color: '#ff7875' },
         itemStyle: { color: '#ff4d4f' }
       }
     ]
   })
 }
 
-// --- 切换 Tab ---
 const switchTab = async (key: string) => {
   loading.value = true
   currentTab.value = key
 
-  // 模拟异构数据加载延迟
   setTimeout(async () => {
     loading.value = false
     if (key === 'sensor') {
       await nextTick()
-      chartInstance?.resize() // 重新渲染图表
+      chartInstance?.resize()
       renderSensorChart()
     }
   }, 500)
 }
 
-// --- 生成简报逻辑 ---
 const reportModalVisible = ref(false)
 const reportProgress = ref(0)
 let timer: any = null
@@ -302,12 +286,9 @@ const handleDownload = () => {
   message.success(`已下载《${currentTabName.value}分析简报.pdf》`)
 }
 
-// --- 生命周期 & 监听 ---
-// 初始化时一定要拉取数据，否则图表是空的
 const initData = async () => {
   loading.value = true
   try {
-    // 确保数据存在
     if (dataStore.alerts.length === 0) {
       await dataStore.fetchAlerts()
     }
@@ -327,7 +308,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', () => chartInstance?.resize())
 })
 
-// 监听数据变化，如果有新报警推送过来，图表和AI结论会自动更新
 watch(
   () => dataStore.alerts,
   () => {
