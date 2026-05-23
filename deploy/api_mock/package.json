@@ -1,0 +1,16 @@
+{
+  "name": "detect-system-api-mock",
+  "private": true,
+  "version": "1.0.0",
+  "description": "json-server mock API for DetectSystem (production deploy)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "json-server": "0.17.4"
+  }
+}

@@ -100,7 +100,7 @@ DetectSystem/
 
 本项目已完成 Linux 服务器的生产环境部署，核心架构如下：
 - **前端托管与路由代理**：由 Nginx 挂载于 88 端口，已配置 `try_files` 解决 SPA 路由单页刷新 404 问题，并负责向后端的反向代理。
-- **业务后端守护**：使用 PM2 守护 json-server 进程（运行于 3000 端口），提供全天候稳定的 RESTful API 数据服务。
+- **业务后端守护**：使用宝塔 **Node 项目**托管 json-server（运行于 3000 端口）；部署包见 [`deploy/api_mock/`](deploy/api_mock/)，步骤见 [`deploy/宝塔部署-不用PM2.md`](deploy/宝塔部署-不用PM2.md)。
 - **AI 算法后端**：在隔离的 Python 虚拟环境（py-project-env）中独立运行 Flask 服务（运行于 5000 端口），防止依赖冲突。
 
 ---
@@ -109,6 +109,7 @@ DetectSystem/
 
 | 文档 | 说明 |
 |------|------|
+| [deploy/宝塔部署-不用PM2.md](deploy/宝塔部署-不用PM2.md) | 线上部署与恢复（宝塔 Node 项目，不用 PM2） |
 | [docs/模拟数据说明.md](docs/模拟数据说明.md) | 模拟数据来源、Mock 后端、Flask 接口说明 |
 | [docs/源程序导出实现说明.md](docs/源程序导出实现说明.md) | 源程序导出至 Word 的实现说明 |
 | [docs/作物灾害预警系统使用说明.docx](docs/作物灾害预警系统使用说明.docx) | 系统使用说明（含源程序清单） |
