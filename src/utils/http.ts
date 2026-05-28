@@ -1,4 +1,3 @@
-/** axios 实例：baseURL /api，请求头附带 token */
 import axios from 'axios'
 
 const http = axios.create({

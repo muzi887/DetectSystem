@@ -1,0 +1,38 @@
+:root {
+  --font-serif: 'Noto Serif SC', 'Songti SC', simsun, serif;
+  --font-sans: 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+
+  --page-max-width: 1280px;
+
+  --primary-green: #677662;
+  --dark-green: #4a5c43;
+  --light-green: #eef1ea;
+
+  --glass-bg: rgb(30 50 30 / 58%);
+  --glass-bg-subtle: rgb(20 40 20 / 45%);
+  --glass-bg-item: rgb(0 0 0 / 12%);
+  --glass-bg-item-hover: rgb(0 0 0 / 22%);
+  --glass-bg-active: rgb(40 60 40 / 85%);
+  --glass-bg-input: rgb(55 75 50 / 60%);
+  --glass-bg-welcome: rgb(30 50 30 / 65%);
+
+  --glass-border: rgb(255 255 255 / 18%);
+  --glass-border-strong: rgb(255 255 255 / 25%);
+  --glass-blur: 16px;
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 25%);
+
+  --glass-text-primary: #fff;
+  --glass-text-secondary: rgb(255 255 255 / 85%);
+  --glass-text-muted: rgb(255 255 255 / 70%);
+  --glass-text-shadow: 0 1px 2px rgb(0 0 0 / 35%);
+  --glass-title-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+
+  --bp-tablet: 992px;
+  --bp-mobile: 576px;
+}
+
+html,
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+}

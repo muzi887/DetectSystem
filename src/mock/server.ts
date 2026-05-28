@@ -1,4 +1,3 @@
-/** json-server Mock：REST + 自定义 /login */
 import jsonServer from 'json-server'
 import path from 'path'
 import fs from 'fs'

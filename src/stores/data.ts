@@ -1,4 +1,3 @@
-/** 监测点、预警：对接 json-server */
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http'
@@ -39,7 +38,6 @@ export const useDataStore = defineStore('data', () => {
             item.status = 'warning'
           }
 
-          // 演示用微量偏移，模拟坐标纠偏
           const calibratedLat = item.lat + 0.00001
           const calibratedLng = item.lng + 0.00001
 

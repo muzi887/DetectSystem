@@ -1,15 +1,13 @@
 <template>
   <AppLayout>
     <main class="main-content">
-      <div class="content-wrapper">
+      <div class="content-wrapper glass-page">
         <a-card :bordered="false">
           <template #title>
-            <div class="card-title">智能分析</div>
+            <div class="glass-card-title">智能分析</div>
           </template>
 
-          <!-- 卡片内容区域 -->
           <div class="analysis-body-container">
-            <!-- 左侧：表单和上传区域 -->
             <div class="form-section">
               <div class="upload-wrapper">
                 <a-upload
@@ -32,7 +30,6 @@
                     <div class="ant-upload-text">上传图片</div>
                   </div>
                 </a-upload>
-                <!-- 上传进度遮罩层 (模拟截图效果) -->
                 <div
                   v-if="uploading"
                   class="upload-progress-overlay">
@@ -45,7 +42,6 @@
                 </div>
               </div>
 
-              <!-- 表单控件 -->
               <a-form
                 class="analysis-form"
                 layout="vertical">
@@ -78,7 +74,6 @@
               </a-button>
             </div>
 
-            <!-- 右侧：分类选择区域 -->
             <div class="category-section">
               <a-button
                 v-for="category in categories"
@@ -90,6 +85,54 @@
               </a-button>
             </div>
           </div>
+
+          <div class="result-section">
+            <div
+              v-if="analyzing"
+              class="result-panel result-loading">
+              <a-spin size="large" />
+              <p>正在智能分析中，请稍候…</p>
+            </div>
+            <div
+              v-else-if="analysisResult"
+              class="result-panel">
+              <div class="result-header">
+                <h3 class="result-title">分析结果</h3>
+                <a-tag :color="analysisResult.isHealthy ? 'success' : 'error'">
+                  {{ analysisResult.isHealthy ? '健康' : '需关注' }}
+                </a-tag>
+              </div>
+              <div class="result-meta">
+                <span>作物：{{ cropLabel }}</span>
+                <span>识别类型：{{ categoryLabel }}</span>
+                <span>分析时间：{{ formatAnalyzedAt(analysisResult.analyzedAt) }}</span>
+              </div>
+              <p class="result-text">{{ analysisResult.result }}</p>
+              <div class="confidence-block">
+                <div class="confidence-label">
+                  <span>模型置信度</span>
+                  <strong>{{ confidencePercent }}%</strong>
+                </div>
+                <a-progress
+                  :percent="confidencePercent"
+                  :stroke-color="confidenceStrokeColor"
+                  :show-info="false" />
+              </div>
+              <p class="result-hint">结果已同步写入预警列表，可在灾害预警页查看与处理。</p>
+              <a-button
+                type="link"
+                class="goto-warnings-btn"
+                @click="router.push('/warnings')">
+                前往预警列表 →
+              </a-button>
+            </div>
+            <div
+              v-else
+              class="result-panel result-empty">
+              <ExperimentOutlined class="result-empty-icon" />
+              <p>上传图片并点击「确定」或「识别」后，分析结果将显示在这里</p>
+            </div>
+          </div>
         </a-card>
       </div>
     </main>
@@ -97,14 +140,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue'
+import { ref, reactive, computed } from 'vue'
+import { PlusOutlined, LoadingOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { analyzeImage } from '@/api/analysis.ts'
 import { useDataStore } from '@/stores/data'
-import { useRouter } from 'vue-router' // <--- 可选：如果你想跳转去查看
+import { useRouter } from 'vue-router'
 
 const store = useDataStore()
 const router = useRouter()
@@ -113,6 +156,14 @@ const formState = reactive({
   cropType: 'peach',
   additionalInfo: ''
 })
+
+const cropLabels: Record<string, string> = {
+  peach: '桃',
+  apple: '苹果',
+  wheat: '小麦',
+  rice: '水稻'
+}
+
 const categories = [
   { key: 'disaster', name: '灾害识别' },
   { key: 'pest', name: '病虫害识别' },
@@ -121,11 +172,51 @@ const categories = [
 ]
 const selectedCategory = ref('disaster')
 
+interface AnalysisResultView {
+  result: string
+  confidence: number
+  isHealthy: boolean
+  cropType: string
+  category: string
+  analyzedAt: number
+}
+
 const fileList = ref<UploadFile[]>([])
 const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
 const uploadProgress = ref<number>(0)
 const imageUrl = ref<string>('')
+const analyzing = ref(false)
+const analysisResult = ref<AnalysisResultView | null>(null)
+
+const cropLabel = computed(
+  () => cropLabels[analysisResult.value?.cropType ?? formState.cropType] ?? formState.cropType
+)
+
+const categoryLabel = computed(() => {
+  const key = analysisResult.value?.category ?? selectedCategory.value
+  return categories.find((c) => c.key === key)?.name ?? key
+})
+
+const confidencePercent = computed(() => {
+  if (!analysisResult.value) return 0
+  const raw = analysisResult.value.confidence
+  const pct = raw <= 1 ? raw * 100 : raw
+  return Math.min(100, Math.max(0, Math.round(pct)))
+})
+
+const confidenceStrokeColor = computed(() => {
+  const p = confidencePercent.value
+  if (p >= 80) return '#73d13d'
+  if (p >= 60) return '#faad14'
+  return '#ff4d4f'
+})
+
+function formatAnalyzedAt(ts: number) {
+  const d = new Date(ts)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 function getBase64(img: Blob, callback: (base64Url: string) => void) {
   const reader = new FileReader()
@@ -144,7 +235,6 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   return isJpgOrPng && isLt2M
 }
 
-/** 仅本地预览，不实际上传；真正分析在 handleConfirm 调 Flask */
 const customUpload = (options: any) => {
   const { onSuccess, file } = options
   setTimeout(() => onSuccess('Ok', file), 100)
@@ -154,6 +244,7 @@ const handleChange = (info: UploadChangeParam) => {
   fileList.value = info.fileList
 
   if (info.file.status === 'uploading') {
+    analysisResult.value = null
     loading.value = true
     uploading.value = true
     uploadProgress.value = 0
@@ -188,7 +279,9 @@ const handleConfirm = async () => {
     message.warning('请先上传一张图片！')
     return
   }
-  message.loading({ content: '正在智能分析中...', key: 'analyzing' })
+
+  analyzing.value = true
+  analysisResult.value = null
 
   try {
     const response = await analyzeImage({
@@ -198,26 +291,34 @@ const handleConfirm = async () => {
       additionalInfo: formState.additionalInfo
     })
 
-    const aiResult = response.data.result
-    const aiConfidence = response.data.confidence
+    const aiResult = response.data.result as string
+    const aiConfidence = response.data.confidence as number
     const isHealthy = aiResult.includes('健康')
     const alertLevel = isHealthy ? 'low' : 'high'
+    const cropName = cropLabels[formState.cropType] ?? formState.cropType
+
+    analysisResult.value = {
+      result: aiResult,
+      confidence: aiConfidence,
+      isHealthy,
+      cropType: formState.cropType,
+      category: selectedCategory.value,
+      analyzedAt: Date.now()
+    }
 
     await store.createAlert({
       pointId: 1,
       level: alertLevel,
-      message: `[AI识别] 监测到 ${formState.cropType} - ${aiResult} (置信度: ${(aiConfidence * 100).toFixed(1)}%)`,
+      message: `[AI识别] 监测到 ${cropName} - ${aiResult} (置信度: ${(aiConfidence <= 1 ? aiConfidence * 100 : aiConfidence).toFixed(1)}%)`,
       handled: false
     })
 
-    message.success({
-      content: `分析完成！结果已自动存入预警列表。`,
-      key: 'analyzing',
-      duration: 3
-    })
+    message.success('分析完成！请查看下方结果卡片。')
   } catch (error) {
-    message.error({ content: '分析或保存失败，请重试。', key: 'analyzing', duration: 3 })
+    message.error('分析或保存失败，请重试。')
     console.error('Error:', error)
+  } finally {
+    analyzing.value = false
   }
 }
 
@@ -226,13 +327,6 @@ const handleIdentify = () => handleConfirm()
 
 <style scoped>
 .main-content {
-  /* 主题变量 */
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%);
-
-  /* 核心布局样式 */
   flex-grow: 1;
   padding: 24px;
   overflow-y: auto;
@@ -240,42 +334,15 @@ const handleIdentify = () => handleConfirm()
   justify-content: center;
 }
 
-.content-wrapper {
-  width: 100%;
-  max-width: 900px;
+.glass-page :deep(.ant-card-body) {
+  padding: 24px 32px;
 }
 
-/* 5. 完善卡片样式，使其与 MapVisualization.vue 的玻璃质感完全一致 */
-.content-wrapper :deep(.ant-card) {
-  background-color: var(--glass-bg);
-  border-radius: 12px;
-  border: 1px solid rgb(255 255 255 / 20%);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-}
-
-.content-wrapper :deep(.ant-card-head) {
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-  padding: 0 24px;
-}
-
-.card-title {
-  color: var(--light-green);
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.content-wrapper :deep(.ant-card-body) {
-  padding: 24px 32px; /* 稍微增加左右内边距 */
-}
-
-/* 6. 定义卡片内部的两栏布局 */
 .analysis-body-container {
   display: flex;
   gap: 40px;
 }
 
-/* 左侧：表单区域 */
 .form-section {
   flex: 2;
   display: flex;
@@ -291,14 +358,14 @@ const handleIdentify = () => handleConfirm()
 .avatar-uploader :deep(.ant-upload.ant-upload-select-picture-card) {
   width: 250px;
   height: 250px;
-  background-color: rgb(255 255 255 / 5%) !important;
-  border: 1px dashed rgb(255 255 255 / 40%) !important;
+  background-color: var(--glass-bg-subtle) !important;
+  border: 1px dashed var(--glass-border-strong) !important;
   border-radius: 8px;
 }
 
 .avatar-uploader :deep(.ant-upload-text),
 .avatar-uploader :deep(.anticon) {
-  color: rgb(255 255 255 / 70%);
+  color: var(--glass-text-muted);
 }
 
 .uploaded-image {
@@ -334,7 +401,6 @@ const handleIdentify = () => handleConfirm()
   gap: 12px;
 }
 
-/* 统一表单所有控件的视觉样式 */
 .analysis-form :deep(.ant-form-item-label > label) {
   color: var(--light-green);
 }
@@ -342,20 +408,19 @@ const handleIdentify = () => handleConfirm()
 .analysis-form :deep(.ant-input),
 .analysis-form :deep(.ant-select-selector),
 .analysis-form :deep(.ant-input-affix-wrapper) {
-  background-color: rgb(255 255 255 / 10%) !important;
-  border: 1px solid rgb(255 255 255 / 30%) !important;
-  color: white !important;
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
 }
 
 .analysis-form :deep(.ant-select-selection-item) {
-  color: white !important;
+  color: var(--glass-text-primary) !important;
 }
 
 .analysis-form :deep(.ant-select-arrow) {
-  color: rgb(255 255 255 / 70%);
+  color: var(--glass-text-muted);
 }
 
-/* 统一表单区域的按钮样式 */
 .form-inline-group .ant-btn {
   background-color: var(--primary-green);
   border-color: var(--primary-green);
@@ -367,7 +432,6 @@ const handleIdentify = () => handleConfirm()
   border-color: var(--dark-green) !important;
 }
 
-/* 右侧：分类按钮区域 */
 .category-section {
   flex: 1;
   display: flex;
@@ -379,15 +443,16 @@ const handleIdentify = () => handleConfirm()
   width: 100%;
   height: 48px;
   font-size: 16px;
-  background-color: rgb(255 255 255 / 15%);
-  border-color: rgb(255 255 255 / 30%);
-  color: white;
+  background-color: var(--glass-bg-subtle);
+  border-color: var(--glass-border-strong);
+  color: var(--glass-text-primary);
   transition: all 0.3s;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .category-btn:hover {
-  background-color: rgb(255 255 255 / 25%);
-  border-color: rgb(255 255 255 / 40%);
+  background-color: var(--glass-bg-item-hover);
+  border-color: var(--glass-border-strong);
 }
 
 .category-btn.active {
@@ -395,5 +460,125 @@ const handleIdentify = () => handleConfirm()
   border-color: var(--dark-green) !important;
   color: white !important;
   font-weight: bold;
+}
+
+.result-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.result-panel {
+  background-color: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.result-loading,
+.result-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 120px;
+  color: var(--glass-text-muted);
+  text-align: center;
+}
+
+.result-empty-icon {
+  font-size: 36px;
+  color: var(--glass-text-muted);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--light-green);
+  font-weight: 600;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--glass-text-muted);
+}
+
+.result-text {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--glass-text-primary);
+  text-shadow: var(--glass-text-shadow);
+}
+
+.confidence-block {
+  margin-bottom: 12px;
+}
+
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--glass-text-secondary);
+}
+
+.confidence-label strong {
+  color: var(--glass-text-primary);
+  font-size: 18px;
+}
+
+.result-hint {
+  margin: 16px 0 4px;
+  font-size: 13px;
+  color: var(--glass-text-muted);
+}
+
+.goto-warnings-btn {
+  padding-left: 0 !important;
+  color: #95de64 !important;
+}
+
+.goto-warnings-btn:hover {
+  color: #b7eb8f !important;
+}
+
+@media (width <= 992px) {
+  .main-content {
+    padding: 16px;
+  }
+
+  .analysis-body-container {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .glass-page :deep(.ant-card-body) {
+    padding: 16px;
+  }
+}
+
+@media (width <= 576px) {
+  .main-content {
+    padding: 12px;
+  }
+
+  .avatar-uploader :deep(.ant-upload.ant-upload-select-picture-card) {
+    width: 200px;
+    height: 200px;
+  }
 }
 </style>

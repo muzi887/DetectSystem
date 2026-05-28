@@ -1,10 +1,10 @@
 <template>
   <AppLayout>
     <main class="main-content">
-      <div class="content-wrapper">
-        <a-card>
+      <div class="content-wrapper glass-page">
+        <a-card :bordered="false">
           <template #title>
-            <div class="card-title">预警管理</div>
+            <div class="glass-card-title">预警管理</div>
           </template>
           <template #extra>
             <a-button
@@ -68,14 +68,13 @@
               </a-list-item>
             </template>
             <template #empty>
-              <a-empty description="暂无预警信息" />
+              <GlassEmpty description="暂无预警信息" />
             </template>
           </a-list>
         </a-card>
       </div>
     </main>
 
-    <!-- Modal 弹窗 -->
     <a-modal
       v-model:open="createModalVisible"
       title="新建预警"
@@ -127,6 +126,7 @@
 
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
+import GlassEmpty from '@/components/GlassEmpty.vue'
 import { reactive, ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
@@ -247,17 +247,6 @@ onMounted(() => {
 })
 </script>
 
-<style>
-:root {
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%);
-}
-
-/* ... (warning-modal 和 ant-select-dropdown 的样式保持不变) */
-</style>
-
 <style scoped>
 .main-content {
   display: flex;
@@ -265,42 +254,13 @@ onMounted(() => {
   width: 100%;
 }
 
-.content-wrapper {
-  width: 100%;
-  max-width: 900px;
-}
-
-.content-wrapper :deep(.ant-card) {
-  background-color: var(--glass-bg);
-  border-radius: 12px;
-  border: 1px solid rgb(255 255 255 / 20%);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-}
-
-.content-wrapper :deep(.ant-card-head) {
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-  padding: 0 24px;
-}
-
-.card-title {
-  color: var(--light-green);
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.content-wrapper :deep(.ant-card-extra .ant-btn-primary) {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-}
-
 .refresh-btn {
-  background-color: rgb(255 255 255 / 15%) !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  color: white !important;
+  background-color: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
 }
 
-.content-wrapper :deep(.ant-card-body) {
+.glass-page :deep(.ant-card-body) {
   padding: 12px 24px 24px;
 }
 
@@ -310,7 +270,11 @@ onMounted(() => {
 
 .alert-list :deep(.ant-list-item) {
   padding: 16px 0;
-  border-block-end: 1px solid rgb(255 255 255 / 20%) !important;
+  border-block-end: 1px solid var(--glass-border) !important;
+  background-color: var(--glass-bg-item);
+  margin-bottom: 4px;
+  border-radius: 4px;
+  padding-inline: 8px;
 }
 
 .alert-title-wrapper {
@@ -330,20 +294,22 @@ onMounted(() => {
   color: var(--light-green);
   font-size: 15px;
   font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .alert-time {
-  color: rgb(255 255 255 / 70%);
+  color: var(--glass-text-muted);
   font-size: 13px;
   flex-shrink: 0;
   margin-left: 16px;
 }
 
 .alert-message {
-  color: rgb(255 255 255 / 85%);
+  color: var(--glass-text-secondary);
   margin-top: 8px;
   white-space: pre-wrap;
   word-break: break-word;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .alert-list :deep(.ant-list-item-action) {
@@ -378,8 +344,8 @@ onMounted(() => {
 .alert-list :deep(.ant-pagination-prev .ant-pagination-item-link),
 .alert-list :deep(.ant-pagination-next .ant-pagination-item-link) {
   background-color: transparent !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  color: white;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary);
 }
 
 .alert-list :deep(.ant-pagination-item-active) {
@@ -392,6 +358,41 @@ onMounted(() => {
 }
 
 .alert-list :deep(.ant-empty-description) {
-  color: rgb(255 255 255 / 70%);
+  color: var(--glass-text-muted);
+}
+
+@media (width <= 992px) {
+  .main-content {
+    padding: 16px;
+  }
+
+  .alert-title-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .alert-time {
+    margin-left: 0;
+  }
+
+  .alert-info {
+    flex-wrap: wrap;
+  }
+}
+
+@media (width <= 576px) {
+  .main-content {
+    padding: 12px;
+  }
+
+  .glass-page :deep(.ant-card-body) {
+    padding: 12px 16px 16px;
+  }
+
+  .alert-list :deep(.ant-list-item-action) {
+    margin-left: 0;
+    margin-top: 8px;
+  }
 }
 </style>

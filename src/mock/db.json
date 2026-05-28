@@ -280,7 +280,7 @@
     },
     {
       "time": 1775656061841,
-      "handled": false,
+      "handled": true,
       "pointId": 1,
       "level": "high",
       "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 88.0%)",
@@ -288,7 +288,7 @@
     },
     {
       "time": 1775656194645,
-      "handled": false,
+      "handled": true,
       "pointId": 1,
       "level": "high",
       "message": "[AI识别] 监测到 wheat - 小麦赤霉病 (置信度: 89.0%)",
@@ -301,6 +301,30 @@
       "level": "high",
       "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 94.0%)",
       "id": 27
+    },
+    {
+      "time": 1779969862535,
+      "handled": false,
+      "pointId": 3,
+      "level": "medium",
+      "message": "手动触发：监测站C - 山谷 状态异常",
+      "id": 28
+    },
+    {
+      "time": 1779970037205,
+      "handled": false,
+      "pointId": 1,
+      "level": "low",
+      "message": "[AI识别] 监测到 桃 - 健康 (置信度: 95.0%)",
+      "id": 29
+    },
+    {
+      "time": 1779971826729,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 桃 - 桃疮痂病 (置信度: 93.0%)",
+      "id": 30
     }
   ]
 }

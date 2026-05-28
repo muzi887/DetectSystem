@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <div class="data-page-content">
-      <div class="chart-panel glass-panel">
+      <div class="chart-panel glass-panel glass-panel--chart">
         <div class="panel-header">
           <div class="header-left">
             <span class="title">{{ currentTitle }}</span>
@@ -9,7 +9,6 @@
           </div>
 
           <div class="header-actions">
-            <!-- 新增：生成简报按钮 -->
             <a-button
               type="primary"
               shape="round"
@@ -26,43 +25,64 @@
           </div>
         </div>
 
-        <!-- 内容区域：根据当前 Tab 动态展示不同内容 -->
         <div class="chart-wrapper">
-          <!-- 加载遮罩 -->
           <div
             v-if="loading"
-            class="loading-mask">
+            class="glass-loading-mask">
             <div class="loading-content">
               <a-spin size="large" />
               <p>正在加载数据...</p>
             </div>
           </div>
 
-          <!-- 情况1：传感器数据 (折线图) -->
           <div
             v-show="currentTab === 'sensor'"
             ref="sensorChartRef"
             class="full-content"></div>
 
-          <!-- 情况2：无人机/GIS (模拟热力图/影像) -->
           <div
             v-if="currentTab === 'drone' || currentTab === 'gis'"
-            class="full-content map-placeholder">
-            <!-- 这里用 CSS 模拟一个热力图效果，实际项目中应替换为真实图片或地图组件 -->
-            <div class="heatmap-mock">
-              <div class="heat-point p1"></div>
-              <div class="heat-point p2"></div>
-              <div class="heat-point p3"></div>
-            </div>
-            <div class="overlay-info">
-              <h3>{{ currentTab === 'drone' ? 'NDVI 植被指数分析' : '土壤湿度空间分布热力图' }}</h3>
-              <p>
-                数据来源：{{ currentTab === 'drone' ? 'DJI-Mavic-3M' : 'Sentinel-2 Satellite' }}
+            class="full-content map-visual">
+            <picture>
+              <source
+                :srcset="mapImageWebp"
+                type="image/webp" />
+              <img
+                :src="mapImageSrc"
+                :alt="currentTab === 'drone' ? 'NDVI 植被指数分析' : '土壤湿度空间分布热力图'"
+                class="map-image"
+                loading="lazy"
+                decoding="async" />
+            </picture>
+            <div class="map-caption">
+              <h3 class="font-heading">
+                {{ currentTab === 'drone' ? 'NDVI 植被指数' : '土壤墒情分布' }}
+              </h3>
+              <p class="map-source">
+                来源：{{ currentTab === 'drone' ? 'DJI Mavic 3M' : 'Sentinel-2' }}
               </p>
+            </div>
+            <div
+              class="map-legend"
+              :aria-label="currentTab === 'drone' ? 'NDVI 色标' : '土壤湿度色标'">
+              <span class="legend-title">
+                {{ currentTab === 'drone' ? 'NDVI' : '墒情 (%)' }}
+              </span>
+              <div class="legend-bar">
+                <span
+                  v-for="step in legendSteps"
+                  :key="step.label"
+                  class="legend-step"
+                  :style="{ background: step.color }"
+                  :title="step.label" />
+              </div>
+              <div class="legend-labels">
+                <span>{{ legendSteps[0].label }}</span>
+                <span>{{ legendSteps[legendSteps.length - 1].label }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- 情况3：气象数据 (仪表盘布局) -->
           <div
             v-if="currentTab === 'weather'"
             class="weather-grid">
@@ -84,7 +104,6 @@
           </div>
         </div>
 
-        <!-- 新增：智能分析结论区域 -->
         <div class="ai-analysis-box">
           <span class="ai-tag">AI 智能分析</span>
           <span class="ai-text">
@@ -93,7 +112,6 @@
         </div>
       </div>
 
-      <!-- 右侧导航按钮 (Tab 切换) -->
       <div class="nav-buttons">
         <a-button
           v-for="tab in tabs"
@@ -108,7 +126,6 @@
       </div>
     </div>
 
-    <!-- 简报生成弹窗 -->
     <a-modal
       v-model:visible="reportModalVisible"
       title="生成月度数据简报"
@@ -134,6 +151,10 @@ import { useDataStore } from '@/stores/data.ts'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import ndviHeatmap from '@/assets/ndvi-heatmap.jpg'
+import ndviHeatmapWebp from '@/assets/ndvi-heatmap.webp'
+import soilMoistureHeatmap from '@/assets/soil-moisture-heatmap.jpg'
+import soilMoistureHeatmapWebp from '@/assets/soil-moisture-heatmap.webp'
 
 const dataStore = useDataStore()
 const loading = ref(false)
@@ -165,7 +186,34 @@ const currentTitle = computed(() => tabs.find((t) => t.key === currentTab.value)
 const currentSubtitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.subtitle)
 const currentTabName = computed(() => tabs.find((t) => t.key === currentTab.value)?.label)
 
-/** 传感器 Tab：根据 alerts 生成结论文案；其余 Tab 为固定演示文案 */
+const mapImageSrc = computed(() =>
+  currentTab.value === 'drone' ? ndviHeatmap : soilMoistureHeatmap
+)
+
+const mapImageWebp = computed(() =>
+  currentTab.value === 'drone' ? ndviHeatmapWebp : soilMoistureHeatmapWebp
+)
+
+const ndviLegend = [
+  { label: '低 (裸地/胁迫)', color: '#8b4513' },
+  { label: '偏低', color: '#d4a574' },
+  { label: '中等', color: '#f4e87c' },
+  { label: '良好', color: '#7cb342' },
+  { label: '高 (茂盛)', color: '#1b5e20' }
+]
+
+const soilLegend = [
+  { label: '干旱', color: '#c62828' },
+  { label: '偏干', color: '#ef6c00' },
+  { label: '适中', color: '#fdd835' },
+  { label: '湿润', color: '#42a5f5' },
+  { label: '饱和', color: '#1565c0' }
+]
+
+const legendSteps = computed(() =>
+  currentTab.value === 'drone' ? ndviLegend : soilLegend
+)
+
 const aiConclusion = computed(() => {
   if (currentTab.value === 'sensor') {
     const alerts = dataStore.alerts || []
@@ -194,7 +242,6 @@ const aiConclusion = computed(() => {
 const sensorChartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 
-/** 按日统计 alerts 数量，供折线图 */
 function buildTrendSeries() {
   const now = Date.now()
   const dayMs = 24 * 60 * 60 * 1000
@@ -252,17 +299,13 @@ function renderSensorChart() {
 }
 
 const switchTab = async (key: string) => {
-  loading.value = true
+  if (key === currentTab.value) return
   currentTab.value = key
-
-  setTimeout(async () => {
-    loading.value = false
-    if (key === 'sensor') {
-      await nextTick()
-      chartInstance?.resize()
-      renderSensorChart()
-    }
-  }, 500)
+  if (key === 'sensor') {
+    await nextTick()
+    chartInstance?.resize()
+    renderSensorChart()
+  }
 }
 
 const reportModalVisible = ref(false)
@@ -286,21 +329,17 @@ const handleDownload = () => {
   message.success(`已下载《${currentTabName.value}分析简报.pdf》`)
 }
 
-const initData = async () => {
+onMounted(async () => {
   loading.value = true
   try {
     if (dataStore.alerts.length === 0) {
       await dataStore.fetchAlerts()
     }
+    await nextTick()
     renderSensorChart()
   } finally {
     loading.value = false
   }
-}
-
-onMounted(async () => {
-  await nextTick()
-  renderSensorChart()
   window.addEventListener('resize', () => chartInstance?.resize())
 })
 
@@ -324,22 +363,16 @@ watch(
   display: flex;
   height: 100%;
   width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
   padding: 30px;
   gap: 30px;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-.glass-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: rgb(20 30 20 / 60%); /* 深色半透明 */
-  border-radius: 20px;
-  padding: 24px;
-  backdrop-filter: blur(15px);
-  border: 1px solid rgb(255 255 255 / 15%);
-  box-shadow: 0 8px 32px rgb(0 0 0 / 30%);
+.chart-panel {
+  min-width: 0;
 }
 
 .panel-header {
@@ -348,7 +381,7 @@ watch(
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .header-left {
@@ -359,13 +392,12 @@ watch(
 .title {
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
-  font-family: 'Noto Serif SC', serif;
+  color: var(--glass-text-primary);
 }
 
 .sub-title {
   font-size: 14px;
-  color: rgb(255 255 255 / 60%);
+  color: var(--glass-text-muted);
   margin-top: 5px;
 }
 
@@ -374,7 +406,7 @@ watch(
   position: relative;
   width: 100%;
   min-height: 0;
-  background: rgb(0 0 0 / 10%); /* 内容区底色 */
+  background: rgb(0 0 0 / 10%);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -384,65 +416,86 @@ watch(
   height: 100%;
 }
 
-/* 模拟热力图样式 */
-.map-placeholder {
-  background: linear-gradient(135deg, #1a2a1a 0%, #2f4f2f 100%);
+.map-visual {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow: hidden;
 }
 
-.heatmap-mock {
-  width: 80%;
-  height: 80%;
-  background: url('https://assets.codepen.io/t-1/shape.svg') no-repeat center; /* 仅作占位示意 */
-  opacity: 0.5;
-  filter: blur(30px);
+.map-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.map-caption {
   position: absolute;
-}
-
-.heat-point {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(20px);
-}
-
-.p1 {
-  width: 100px;
-  height: 100px;
-  background: red;
-  top: 30%;
-  left: 30%;
-}
-
-.p2 {
-  width: 150px;
-  height: 150px;
-  background: yellow;
-  top: 60%;
-  right: 30%;
-}
-
-.p3 {
-  width: 80px;
-  height: 80px;
-  background: orange;
-  bottom: 20%;
-  left: 40%;
-}
-
-.overlay-info {
+  left: 12px;
+  bottom: 12px;
   z-index: 2;
-  text-align: center;
-  color: #fff;
-  background: rgb(0 0 0 / 50%);
-  padding: 20px;
-  border-radius: 10px;
-  backdrop-filter: blur(5px);
+  max-width: min(280px, 55%);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 15%);
+  backdrop-filter: blur(8px);
+  color: var(--glass-text-primary);
 }
 
-/* 气象卡片样式 */
+.map-caption h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.map-source {
+  margin: 0;
+  font-size: 12px;
+  color: var(--glass-text-muted);
+}
+
+.map-legend {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  min-width: 140px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 15%);
+  backdrop-filter: blur(8px);
+  color: var(--glass-text-primary);
+}
+
+.legend-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--glass-text-secondary);
+}
+
+.legend-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.legend-step {
+  flex: 1;
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--glass-text-muted);
+}
+
 .weather-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -451,19 +504,20 @@ watch(
 }
 
 .weather-card {
-  background: rgb(255 255 255 / 10%) !important;
-  border: none !important;
-  color: white !important;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text-primary) !important;
   text-align: center;
   font-size: 32px;
   font-weight: bold;
+  text-shadow: var(--glass-text-shadow);
 }
 
 :deep(.ant-card-head-title) {
-  color: rgb(255 255 255 / 80%) !important;
+  color: var(--glass-text-secondary) !important;
+  text-shadow: var(--glass-text-shadow);
 }
 
-/* AI 分析栏 */
 .ai-analysis-box {
   margin-top: 20px;
   background: rgb(74 92 67 / 30%);
@@ -487,7 +541,7 @@ watch(
 .ai-text {
   color: #eef1ea;
   font-size: 14px;
-  font-family: monospace;
+  line-height: 1.6;
 }
 
 .nav-buttons {
@@ -499,10 +553,11 @@ watch(
 
 .nav-btn {
   height: 60px !important;
-  background: rgb(255 255 255 / 5%) !important;
-  border: 1px solid rgb(255 255 255 / 10%) !important;
-  color: rgb(255 255 255 / 70%) !important;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text-secondary) !important;
   font-size: 16px !important;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .active-btn {
@@ -512,18 +567,110 @@ watch(
   box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
 }
 
-.loading-mask {
-  position: absolute;
-  inset: 0;
-  background: rgb(0 0 0 / 60%);
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
+@media (width <= 992px) {
+  .data-page-content {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+    gap: 16px;
+    overflow: visible;
+  }
+
+  .chart-wrapper {
+    min-height: 320px;
+  }
+
+  .nav-buttons {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    order: 1;
+  }
+
+  .chart-panel {
+    order: 0;
+    min-height: 480px;
+  }
+
+  .nav-btn {
+    flex: 1 1 calc(50% - 4px);
+    height: 48px !important;
+    font-size: 14px !important;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .weather-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 20px;
+  }
+
+  .ai-analysis-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 
-.loading-content {
-  text-align: center;
+@media (width <= 576px) {
+  .data-page-content {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .nav-btn {
+    flex: 1 1 100%;
+    height: 44px !important;
+    font-size: 13px !important;
+  }
+
+  .chart-wrapper {
+    min-height: 260px;
+  }
+
+  .chart-panel {
+    min-height: 420px;
+  }
+
+  .weather-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .weather-card {
+    font-size: 24px !important;
+  }
+
+  .map-caption {
+    max-width: calc(100% - 24px);
+    left: 8px;
+    bottom: 8px;
+    padding: 8px 10px;
+  }
+
+  .map-legend {
+    right: 8px;
+    bottom: 8px;
+    min-width: 120px;
+    padding: 8px;
+  }
 }
 </style>

@@ -1,4 +1,3 @@
-"""Flask：图片分析接口（当前为 MOCK_RESULTS 模拟，可替换 run_ai_model_prediction）"""
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time
@@ -16,7 +15,6 @@ MOCK_RESULTS = {
 
 
 def run_ai_model_prediction(image_file, crop_type):
-    """接入真实模型时在此替换；下方为演示随机结果。"""
     print(f"分析: {image_file.filename}, 作物={crop_type}")
     time.sleep(1)
     possible = MOCK_RESULTS.get(crop_type, ["未知病害"])

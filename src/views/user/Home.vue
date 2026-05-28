@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <div class="dashboard-container">
-      <div class="dashboard-panel welcome">
+      <div class="glass-panel welcome">
         <h2>欢迎！</h2>
         <p>青禾智匠监测预警系统：查看监测点、处理预警、上传图片分析（演示环境）。</p>
         <div class="quick-links">
@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="dashboard-panel stats">
+      <div class="glass-panel stats">
         <h3>核心指标概览</h3>
         <div class="stat-grid">
           <div class="stat-card">
@@ -38,14 +38,14 @@
             <h4>系统状态</h4>
             <p
               class="value"
-              style="color: #4caf50">
-              正常
+              :class="systemStatus.class">
+              {{ systemStatus.label }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="dashboard-panel recent-alerts">
+      <div class="glass-panel recent-alerts">
         <h3>最新预警动态</h3>
         <a-list
           item-layout="horizontal"
@@ -63,9 +63,9 @@
             </a-list-item>
           </template>
           <template #empty>
-            <a-empty
+            <GlassEmpty
               description="暂无预警信息"
-              style="color: white; padding-top: 20px" />
+              style="padding-top: 20px" />
           </template>
         </a-list>
       </div>
@@ -77,12 +77,30 @@
 import { computed, onMounted } from 'vue'
 import { useDataStore, type AlertLevel } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
+import GlassEmpty from '@/components/GlassEmpty.vue'
 
 const dataStore = useDataStore()
 
-const unhandledAlertsCount = computed(() =>
-  dataStore.alerts.filter((alert) => !alert.handled).length
-)
+const unhandledAlerts = computed(() => dataStore.alerts.filter((alert) => !alert.handled))
+
+const unhandledAlertsCount = computed(() => unhandledAlerts.value.length)
+
+const systemStatus = computed(() => {
+  const pending = unhandledAlerts.value
+  if (pending.length === 0) {
+    return { label: '正常', class: 'status-normal' }
+  }
+  if (pending.some((a) => a.level === 'critical')) {
+    return { label: '严重告警', class: 'status-critical' }
+  }
+  if (pending.some((a) => a.level === 'high')) {
+    return { label: '高风险', class: 'status-high' }
+  }
+  if (pending.some((a) => a.level === 'warning' || a.level === 'medium')) {
+    return { label: '需关注', class: 'status-warning' }
+  }
+  return { label: '轻微波动', class: 'status-low' }
+})
 
 const monitorPointsCount = computed(() => dataStore.monitorPoints.length)
 
@@ -108,43 +126,21 @@ onMounted(() => {
 
 <style scoped>
 .dashboard-container {
-  --primary-green: #677662;
-  --dark-green: #4a5c43;
-  --light-green: #eef1ea;
-  --glass-bg: rgb(255 255 255 / 10%);
-
   width: 100%;
-  max-width: 1300px;
-  margin: 0 auto; /* 水平居中 */
-
+  max-width: var(--page-max-width);
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 1fr; /* 左边宽，右边窄 */
-  grid-template-rows: auto 1fr; /* 第一行自适应，第二行撑满 */
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: auto 1fr;
   gap: 24px;
-
-  /* 确保高度撑满视口剩余空间，看起来更饱满 */
   min-height: 100%;
 }
 
-/* 玻璃感面板通用样式 */
-.dashboard-panel {
-  background-color: var(--glass-bg);
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(255 255 255 / 20%);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 欢迎面板 (跨两列) */
 .welcome {
   grid-column: 1 / 3;
   padding: 40px;
   text-align: center;
-  background-color: rgb(74 92 67 / 40%); /* 稍微加深一点背景 */
+  background-color: var(--glass-bg-welcome);
   align-items: center;
   justify-content: center;
 }
@@ -154,12 +150,14 @@ onMounted(() => {
   font-size: 32px;
   margin-bottom: 15px;
   font-weight: bold;
+  text-shadow: var(--glass-title-shadow);
 }
 
 .welcome p {
   margin-bottom: 30px;
   font-size: 18px;
-  color: rgb(255 255 255 / 90%);
+  color: var(--glass-text-secondary);
+  text-shadow: var(--glass-text-shadow);
 }
 
 .quick-links {
@@ -185,7 +183,6 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
 }
 
-/* 统计面板 (左下) */
 .stats {
   grid-column: 1 / 2;
 }
@@ -193,75 +190,101 @@ onMounted(() => {
 .stats h3,
 .recent-alerts h3 {
   padding-bottom: 15px;
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
+  border-bottom: 1px solid var(--glass-border);
   margin-bottom: 20px;
   font-size: 18px;
   color: var(--light-green);
   font-weight: bold;
+  text-shadow: var(--glass-title-shadow);
 }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  flex-grow: 1; /* 让 grid 填满剩余高度 */
-  align-content: center; /* 内容垂直居中 */
+  flex-grow: 1;
+  align-content: center;
 }
 
 .stat-card {
   padding: 25px 15px;
-  border: 1px solid rgb(255 255 255 / 10%);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   text-align: center;
-  background-color: rgb(255 255 255 / 5%);
+  background-color: var(--glass-bg-subtle);
   transition: transform 0.3s;
 }
 
 .stat-card:hover {
-  background-color: rgb(255 255 255 / 8%);
+  background-color: var(--glass-bg-item-hover);
 }
 
 .stat-card h4 {
-  color: rgb(255 255 255 / 80%);
+  color: var(--glass-text-secondary);
   font-size: 14px;
   margin-bottom: 10px;
+  font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .stat-card .value {
   font-size: 28px;
   font-weight: bold;
   margin: 0;
-  color: #fff;
+  color: var(--glass-text-primary);
+  text-shadow: var(--glass-text-shadow);
 }
 
 .stat-card .alert {
   color: #ff9800;
 }
 
-/* 最新预警面板 (右下) */
+.stat-card .status-normal {
+  color: #4caf50;
+}
+
+.stat-card .status-critical {
+  color: #cf1322;
+}
+
+.stat-card .status-high {
+  color: #ff4d4f;
+}
+
+.stat-card .status-warning {
+  color: #faad14;
+}
+
+.stat-card .status-low {
+  color: #95de64;
+}
+
 .recent-alerts {
   grid-column: 2 / 3;
-
-  /* 确保列表过长时只在卡片内部滚动，不撑破布局 (可选) */
   overflow: hidden;
 }
 
 .recent-alerts :deep(.ant-list) {
   color: white;
   flex-grow: 1;
-  overflow-y: auto; /* 允许列表内部滚动 */
+  overflow-y: auto;
 }
 
 .recent-alerts :deep(.ant-list-item) {
-  border-block-end: 1px solid rgb(255 255 255 / 15%) !important;
+  border-block-end: 1px solid var(--glass-border) !important;
   padding: 16px 0;
+  background-color: var(--glass-bg-item);
+  margin-bottom: 4px;
+  border-radius: 4px;
+  padding-inline: 8px;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a) {
-  color: rgb(255 255 255 / 95%);
-  font-weight: normal;
+  color: var(--glass-text-secondary);
+  font-weight: 500;
   transition: color 0.3s;
   font-size: 14px;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a:hover) {
@@ -270,12 +293,11 @@ onMounted(() => {
 }
 
 .recent-alerts :deep(.ant-list-item-meta-description) {
-  color: rgb(255 255 255 / 60%);
+  color: var(--glass-text-muted);
   font-size: 12px;
   margin-top: 4px;
 }
 
-/* --- 预警级别样式 --- */
 .level-critical {
   color: #cf1322 !important;
   font-weight: bold !important;
@@ -295,6 +317,65 @@ onMounted(() => {
 }
 
 .level-low {
-  color: #52c41a !important;
+  color: #95de64 !important;
+}
+
+@media (width <= 992px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+
+  .welcome,
+  .stats,
+  .recent-alerts {
+    grid-column: 1;
+  }
+
+  .welcome {
+    padding: 28px 20px;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (width <= 576px) {
+  .welcome h2 {
+    font-size: 24px;
+  }
+
+  .welcome p {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+
+  .quick-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .quick-btn {
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 16px 12px;
+  }
+
+  .stat-card .value {
+    font-size: 22px;
+  }
 }
 </style>

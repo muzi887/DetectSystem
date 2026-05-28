@@ -1,7 +1,3 @@
-/**
- * 全局搜索 Composable
- * 支持搜索：导航菜单、监测点、预警信息
- */
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDataStore } from '@/stores/data'
@@ -17,7 +13,6 @@ export interface SearchResult {
   query?: Record<string, string | number>
 }
 
-// 导航菜单（与路由对应，排除登录页）
 const MENU_ITEMS: { path: string; title: string; keywords: string[] }[] = [
   { path: '/home', title: '首页', keywords: ['首页', 'home'] },
   { path: '/related-data', title: '相关数据', keywords: ['相关数据', '数据'] },

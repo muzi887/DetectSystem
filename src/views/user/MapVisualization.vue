@@ -1,24 +1,22 @@
 <template>
   <AppLayout>
-    <div class="content-wrapper">
-      <!-- 地图容器卡片 -->
+    <div class="content-wrapper glass-page map-page">
       <a-card
-        class="map-card"
+        class="map-card glass-ant-card"
         :bordered="false">
         <template #title>
-          <div class="card-title">地图 - 监测点实时分布</div>
+          <div class="glass-card-title">地图 - 监测点实时分布</div>
         </template>
         <div
           ref="mapRef"
           class="map-container"></div>
       </a-card>
 
-      <!-- 操作面板卡片 -->
       <a-card
-        class="actions-card"
+        class="actions-card glass-ant-card"
         :bordered="false">
         <template #title>
-          <div class="card-title">地图操作</div>
+          <div class="glass-card-title">地图操作</div>
         </template>
         <a-space>
           <a-button
@@ -42,6 +40,10 @@ import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
+import {
+  getMonitorStatusColor,
+  getMonitorStatusLabel
+} from '@/utils/monitorStatus'
 import * as L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet/dist/leaflet.css'
@@ -55,15 +57,8 @@ let map: L.Map | null = null
 let markerCluster: L.MarkerClusterGroup | null = null
 const markersById = new Map<number, L.Marker>()
 
-function statusColor(status: string) {
-  if (status === 'normal') return '#52c41a'
-  if (status === 'warning') return '#fa8c16'
-  if (status === 'critical') return '#cf1322'
-  return '#1890ff'
-}
-
 function createDivIcon(point: any) {
-  const color = statusColor(point.status)
+  const color = getMonitorStatusColor(point.status)
   const html = `
     <div class="custom-marker">
       <div class="marker-dot" style="background:${color};"></div>
@@ -90,7 +85,7 @@ function buildPopupHtml(point: any) {
       <div class="popup-title">${point.name}</div>
       <div class="popup-info">温度: <strong>${point.temp}°C</strong></div>
       <div class="popup-info">土壤湿度: <strong>${point.soilMoisture}%</strong></div>
-      <div class="popup-info">状态: <strong style="color:${statusColor(point.status)}">${point.status || '未知'}</strong></div>
+      <div class="popup-info">状态: <strong style="color:${getMonitorStatusColor(point.status)}">${getMonitorStatusLabel(point.status)}</strong></div>
       ${alertInfo}
       <div class="popup-actions">
         <button data-action="trigger" data-id="${point.id}" class="popup-btn trigger">手动触发</button>
@@ -181,7 +176,6 @@ async function initMap() {
   markerCluster.addTo(map)
 
   setTimeout(() => {
-    // Leaflet 在 flex 容器内需 invalidateSize
     map?.invalidateSize()
   }, 100)
 }
@@ -228,193 +222,50 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<!-- 全局样式：Leaflet 覆盖 -->
-<style>
-/* 自定义 Leaflet 弹窗样式 */
-.leaflet-popup-content-wrapper {
-  background: rgb(40 50 38 / 90%) !important;
-  color: #eef1ea !important;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 8px !important;
-  box-shadow: 0 4px 30px rgb(0 0 0 / 20%) !important;
-  backdrop-filter: blur(10px);
-}
-
-.leaflet-popup-tip {
-  background: rgb(40 50 38 / 90%) !important;
-  border-left: 1px solid rgb(255 255 255 / 20%);
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-}
-
-.leaflet-popup-content {
-  margin: 14px 20px !important;
-  line-height: 1.8;
-}
-
-.leaflet-popup-close-button {
-  color: #eef1ea !important;
-  padding: 8px 8px 0 0 !important;
-}
-
-/* 自定义聚合点样式 */
-.marker-cluster-small,
-.marker-cluster-medium,
-.marker-cluster-large {
-  background-color: rgb(74 92 67 / 60%) !important;
-  border: 2px solid #677662;
-}
-
-.marker-cluster-small div,
-.marker-cluster-medium div,
-.marker-cluster-large div {
-  background-color: rgb(42 60 35 / 80%) !important;
-  color: white !important;
-}
-
-/* 弹窗内容与按钮样式（须在全局，因 Leaflet 动态注入的 HTML 不受 scoped 影响） */
-.leaflet-popup-content-themed .popup-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: white;
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-  padding-bottom: 8px;
-}
-
-.leaflet-popup-content-themed .popup-info {
-  margin-bottom: 4px;
-}
-
-.leaflet-popup-content-themed .popup-alert-info {
-  margin-top: 10px;
-  padding: 8px;
-  border-radius: 4px;
-  background: rgb(207 19 34 / 30%);
-  color: #ffc2c2;
-  font-size: 13px;
-}
-
-.leaflet-popup-content-themed .popup-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.leaflet-popup-content-themed .popup-btn {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff !important;
-  border: 1px solid rgb(255 255 255 / 40%);
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  -webkit-font-smoothing: antialiased;
-  white-space: nowrap;
-}
-
-/* 手动触发：橙色更醒目 */
-.leaflet-popup-content-themed .popup-btn.trigger {
-  background: linear-gradient(180deg, #f0a050 0%, #d67220 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-
-/* 标记解决：使用蓝绿色与弹窗背景区分 */
-.leaflet-popup-content-themed .popup-btn.close {
-  background: linear-gradient(180deg, #4a9fd4 0%, #2d7ab0 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-
-.leaflet-popup-content-themed .popup-btn:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-}
-
-.leaflet-popup-content-themed .popup-btn:disabled {
-  background: #555 !important;
-  border-color: #666;
-  cursor: not-allowed;
-  transform: none;
-}
-</style>
-
 <style scoped>
-/* 变量定义 (如果 AppLayout 样式没穿透，这里可能需要，但通常不需要了) */
-.content-wrapper {
-  /* 关键修改：让内容区域填满 AppLayout 留下的空间 */
-  width: 100%;
+.map-page {
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* 卡片通用玻璃样式 */
-.map-card,
-.actions-card {
-  background-color: rgb(255 255 255 / 10%);
-  border-radius: 12px;
-  border: 1px solid rgb(255 255 255 / 20%);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgb(0 0 0 / 10%);
-}
-
-:deep(.ant-card-head) {
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-}
-
-.card-title {
-  color: #eef1ea;
+.map-page .glass-card-title {
   font-size: 18px;
-  font-weight: bold;
-}
-
-:deep(.ant-card-body) {
-  padding: 16px;
 }
 
 .map-card {
-  /* 关键修改：使用 flex: 1 占据剩余所有垂直空间 */
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 防止内容溢出 */
+  overflow: hidden;
 }
 
 .map-card :deep(.ant-card-body) {
   padding: 0 !important;
-  flex: 1; /* 让 body 填满卡片 */
-  position: relative; /* 为地图绝对定位做准备（可选，视leaflet行为而定） */
-  height: 100%; /* 确保高度传递 */
+  flex: 1;
+  position: relative;
+  height: 100%;
 }
 
 .map-container {
   width: 100%;
-  height: 100%; /* 必须设置高度，否则 leaflet 无法渲染 */
-  min-height: 400px; /* 防止极端情况下高度为0 */
+  height: 100%;
+  min-height: 400px; /* Leaflet 需要容器高度 */
   border-radius: 0 0 12px 12px;
-  z-index: 1; /* 确保地图在最下层 */
+  z-index: 1;
 }
 
-/* 操作区按钮样式 */
 .actions-card {
-  flex-shrink: 0; /* 防止操作栏被压缩 */
-}
-
-.actions-card :deep(.ant-btn-primary) {
-  background-color: #4a5c43 !important;
-  border-color: #4a5c43 !important;
+  flex-shrink: 0;
 }
 
 .refresh-btn {
-  background-color: rgb(255 255 255 / 15%) !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  color: white !important;
+  background-color: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
 }
 
-/* --- 自定义 Marker 和 Popup 内容样式 --- */
 :deep(.custom-marker) {
   display: flex;
   flex-direction: column;
@@ -437,4 +288,13 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+@media (width <= 576px) {
+  .map-container {
+    min-height: 280px;
+  }
+
+  .map-page .glass-card-title {
+    font-size: 16px;
+  }
+}
 </style>

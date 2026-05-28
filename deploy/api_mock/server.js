@@ -1,7 +1,3 @@
-/**
- * json-server Mock：REST + 自定义 /login
- * 生产部署用（CommonJS）。源码：src/mock/server.ts
- */
 const jsonServer = require('json-server')
 const path = require('path')
 const fs = require('fs')

@@ -1,4 +1,3 @@
-/** 登录态：token / userInfo 持久化到 localStorage */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import http from '@/utils/http'

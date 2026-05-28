@@ -20,10 +20,17 @@
             <strong>坤灵智巡创工队</strong>
             ，参加 2025–2026 年「挑战杯」大学生创业计划竞赛。本 Web 监测系统由
             <strong>张晓琳</strong>
-            （信息工程学院 · 计算机科学与技术）完成从 0 到 1 的搭建与线上部署；其余队员负责策划、调研、运营与赛事组织等工作。
+            （信息工程学院）完成开发与线上部署；团队在地信、测绘、运营等方面协同完成。
           </div>
 
-          <!-- 三个维度图标区 -->
+          <img
+            :src="agriMonitoringIllustration"
+            alt="智慧农业监测示意：传感器、数据大屏与无人机协同"
+            class="vision-illustration"
+            loading="lazy"
+            decoding="async" />
+
+
           <div class="dimension-grid">
             <div class="dim-item">
               <RocketOutlined class="dim-icon" />
@@ -56,7 +63,6 @@
         </div>
       </div>
 
-      <!-- 2. 技术栈 (胶囊风格) -->
       <div class="glass-panel section-panel">
         <div class="section-header">
           <CodeOutlined />
@@ -81,24 +87,18 @@
         </div>
       </div>
 
-      <!-- 3. 核心团队 (重点：深色玻璃卡片) -->
       <div class="glass-panel section-panel">
         <div class="section-header">
           <TeamOutlined />
           核心团队
         </div>
-        <p class="team-intro">
-          以下为项目成员分工介绍。网站开发、接口联调与服务器部署由
-          <strong>张晓琳</strong>
-          负责；其他成员在地信、测绘、运营、市场等领域协作。
-        </p>
+        <p class="team-intro">以下为成员分工介绍。</p>
 
         <div class="team-grid">
           <div
             v-for="member in teamMembers"
             :key="member.name"
             class="member-card">
-            <!-- 头像区 -->
             <div class="avatar-wrapper">
               <a-avatar
                 :size="80"
@@ -107,7 +107,6 @@
                 {{ member.name.charAt(0) }}
               </a-avatar>
             </div>
-            <!-- 信息区 -->
             <div class="info-wrapper">
               <div class="name-row">
                 <span class="name">{{ member.name }}</span>
@@ -124,7 +123,6 @@
         </div>
       </div>
 
-      <!-- 4. 指导老师 -->
       <div class="glass-panel section-panel">
         <div class="section-header">
           <TrophyOutlined />
@@ -135,6 +133,7 @@
             <div class="avatar-wrapper">
               <a-avatar
                 :size="80"
+                :src="advisorDefaultAvatar"
                 class="custom-avatar advisor-avatar">
                 师
               </a-avatar>
@@ -151,7 +150,6 @@
         </div>
       </div>
 
-      <!-- 5. 联系我们 -->
       <div class="glass-panel footer-panel">
         <div class="footer-inner">
           <p class="contest-info">
@@ -193,6 +191,11 @@ import {
 } from '@ant-design/icons-vue'
 
 import vueIcon from '@/assets/icons/vue.svg'
+import teamDefaultAvatar from '@/assets/avatars/team-default.svg'
+import advisorDefaultAvatar from '@/assets/avatars/advisor-default.svg'
+import agriMonitoringIllustration from '@/assets/illustrations/agri-monitoring-line.svg'
+
+const TEAM_AVATAR = teamDefaultAvatar
 
 const techStack = ref([
   { name: 'Vue 3', icon: 'img', src: vueIcon, color: '#42b883' },
@@ -218,7 +221,8 @@ const advisor = {
   name: '刘兴冉',
   title: '讲师',
   college: '土地科学与空间规划学院',
-  message: '寄语：脚踏实地，仰望星空。'
+  message:
+    '寄语：把地信所学落到田间，用可落地的系统守护粮安。祝坤灵智巡在挑战杯中行稳致远。'
 }
 
 const teamMembers = ref([
@@ -227,113 +231,89 @@ const teamMembers = ref([
     role: '项目负责人',
     major: '地理信息科学专业',
     desc: '国家奖学金、国家励志奖学金获得者；多次获得国家级、省级荣誉；主持过多项创新创业类赛事。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '张晓琳',
     role: '技术总监',
-    major: '信息工程学院 · 计算机科学与技术（大三）',
-    desc: '河北地质大学信息工程学院计科大三学生，专业成绩扎实，熟悉 C++ 与 Vue 开发流程，对 Web 与人工智能应用有浓厚兴趣。在本项目中承担网站从 0 到 1 的搭建与线上部署，负责前后端联调，保障系统稳定运行。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    major: '计算机科学与技术专业',
+    desc: '专业成绩扎实，熟悉 C++ 与 Vue 开发流程，对 Web 与人工智能应用有浓厚兴趣。',
+    avatar: TEAM_AVATAR
   },
   {
     name: '王子雪',
     role: '技术总监',
     major: '地理信息科学专业',
     desc: '擅长系统开发，具有丰富的数据处理与应用能力。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '鲍辰怡',
     role: '运营总监',
     major: '地理信息科学专业',
     desc: '负责渠道推广、活动策划与内容生产，运营项目品牌价值。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '周艺恬',
     role: '技术总监',
     major: '测绘工程专业',
     desc: '具有较强专业技术能力，擅长软件开发与编程。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '柴雨润',
     role: '行政总监',
     major: '土地资源管理专业',
     desc: '具有丰富的实践调研经验，制定与执行团队行政与日常运营安排。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '刘金莎',
     role: '技术总监',
     major: '地理信息科学专业',
     desc: '擅长系统开发与测试，参与营销与推广策略制定。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '杨紫蓉',
     role: '市场总监',
     major: '土地资源管理专业',
     desc: '具有丰富的实践调研经验，开展市场调研与渠道拓展。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   },
   {
     name: '王婧蕾',
     role: '财务总监',
     major: '会计学专业',
     desc: '分析经营活动情况，负责日常财务核算与资金动态分析。',
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    avatar: TEAM_AVATAR
   }
 ])
 </script>
 
 <style scoped>
-/* 引入字体，与 Layout 保持一致 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
-
-/* 
-   =========== 核心布局 =========== 
-*/
 .about-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 30px; /* 板块间距 */
+  gap: 30px;
   padding-bottom: 40px;
 }
 
-/* 
-   =========== 通用玻璃面板样式 =========== 
-   这是实现你 Layout 风格的关键 
-*/
 .glass-panel {
-  /* 深绿色半透明背景 */
-  background: rgb(30 50 30 / 60%);
-
-  /* 磨砂效果 */
-  backdrop-filter: blur(12px);
-
-  /* 边框：细微的亮光边框 */
-  border: 1px solid rgb(255 255 255 / 15%);
-  border-radius: 16px;
-
-  /* 阴影 */
-  box-shadow: 0 8px 32px rgb(0 0 0 / 30%);
   padding: 30px;
-  color: #fff;
   transition: transform 0.3s ease;
 }
 
-/* 标题通用样式 */
 .section-header {
-  font-family: 'Noto Serif SC', serif;
+  font-family: var(--font-serif);
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 24px;
-  color: #eef1ea; /* 浅绿白 */
+  color: #eef1ea;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -341,16 +321,13 @@ const teamMembers = ref([
   padding-bottom: 10px;
 }
 
-/* 
-   =========== 1. 愿景板块 =========== 
-*/
 .panel-header {
   text-align: center;
   margin-bottom: 20px;
 }
 
 .main-title {
-  font-family: 'Noto Serif SC', serif;
+  font-family: var(--font-serif);
   font-size: 36px;
   color: #fff;
   margin: 0;
@@ -367,9 +344,9 @@ const teamMembers = ref([
 
 .slogan {
   text-align: center;
-  font-family: 'Noto Serif SC', serif;
+  font-family: var(--font-serif);
   font-size: 28px;
-  color: #b7eb8f; /* 嫩绿高亮 */
+  color: #b7eb8f;
   margin-bottom: 5px;
 }
 
@@ -391,6 +368,16 @@ const teamMembers = ref([
   line-height: 1.8;
   color: rgb(255 255 255 / 90%);
   font-size: 16px;
+}
+
+.vision-illustration {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 28px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .dimension-grid {
@@ -424,7 +411,7 @@ const teamMembers = ref([
   color: #fff;
   font-size: 18px;
   margin-bottom: 8px;
-  font-family: 'Noto Serif SC', serif;
+  font-family: var(--font-serif);
 }
 
 .dim-item p {
@@ -434,9 +421,6 @@ const teamMembers = ref([
   margin: 0;
 }
 
-/* 
-   =========== 2. 技术栈 =========== 
-*/
 .tech-grid {
   display: flex;
   flex-wrap: wrap;
@@ -469,9 +453,6 @@ const teamMembers = ref([
   font-size: 20px;
 }
 
-/* 
-   =========== 3. 团队卡片 (关键美化) =========== 
-*/
 .team-intro {
   text-align: center;
   color: rgb(255 255 255 / 70%);
@@ -481,12 +462,12 @@ const teamMembers = ref([
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* 卡片稍宽 */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
 }
 
 .member-card {
-  background: rgb(0 0 0 / 25%); /* 比大背景更深一点 */
+  background: rgb(0 0 0 / 25%);
   border: 1px solid rgb(255 255 255 / 8%);
   border-radius: 12px;
   display: flex;
@@ -504,7 +485,6 @@ const teamMembers = ref([
   box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
 }
 
-/* 装饰线条 */
 .member-card::before {
   content: '';
   position: absolute;
@@ -512,12 +492,12 @@ const teamMembers = ref([
   left: 0;
   width: 4px;
   height: 100%;
-  background: #344e31; /* 暗绿条 */
+  background: #344e31;
   transition: background 0.3s;
 }
 
 .member-card:hover::before {
-  background: #b7eb8f; /* 亮绿条 */
+  background: #b7eb8f;
 }
 
 .avatar-wrapper {
@@ -545,7 +525,7 @@ const teamMembers = ref([
 .name {
   font-size: 18px;
   font-weight: bold;
-  font-family: 'Noto Serif SC', serif;
+  font-family: var(--font-serif);
   color: #fff;
 }
 
@@ -581,9 +561,6 @@ const teamMembers = ref([
   text-align: justify;
 }
 
-/* 
-   =========== 4. 指导老师特殊样式 =========== 
-*/
 .advisor-container {
   display: flex;
   justify-content: center;
@@ -603,7 +580,7 @@ const teamMembers = ref([
 }
 
 .advisor-avatar {
-  background-color: #d4b106; /* 金色 */
+  background-color: #d4b106;
   color: #fff;
 }
 
@@ -620,9 +597,6 @@ const teamMembers = ref([
   text-align: center;
 }
 
-/* 
-   =========== 5. 底部 =========== 
-*/
 .footer-panel {
   text-align: center;
   padding: 40px;
@@ -657,7 +631,6 @@ const teamMembers = ref([
   color: #344e31;
 }
 
-/* 响应式 */
 @media (width <= 768px) {
   .dimension-grid {
     grid-template-columns: 1fr;

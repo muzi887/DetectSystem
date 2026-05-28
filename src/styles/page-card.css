@@ -1,0 +1,106 @@
+.page-content-wrapper,
+.content-wrapper {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+}
+
+.glass-page .ant-card,
+.ant-card.glass-ant-card {
+  background-color: var(--glass-bg);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-page .ant-card-head,
+.ant-card.glass-ant-card .ant-card-head {
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px;
+}
+
+.glass-card-title,
+.card-title {
+  color: var(--light-green);
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  text-shadow: var(--glass-title-shadow);
+}
+
+.glass-page .ant-card-extra .ant-btn-primary,
+.glass-ant-card .ant-card-extra .ant-btn-primary {
+  background-color: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+}
+
+.glass-panel,
+.dashboard-panel {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  color: var(--glass-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.glass-panel--chart {
+  border-radius: 20px;
+  padding: 24px;
+  flex: 1;
+}
+
+.glass-widget-card.ant-card {
+  background-color: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text-primary);
+}
+
+.glass-widget-card .ant-card-head {
+  background-color: rgb(0 0 0 / 15%);
+  border-bottom: 1px solid var(--glass-border) !important;
+  color: var(--light-green);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  text-shadow: var(--glass-title-shadow);
+  padding: 0 16px;
+}
+
+.glass-widget-card .ant-card-body {
+  padding: 12px;
+}
+
+.font-heading,
+.glass-panel .title,
+.panel-header .title {
+  font-family: var(--font-serif);
+  text-shadow: var(--glass-title-shadow);
+}
+
+.glass-empty.ant-empty .ant-empty-description {
+  color: var(--glass-text-muted);
+}
+
+.glass-empty.ant-empty .ant-empty-image {
+  opacity: 0.85;
+}
+
+.glass-loading-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 55%);
+  color: var(--glass-text-primary);
+}
+
+.glass-loading-mask .loading-content {
+  text-align: center;
+}

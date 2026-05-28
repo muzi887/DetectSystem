@@ -1,10 +1,10 @@
 <template>
   <AppLayout>
     <main class="main-content">
-      <div class="content-wrapper">
+      <div class="content-wrapper glass-page">
         <a-card :bordered="false">
           <template #title>
-            <div class="card-title">智慧决策支持</div>
+            <div class="glass-card-title">智慧决策支持</div>
           </template>
 
           <div class="decision-dashboard">
@@ -12,7 +12,7 @@
               <a-card
                 title="待处理灾害预警"
                 size="small"
-                class="widget-card">
+                class="widget-card glass-widget-card">
                 <a-list
                   :data-source="unhandledAlerts"
                   size="small">
@@ -21,7 +21,10 @@
                       class="area-list-item"
                       :class="{ active: selectedArea && selectedArea.id === item.id }"
                       @click="selectArea(item)">
-                      <a-list-item-meta :title="item.pointName">
+                      <a-list-item-meta>
+                        <template #title>
+                          <span class="area-item-title">{{ item.pointName }}</span>
+                        </template>
                         <template #description>
                           <a-tag :color="getLevelColor(item.level)">
                             {{ getLevelText(item.level) }}
@@ -40,7 +43,7 @@
                 v-if="selectedArea"
                 title="区域概览"
                 size="small"
-                class="widget-card">
+                class="widget-card glass-widget-card">
                 <div
                   ref="mapRef"
                   class="mini-map-container"></div>
@@ -72,7 +75,7 @@
                 <a-card
                   title="实时监测数据"
                   size="small"
-                  class="widget-card">
+                  class="widget-card glass-widget-card">
                   <div class="geo-info-grid">
                     <div class="info-card">
                       <dashboard-outlined
@@ -80,7 +83,7 @@
                         :style="{ color: getStatusColor(selectedArea.pointStatus) }" />
                       <h4>设备状态</h4>
                       <p :style="{ color: getStatusColor(selectedArea.pointStatus) }">
-                        {{ selectedArea.pointStatus }}
+                        {{ getStatusLabel(selectedArea.pointStatus) }}
                       </p>
                     </div>
                     <div class="info-card">
@@ -99,7 +102,7 @@
                 <a-card
                   title="AI 决策建议"
                   size="small"
-                  class="widget-card">
+                  class="widget-card glass-widget-card">
                   <template #extra>
                     <a-button
                       type="primary"
@@ -145,6 +148,10 @@ import {
 } from '@ant-design/icons-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useDataStore } from '@/stores/data'
+import {
+  getMonitorStatusColor as getStatusColor,
+  getMonitorStatusLabel as getStatusLabel
+} from '@/utils/monitorStatus'
 
 const dataStore = useDataStore()
 
@@ -230,13 +237,6 @@ function getLevelColor(level: string) {
 function getLevelText(level: string) {
   return levelText[level] || '未知'
 }
-function getStatusColor(status: string) {
-  if (status === 'normal') return '#52c41a'
-  if (status === 'warning') return '#fa8c16'
-  if (status === 'critical') return '#cf1322'
-  return '#fff'
-}
-
 const initMap = () => {
   if (!mapRef.value) return
   const darkTileLayer = L.tileLayer(
@@ -286,37 +286,7 @@ watch(selectedArea, (newArea) => {
 })
 </script>
 
-<style>
-/* 全局弹窗样式保持不变 */
-.leaflet-popup-content-wrapper {
-  background: rgb(40 50 38 / 90%) !important;
-  color: #eef1ea !important;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 8px !important;
-  box-shadow: 0 4px 30px rgb(0 0 0 / 20%) !important;
-  backdrop-filter: blur(10px);
-}
-
-.leaflet-popup-tip {
-  background: rgb(40 50 38 / 90%) !important;
-  border-left: 1px solid rgb(255 255 255 / 20%);
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-}
-
-.leaflet-popup-content {
-  margin: 14px 20px !important;
-  line-height: 1.8;
-  color: #eef1ea;
-}
-
-.leaflet-popup-close-button {
-  color: #eef1ea !important;
-  padding: 8px 8px 0 0 !important;
-}
-</style>
-
 <style scoped>
-/* Scoped 样式进行了布局优化 */
 .main-content {
   flex-grow: 1;
   padding: 24px;
@@ -324,34 +294,15 @@ watch(selectedArea, (newArea) => {
   justify-content: center;
 }
 
-.content-wrapper {
-  width: 100%;
-  max-width: 1400px; /* 适当加宽以容纳三栏 */
-}
-
-.content-wrapper > :deep(.ant-card) {
-  background-color: var(--glass-bg, rgb(255 255 255 / 10%));
-  border-radius: 12px;
-  border: 1px solid rgb(255 255 255 / 20%);
-  backdrop-filter: blur(10px);
-  height: 100%; /* 让卡片填满父容器 */
+.glass-page > :deep(.ant-card) {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.content-wrapper > :deep(.ant-card-head) {
-  border-bottom: 1px solid rgb(255 255 255 / 20%);
-}
-
-.card-title {
-  color: var(--light-green, #eef1ea);
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.content-wrapper > :deep(.ant-card-body) {
+.glass-page > :deep(.ant-card-body) {
   padding: 20px;
-  flex-grow: 1; /* 让body填满剩余空间 */
+  flex-grow: 1;
   display: flex;
 }
 
@@ -374,27 +325,13 @@ watch(selectedArea, (newArea) => {
 }
 
 .widget-card {
-  background-color: rgb(255 255 255 / 5%) !important;
-  border: 1px solid rgb(255 255 255 / 15%) !important;
-  color: white;
-
   display: flex;
   flex-direction: column;
 }
 
-.widget-card :deep(.ant-card-head) {
-  background-color: rgb(255 255 255 / 10%);
-  border-bottom: 1px solid rgb(255 255 255 / 15%) !important;
-  color: var(--light-green, #eef1ea);
-  font-size: 16px;
-  padding: 0 16px;
-}
-
 .widget-card :deep(.ant-card-body) {
-  padding: 12px;
-
   flex-grow: 1;
-  overflow-y: auto; /* 如果内容过多，允许滚动 */
+  overflow-y: auto;
 }
 
 .area-list-item {
@@ -403,20 +340,29 @@ watch(selectedArea, (newArea) => {
   border-radius: 4px;
   transition: background-color 0.2s;
   border-bottom: none !important;
+  background-color: var(--glass-bg-item);
+  margin-bottom: 4px;
 }
 
 .area-list-item:hover {
-  background-color: rgb(255 255 255 / 10%);
+  background-color: var(--glass-bg-item-hover);
 }
 
 .area-list-item.active {
-  background-color: var(--dark-green, #4a5c43);
+  background-color: var(--glass-bg-active);
   font-weight: bold;
 }
 
-.area-list-item :deep(.ant-list-item-meta-title) {
-  color: white;
+.area-list-item :deep(.ant-list-item-meta-title),
+.area-item-title {
+  color: var(--glass-text-primary) !important;
   margin-bottom: 2px !important;
+  font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.area-list-item :deep(.ant-list-item-meta-description) {
+  color: var(--glass-text-secondary);
 }
 
 .alert-message-preview {
@@ -425,12 +371,12 @@ watch(selectedArea, (newArea) => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 220px; /* 适当放宽 */
-  color: rgb(255 255 255 / 70%);
+  max-width: 220px;
+  color: var(--glass-text-secondary);
 }
 
 .empty-list-placeholder {
-  color: rgb(255 255 255 / 60%);
+  color: var(--glass-text-muted);
   text-align: center;
   padding: 20px 0;
 }
@@ -441,11 +387,11 @@ watch(selectedArea, (newArea) => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: rgb(255 255 255 / 60%);
+  color: var(--glass-text-muted);
   font-size: 16px;
-  background-color: rgb(255 255 255 / 5%);
+  background-color: var(--glass-bg-subtle);
   border-radius: 8px;
-  border: 1px dashed rgb(255 255 255 / 20%);
+  border: 1px dashed var(--glass-border);
 }
 
 .right-column-grid {
@@ -473,34 +419,102 @@ watch(selectedArea, (newArea) => {
 
 .info-card h4 {
   font-size: 14px;
-  color: white;
+  color: var(--glass-text-primary);
   margin-bottom: 4px;
+  font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
 }
 
 .info-card p {
+  display: inline-block;
   font-size: 13px;
-  color: rgb(255 255 255 / 90%);
+  color: var(--glass-text-secondary);
   margin-bottom: 0;
   font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 30%);
+  text-shadow: var(--glass-text-shadow);
 }
 
 .mini-map-container {
   height: 150px;
   border-radius: 4px;
-  border: 1px solid rgb(255 255 255 / 15%);
+  border: 1px solid var(--glass-border);
 }
 
 :deep(.ant-descriptions-item-label) {
-  color: rgb(255 255 255 / 70%);
+  color: var(--glass-text-muted);
 }
 
 :deep(.ant-descriptions-item-content) {
-  color: white;
+  color: var(--glass-text-primary);
+  text-shadow: var(--glass-text-shadow);
 }
 
 .suggestion-list :deep(.ant-list-item) {
-  color: rgb(255 255 255 / 90%);
+  color: var(--glass-text-secondary);
   border: none !important;
   padding: 6px 0 !important;
+  font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
+}
+
+@media (width <= 992px) {
+  .main-content {
+    padding: 16px;
+  }
+
+  .decision-dashboard {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .glass-page > :deep(.ant-card) {
+    height: auto;
+  }
+
+  .glass-page > :deep(.ant-card-body) {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .right-column-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left-column,
+  .right-column {
+    min-height: auto;
+  }
+
+  .placeholder-wrapper {
+    min-height: 200px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .alert-message-preview {
+    max-width: 100%;
+  }
+}
+
+@media (width <= 576px) {
+  .main-content {
+    padding: 12px;
+  }
+
+  .geo-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mini-map-container {
+    height: 180px;
+  }
+
+  .glass-page > :deep(.ant-card-body) {
+    padding: 12px;
+  }
 }
 </style>

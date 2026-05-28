@@ -1,14 +1,26 @@
 <template>
   <div class="app-layout-container">
     <header class="header">
-      <div
-        class="logo-area"
-        @click="goHome">
-        <img
-          src="@/assets/logo.jpg"
-          alt="Logo"
-          class="logo-img" />
-        <span class="title">青禾智匠 · 作物灾害监测预警系统</span>
+      <div class="header-left">
+        <button
+          type="button"
+          class="menu-toggle"
+          aria-label="打开导航菜单"
+          @click="drawerOpen = true">
+          <MenuOutlined />
+        </button>
+        <div
+          class="logo-area"
+          @click="goHome">
+          <img
+            src="@/assets/logo.jpg"
+            alt="Logo"
+            class="logo-img" />
+          <span class="title">
+            <span class="title-full">青禾智匠 · 作物灾害监测预警系统</span>
+            <span class="title-short">青禾智匠</span>
+          </span>
+        </div>
       </div>
 
       <div class="header-right">
@@ -103,43 +115,34 @@
       </div>
     </header>
 
-    <nav class="nav-bar">
+    <nav class="nav-bar desktop-nav">
       <router-link
-        to="/home"
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
         class="nav-item">
-        首页
-      </router-link>
-      <router-link
-        to="/related-data"
-        class="nav-item">
-        相关数据
-      </router-link>
-      <router-link
-        to="/map"
-        class="nav-item">
-        灾害实时监测
-      </router-link>
-      <router-link
-        to="/analysis"
-        class="nav-item">
-        智能分析
-      </router-link>
-      <router-link
-        to="/warnings"
-        class="nav-item">
-        灾害预警
-      </router-link>
-      <router-link
-        to="/decision"
-        class="nav-item">
-        智慧决策
-      </router-link>
-      <router-link
-        to="/about"
-        class="nav-item">
-        关于我们
+        {{ item.label }}
       </router-link>
     </nav>
+
+    <a-drawer
+      v-model:open="drawerOpen"
+      placement="left"
+      title="功能导航"
+      :width="280"
+      class="nav-drawer"
+      :body-style="{ padding: 0 }">
+      <nav class="drawer-nav">
+        <router-link
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="drawer-nav-item"
+          @click="drawerOpen = false">
+          {{ item.label }}
+        </router-link>
+      </nav>
+    </a-drawer>
 
     <main class="content-slot">
       <slot></slot>
@@ -148,15 +151,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { message, Modal } from 'ant-design-vue'
-import { UserOutlined, DownOutlined, LogoutOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import {
+  UserOutlined,
+  DownOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  SearchOutlined,
+  MenuOutlined
+} from '@ant-design/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
+
+const navItems = [
+  { to: '/home', label: '首页' },
+  { to: '/related-data', label: '相关数据' },
+  { to: '/map', label: '灾害实时监测' },
+  { to: '/analysis', label: '智能分析' },
+  { to: '/warnings', label: '灾害预警' },
+  { to: '/decision', label: '智慧决策' },
+  { to: '/about', label: '关于我们' }
+]
 
 const router = useRouter()
 const userStore = useUserStore()
+const drawerOpen = ref(false)
 const searchAreaRef = ref<HTMLElement | null>(null)
 const searchDropdownRef = ref<HTMLElement | null>(null)
 
@@ -214,7 +235,6 @@ watch([searchVisible, searchKeyword], () => {
   }
 })
 
-// 下拉展开时才监听 document 点击，避免抢输入框焦点
 watch(
   searchVisible,
   (visible) => {
@@ -225,6 +245,13 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => router.currentRoute.value.path,
+  () => {
+    drawerOpen.value = false
+  }
 )
 
 onUnmounted(() => {
@@ -251,12 +278,13 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
-
 .app-layout-container {
   width: 100%;
   height: 100vh;
-  background-image: url('@/assets/bg.jpg');
+  background-image: image-set(
+    url('@/assets/bg.webp') type('image/webp'),
+    url('@/assets/bg.jpg') type('image/jpeg')
+  );
   background-size: cover;
   background-position: center;
   display: flex;
@@ -265,11 +293,6 @@ const handleLogout = () => {
   box-sizing: border-box;
   overflow: hidden;
 
-  /* 深沉色调 */
-  --primary-green: #677662;
-  --dark-green: #344e31; /* 深森林绿 */
-  --light-green: #eef1ea;
-  --glass-border: rgb(255 255 255 / 20%);
 }
 
 .content-slot {
@@ -279,9 +302,24 @@ const handleLogout = () => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-/* Header 样式：高 z-index 确保始终浮在页面内容之上，防止被覆盖 */
+.content-slot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(20 35 20 / 25%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.content-slot > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header 置于内容之上，避免被遮挡 */
 .header {
   display: flex;
   justify-content: space-between;
@@ -289,14 +327,42 @@ const handleLogout = () => {
   padding: 10px 40px;
   position: relative;
   z-index: 100;
-
-  /* 背景稍微深一点，增加质感 */
   background-color: rgb(50 70 50 / 85%);
   backdrop-filter: blur(10px);
   flex-shrink: 0;
-  height: 64px;
+  min-height: 64px;
   border-bottom: 1px solid var(--glass-border);
   box-shadow: 0 4px 20px rgb(0 0 0 / 20%);
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+  background: rgb(255 255 255 / 18%);
 }
 
 .logo-area {
@@ -315,15 +381,19 @@ const handleLogout = () => {
 
 .title {
   font-size: 22px;
-
-  /* 3. 字体应用：衬线体 */
-  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-family: var(--font-serif);
   font-weight: bold;
   letter-spacing: 2px;
   text-shadow: 0 2px 4px rgb(0 0 0 / 50%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Header 右侧区域：确保不被 logo 覆盖，始终可点击 */
+.title-short {
+  display: none;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -339,7 +409,6 @@ const handleLogout = () => {
   pointer-events: auto;
 }
 
-/* 原生搜索框样式（替代 Ant Design 避免点击/输入被拦截） */
 .search-input-wrap {
   display: inline-flex;
   width: 260px;
@@ -380,7 +449,6 @@ const handleLogout = () => {
   background: #3d5a3d;
 }
 
-/* 用户信息区域 */
 .user-info-trigger {
   display: flex;
   align-items: center;
@@ -388,8 +456,6 @@ const handleLogout = () => {
   padding: 6px 12px;
   border-radius: 20px;
   transition: background-color 0.3s;
-
-  /* 增加一点边框感 */
   border: 1px solid transparent;
 }
 
@@ -403,17 +469,12 @@ const handleLogout = () => {
   font-size: 15px;
   font-weight: 500;
   color: #fff;
-
-  /* 用户名也稍微带点衬线感，或者保持无衬线清晰易读 */
-  font-family: 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
 }
 
-/* 导航栏样式 */
 .nav-bar {
   display: flex;
   justify-content: center;
-
-  /* 颜色调整：与Header呼应但稍浅 */
   background-color: rgb(90 110 90 / 85%);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 10px rgb(0 0 0 / 10%);
@@ -422,16 +483,14 @@ const handleLogout = () => {
 }
 
 .nav-item {
-  padding: 14px 30px; /* 增加一点点击区域 */
+  padding: 14px 30px;
   color: rgb(255 255 255 / 90%);
   text-decoration: none;
   font-size: 17px;
   transition: all 0.3s;
   white-space: nowrap;
   position: relative;
-
-  /* 5. 导航栏字体同步：使用衬线体 */
-  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-family: var(--font-serif);
   font-weight: bold;
   letter-spacing: 1px;
 }
@@ -441,7 +500,6 @@ const handleLogout = () => {
   color: #fff;
 }
 
-/* 激活状态：底部加一个高亮条，而不是整个背景变色，更高级 */
 .router-link-active.router-link-exact-active,
 .nav-item.active {
   background-color: rgb(0 0 0 / 20%);
@@ -449,7 +507,73 @@ const handleLogout = () => {
   text-shadow: 0 0 10px rgb(255 255 255 / 50%);
 }
 
-/* 全局搜索下拉框（Teleport 到 body，需保证样式生效） */
+@media (width <= 992px) {
+  .header {
+    padding: 10px 16px;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .content-slot {
+    padding: 16px;
+  }
+
+  .search-input-wrap {
+    width: 180px;
+  }
+
+  .title-full {
+    display: none;
+  }
+
+  .title-short {
+    display: inline;
+    letter-spacing: 1px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+}
+
+@media (width <= 576px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .content-slot {
+    padding: 12px;
+  }
+
+  .logo-img {
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .search-area {
+    display: none;
+  }
+
+  .username {
+    display: none;
+  }
+
+  .user-info-trigger {
+    padding: 4px 8px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+}
+
+/* Teleport 到 body 的下拉样式 */
 :deep(.global-search-dropdown) {
   background: rgb(50 70 50 / 98%);
   backdrop-filter: blur(12px);
@@ -524,5 +648,58 @@ const handleLogout = () => {
 :deep(.search-item-subtitle) {
   color: rgb(255 255 255 / 65%);
   font-size: 12px;
+}
+</style>
+
+<style>
+/* Drawer 挂载 body */
+.nav-drawer .ant-drawer-header {
+  background: rgb(50 70 50 / 98%);
+  border-bottom: 1px solid rgb(255 255 255 / 15%);
+}
+
+.nav-drawer .ant-drawer-title {
+  color: #eef1ea;
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+.nav-drawer .ant-drawer-close {
+  color: rgb(255 255 255 / 75%);
+}
+
+.nav-drawer .ant-drawer-body {
+  background: rgb(40 55 40 / 98%);
+  padding: 0;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-nav-item {
+  display: block;
+  padding: 16px 24px;
+  color: rgb(255 255 255 / 90%);
+  text-decoration: none;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  transition: background 0.2s;
+}
+
+.drawer-nav-item:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.drawer-nav-item.router-link-active {
+  background: rgb(0 0 0 / 25%);
+  color: #fff;
+  border-left: 3px solid #73d13d;
+  padding-left: 21px;
 }
 </style>

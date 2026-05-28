@@ -10,7 +10,8 @@
     "lint": "eslint --fix src",
     "prettier": "prettier --write .",
     "lint:css": "stylelint --fix 'src/**/*.{css,scss,vue}'",
-    "mock": "tsx watch src/mock/server.ts"
+    "mock": "tsx watch src/mock/server.ts",
+    "optimize-assets": "node scripts/optimize-assets.mjs"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",

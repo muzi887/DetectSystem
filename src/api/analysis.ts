@@ -7,7 +7,6 @@ interface AnalysisData {
   additionalInfo?: string
 }
 
-/** POST /api/analysis/image → Flask */
 export const analyzeImage = (data: AnalysisData) => {
   const formData = new FormData()
   formData.append('file', data.file)

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" aria-hidden="true">
+  <rect width="640" height="400" rx="16" fill="#1a2a1a" fill-opacity="0.35"/>
+  <!-- field grid -->
+  <path d="M40 280h200v80H40zM260 260h160v100H260zM440 270h160v90H440z" stroke="#4a5c43" stroke-width="2" fill="#2f4f2f" fill-opacity="0.4"/>
+  <path d="M40 300h200M40 320h200M140 280v80M180 280v80" stroke="#5d7454" stroke-width="1" opacity="0.6"/>
+  <!-- drone -->
+  <ellipse cx="520" cy="88" rx="36" ry="12" stroke="#73d13d" stroke-width="2"/>
+  <line x1="484" y1="88" x2="460" y2="72" stroke="#73d13d" stroke-width="2" stroke-linecap="round"/>
+  <line x1="556" y1="88" x2="580" y2="72" stroke="#73d13d" stroke-width="2" stroke-linecap="round"/>
+  <line x1="484" y1="88" x2="460" y2="104" stroke="#73d13d" stroke-width="2" stroke-linecap="round"/>
+  <line x1="556" y1="88" x2="580" y2="104" stroke="#73d13d" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="520" cy="88" r="8" fill="#73d13d"/>
+  <!-- sensor pole -->
+  <line x1="120" y1="160" x2="120" y2="280" stroke="#eef1ea" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="120" cy="150" r="14" stroke="#faad14" stroke-width="2"/>
+  <path d="M106 150h28M120 136v28" stroke="#faad14" stroke-width="1.5"/>
+  <!-- monitor dashboard -->
+  <rect x="280" y="100" width="200" height="130" rx="10" stroke="#eef1ea" stroke-width="2.5" fill="#2a3d28"/>
+  <rect x="296" y="118" width="168" height="72" rx="6" stroke="#73d13d" stroke-width="1.5"/>
+  <path d="M304 172l32-28 24 16 40-36 16 12" stroke="#73d13d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="312" cy="132" r="4" fill="#ff4d4f"/>
+  <circle cx="328" cy="128" r="4" fill="#faad14"/>
+  <circle cx="344" cy="134" r="4" fill="#73d13d"/>
+  <rect x="296" y="200" width="60" height="8" rx="4" fill="#4a5c43"/>
+  <rect x="364" y="200" width="100" height="8" rx="4" fill="#4a5c43"/>
+  <!-- data link waves -->
+  <path d="M200 200c40-30 60-30 80 0s60 30 80 0" stroke="#95de64" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round"/>
+  <path d="M420 165c30-20 50-20 70 0" stroke="#95de64" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round"/>
+  <!-- warning cloud -->
+  <path d="M48 120c0-18 14-32 32-32 4 0 8 1 11 3 5-12 18-20 32-20 20 0 36 16 36 36 0 2 0 4-.2 6H48z" stroke="#eef1ea" stroke-width="2" fill="#4a5c43" fill-opacity="0.5"/>
+  <path d="M64 108v16M64 132v4" stroke="#faad14" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
