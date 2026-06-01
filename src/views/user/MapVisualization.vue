@@ -36,14 +36,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
 import {
-  getMonitorStatusColor,
-  getMonitorStatusLabel
-} from '@/utils/monitorStatus'
+  createLeafletBaseMap,
+  invalidateLeafletSize,
+  removeLeafletMap
+} from '@/composables/useLeafletBase'
+import {
+  buildMonitorPopupHtml,
+  createMonitorDivIcon
+} from '@/composables/useMonitorMarkers'
 import * as L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet/dist/leaflet.css'
@@ -57,43 +62,7 @@ let map: L.Map | null = null
 let markerCluster: L.MarkerClusterGroup | null = null
 const markersById = new Map<number, L.Marker>()
 
-function createDivIcon(point: any) {
-  const color = getMonitorStatusColor(point.status)
-  const html = `
-    <div class="custom-marker">
-      <div class="marker-dot" style="background:${color};"></div>
-      <div class="marker-label">${point.name}</div>
-    </div>
-  `
-  return L.divIcon({
-    html,
-    className: 'leaflet-custom-icon',
-    iconSize: [80, 40],
-    iconAnchor: [40, 20],
-    popupAnchor: [0, -20]
-  })
-}
-
-function buildPopupHtml(point: any) {
-  const unhandled = dataStore.alerts.find((a) => a.pointId === point.id && !a.handled)
-  const alertInfo = unhandled
-    ? `<div class="popup-alert-info">未处理预警: ${unhandled.message}</div>`
-    : ''
-
-  return `
-    <div class="leaflet-popup-content-themed">
-      <div class="popup-title">${point.name}</div>
-      <div class="popup-info">温度: <strong>${point.temp}°C</strong></div>
-      <div class="popup-info">土壤湿度: <strong>${point.soilMoisture}%</strong></div>
-      <div class="popup-info">状态: <strong style="color:${getMonitorStatusColor(point.status)}">${getMonitorStatusLabel(point.status)}</strong></div>
-      ${alertInfo}
-      <div class="popup-actions">
-        <button data-action="trigger" data-id="${point.id}" class="popup-btn trigger">手动触发</button>
-        <button data-action="close" data-id="${point.id}" class="popup-btn close">标记解决</button>
-      </div>
-    </div>
-  `
-}
+const buildPopupHtml = (point: any) => buildMonitorPopupHtml(point, dataStore.alerts)
 
 function renderMarkers() {
   if (!markerCluster || !map) return
@@ -101,7 +70,7 @@ function renderMarkers() {
   markersById.clear()
 
   for (const p of dataStore.monitorPoints) {
-    const icon = createDivIcon(p)
+    const icon = createMonitorDivIcon(p)
     const marker = L.marker([p.lat, p.lng], { icon })
     marker.bindPopup(buildPopupHtml(p))
 
@@ -132,7 +101,7 @@ function renderMarkers() {
 
       if (closeBtn) {
         closeBtn.onclick = async () => {
-          const unhandled = dataStore.alerts.find((a) => a.pointId === p.id && !a.handled)
+          const unhandled = dataStore.unhandledAlerts.find((a) => a.pointId === p.id)
           if (!unhandled) {
             message.info('该点暂无未处理预警')
             return
@@ -158,25 +127,15 @@ function renderMarkers() {
 
 async function initMap() {
   if (!mapRef.value) return
-  const gaodeSatelliteLayer = L.tileLayer(
-    'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-    {
-      attribution: '&copy; <a href="https://www.amap.com/">高德地图</a>',
-      subdomains: ['1', '2', '3', '4'],
-      maxZoom: 18
-    }
-  )
-
-  map = L.map(mapRef.value, {
-    layers: [gaodeSatelliteLayer]
-  }).setView([38.44, 115.95], 8)
+  map = createLeafletBaseMap(mapRef.value, {
+    center: [38.44, 115.95],
+    zoom: 8,
+    tile: 'gaodeSatellite'
+  })
 
   markerCluster = L.markerClusterGroup()
   markerCluster.addTo(map)
-
-  setTimeout(() => {
-    map?.invalidateSize()
-  }, 100)
+  invalidateLeafletSize(map)
 }
 
 async function refreshData() {
@@ -214,10 +173,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  if (map) {
-    map.remove()
-    map = null
-  }
+  removeLeafletMap(map)
+  map = null
 })
 </script>
 

@@ -1,15 +1,19 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { alertRoutes } from './modules/alert'
+import { homeRoutes } from './modules/home'
+import { monitorRoutes } from './modules/monitor'
 
 const Login = () => import('../views/user/Login.vue')
-const Home = () => import('../views/user/Home.vue')
-const RelatedData = () => import('../views/user/RelatedData.vue')
-const MapVisualization = () => import('../views/user/MapVisualization.vue')
-const DataAnalysis = () => import('../views/user/DataAnalysis.vue')
-const WarningSystem = () => import('../views/user/WarningSystem.vue')
-const DecisionSupport = () => import('../views/user/DecisionSupport.vue')
-const About = () => import('../views/user/About.vue')
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    requiresRole?: 'admin' | 'agronomist' | 'cooperative'
+    title?: string
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
@@ -17,50 +21,11 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     component: Login,
     name: 'Login',
-    meta: { requireAuth: false, title: '登录' }
+    meta: { requiresAuth: false, title: '登录' }
   },
-  {
-    path: '/home',
-    component: Home,
-    name: 'Home',
-    meta: { requireAuth: true, title: '首页' }
-  },
-  {
-    path: '/related-data',
-    component: RelatedData,
-    name: 'RelatedData',
-    meta: { requireAuth: true, title: '相关数据' }
-  },
-  {
-    path: '/map',
-    component: MapVisualization,
-    name: 'MapVisualization',
-    meta: { requireAuth: true, title: '实时监测' }
-  },
-  {
-    path: '/analysis',
-    component: DataAnalysis,
-    name: 'DataAnalysis',
-    meta: { requireAuth: true, title: '智能分析' }
-  },
-  {
-    path: '/warnings',
-    component: WarningSystem,
-    name: 'WarningSystem',
-    meta: { requireAuth: true, title: '预警中心' }
-  },
-  {
-    path: '/decision',
-    component: DecisionSupport,
-    name: 'DecisionSupport',
-    meta: { requireAuth: true, title: '智慧决策' }
-  },
-  {
-    path: '/about',
-    component: About,
-    name: 'About',
-    meta: { requireAuth: true, title: '关于我们' }
-  }
+  ...homeRoutes,
+  ...monitorRoutes,
+  ...alertRoutes
 ]
 
 const router = createRouter({
@@ -70,13 +35,16 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const userStore = useUserStore()
-  const token = userStore.token
-  const requireAuth = to.meta.requireAuth
+  const requiresAuth = to.meta.requiresAuth
+  const requiredRole = to.meta.requiresRole
+  const userRole = userStore.userInfo?.role
 
-  if (requireAuth && !token) {
+  if (requiresAuth && !userStore.isLogged) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else if (to.name === 'Login' && token) {
+  } else if (to.name === 'Login' && userStore.isLogged) {
     next({ name: 'Home' })
+  } else if (requiredRole && !userStore.canEnter(requiredRole)) {
+    next({ name: userRole === 'cooperative' ? 'Home' : 'MapVisualization' })
   } else {
     next()
   }

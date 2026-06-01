@@ -1,6 +1,7 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http'
+import { deriveMonitorStatus } from '@/utils/monitorStatus'
 
 export type AlertLevel = 'low' | 'medium' | 'high' | 'critical' | 'warning'
 
@@ -20,6 +21,7 @@ export const useDataStore = defineStore('data', () => {
   const alerts = ref<Array<any>>([])
   const loadingPoints = ref(false)
   const loadingAlerts = ref(false)
+  const unhandledAlerts = computed(() => alerts.value.filter((alert) => !alert.handled))
 
   async function fetchMonitorPoints() {
     loadingPoints.value = true
@@ -32,10 +34,16 @@ export const useDataStore = defineStore('data', () => {
         .map((item: any) => {
           let fixedTemp = parseFloat(item.temp)
           const fixedMoisture = parseFloat(item.soilMoisture)
+          const status = deriveMonitorStatus({
+            status: item.status,
+            temp: fixedTemp,
+            soilMoisture: fixedMoisture,
+            online: item.online,
+            maintenance: item.maintenance
+          })
 
-          if (fixedTemp < -50 || fixedTemp > 100) {
+          if (!Number.isFinite(fixedTemp) || fixedTemp < -50 || fixedTemp > 100) {
             fixedTemp = 0
-            item.status = 'warning'
           }
 
           const calibratedLat = item.lat + 0.00001
@@ -43,6 +51,7 @@ export const useDataStore = defineStore('data', () => {
 
           return {
             ...item,
+            status,
             temp: fixedTemp.toFixed(1),
             soilMoisture: fixedMoisture.toFixed(1),
             lat: calibratedLat,
@@ -108,6 +117,7 @@ export const useDataStore = defineStore('data', () => {
   return {
     monitorPoints,
     alerts,
+    unhandledAlerts,
     loadingPoints,
     loadingAlerts,
     fetchMonitorPoints,

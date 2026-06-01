@@ -1,13 +1,13 @@
 <template>
   <AppLayout>
-    <main class="main-content">
-      <div class="content-wrapper glass-page">
+    <main class="main-content page-main-shell">
+      <div class="content-wrapper glass-page page-card-fill page-card-body-stack-md">
         <a-card :bordered="false">
           <template #title>
             <div class="glass-card-title">智慧决策支持</div>
           </template>
 
-          <div class="decision-dashboard">
+          <div class="decision-dashboard page-grid-stack-md">
             <div class="left-column">
               <a-card
                 title="待处理灾害预警"
@@ -71,7 +71,7 @@
 
               <div
                 v-else
-                class="right-column-grid">
+                class="right-column-grid page-grid-stack-md">
                 <a-card
                   title="实时监测数据"
                   size="small"
@@ -148,6 +148,8 @@ import {
 } from '@ant-design/icons-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useDataStore } from '@/stores/data'
+import { createLeafletBaseMap, removeLeafletMap } from '@/composables/useLeafletBase'
+import { getAlertLevelColor, getAlertLevelText } from '@/utils/alertLevel'
 import {
   getMonitorStatusColor as getStatusColor,
   getMonitorStatusLabel as getStatusLabel
@@ -157,8 +159,7 @@ const dataStore = useDataStore()
 
 const unhandledAlerts = computed(() => {
   const pointsMap = new Map(dataStore.monitorPoints.map((p) => [p.id, p]))
-  return dataStore.alerts
-    .filter((alert) => !alert.handled)
+  return dataStore.unhandledAlerts
     .map((alert) => {
       const point = pointsMap.get(alert.pointId)
       return {
@@ -217,36 +218,16 @@ const selectArea = (area: any) => {
   selectedArea.value = area
 }
 
-const levelColors: Record<string, string> = {
-  low: 'blue',
-  medium: 'orange',
-  high: 'red',
-  warning: 'gold',
-  critical: '#a70000'
-}
-const levelText: Record<string, string> = {
-  low: '低',
-  medium: '中',
-  high: '高',
-  warning: '警告',
-  critical: '危急'
-}
-function getLevelColor(level: string) {
-  return levelColors[level] || 'gray'
-}
-function getLevelText(level: string) {
-  return levelText[level] || '未知'
-}
+const getLevelColor = getAlertLevelColor
+const getLevelText = getAlertLevelText
 const initMap = () => {
   if (!mapRef.value) return
-  const darkTileLayer = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19 }
-  )
-  map = L.map(mapRef.value, { layers: [darkTileLayer], zoomControl: false }).setView(
-    [35.1, 139.1],
-    11
-  )
+  map = createLeafletBaseMap(mapRef.value, {
+    center: [35.1, 139.1],
+    zoom: 11,
+    tile: 'cartoDark',
+    zoomControl: false
+  })
 }
 
 const updateMap = (area: any) => {
@@ -266,7 +247,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (map) map.remove()
+  removeLeafletMap(map)
+  map = null
 })
 watch(selectedArea, (newArea) => {
   if (newArea) {
@@ -287,28 +269,8 @@ watch(selectedArea, (newArea) => {
 </script>
 
 <style scoped>
-.main-content {
-  flex-grow: 1;
-  padding: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.glass-page > :deep(.ant-card) {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.glass-page > :deep(.ant-card-body) {
-  padding: 20px;
-  flex-grow: 1;
-  display: flex;
-}
-
 .decision-dashboard {
   display: grid;
-
   grid-template-columns: 350px 1fr;
   gap: 20px;
   width: 100%;
@@ -461,28 +423,6 @@ watch(selectedArea, (newArea) => {
 }
 
 @media (width <= 992px) {
-  .main-content {
-    padding: 16px;
-  }
-
-  .decision-dashboard {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .glass-page > :deep(.ant-card) {
-    height: auto;
-  }
-
-  .glass-page > :deep(.ant-card-body) {
-    flex-direction: column;
-    padding: 16px;
-  }
-
-  .right-column-grid {
-    grid-template-columns: 1fr;
-  }
-
   .left-column,
   .right-column {
     min-height: auto;
@@ -500,10 +440,6 @@ watch(selectedArea, (newArea) => {
 }
 
 @media (width <= 576px) {
-  .main-content {
-    padding: 12px;
-  }
-
   .geo-info-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -511,10 +447,6 @@ watch(selectedArea, (newArea) => {
 
   .mini-map-container {
     height: 180px;
-  }
-
-  .glass-page > :deep(.ant-card-body) {
-    padding: 12px;
   }
 }
 </style>

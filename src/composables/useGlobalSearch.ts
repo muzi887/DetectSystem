@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDataStore } from '@/stores/data'
+import { getMonitorStatusLabel } from '@/utils/monitorStatus'
 
 export type SearchResultType = 'menu' | 'monitor' | 'alert'
 
@@ -58,7 +59,7 @@ export function useGlobalSearch() {
           type: 'monitor',
           id: `monitor-${p.id}`,
           title: name,
-          subtitle: `状态: ${p.status || '-'}`,
+          subtitle: `状态: ${getMonitorStatusLabel(p.status)}`,
           path: '/map',
           query: { highlight: p.id }
         })

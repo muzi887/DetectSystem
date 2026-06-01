@@ -16,7 +16,7 @@
       </div>
 
       <div class="login-card">
-        <h3 class="login-title">密码登录</h3>
+        <h3 class="login-title">农情通行登录</h3>
         <div class="title-underline"></div>
 
         <a-form
@@ -24,18 +24,38 @@
           :model="form"
           @finish="onSubmit">
           <a-form-item name="phone">
-            <div class="input-label">账号</div>
+            <div class="input-label">手机号</div>
             <a-input
               v-model:value="form.phone"
-              placeholder="手机号/用户名"
+              placeholder="请输入演示手机号"
               class="custom-input" />
           </a-form-item>
 
+          <a-form-item name="verificationCode">
+            <div class="input-label">演示验证码</div>
+            <a-input
+              v-model:value="form.verificationCode"
+              placeholder="默认验证码 2026"
+              class="custom-input" />
+          </a-form-item>
+
+          <a-form-item name="role">
+            <div class="input-label">登录角色</div>
+            <a-select
+              v-model:value="form.role"
+              class="role-select"
+              popupClassName="farm-role-dropdown">
+              <a-select-option value="admin">管理员</a-select-option>
+              <a-select-option value="agronomist">农技员</a-select-option>
+              <a-select-option value="cooperative">合作社</a-select-option>
+            </a-select>
+          </a-form-item>
+
           <a-form-item name="password">
-            <div class="input-label">密码</div>
+            <div class="input-label">备用密码</div>
             <a-input-password
               v-model:value="form.password"
-              placeholder="请输入密码"
+              placeholder="旧演示密码仍可用"
               class="custom-input" />
           </a-form-item>
 
@@ -50,7 +70,7 @@
               :loading="loading"
               block
               class="submit-btn">
-              立即登录
+              进入系统
             </a-button>
           </a-form-item>
         </a-form>
@@ -75,14 +95,19 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { useUserStore, type FarmUserRole } from '@/stores/user'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import wheatJpg from '@/assets/wheat.jpg'
 import wheatWebp from '@/assets/wheat.webp'
 
-const form = reactive({ phone: '', password: '' })
+const form = reactive({
+  phone: '13800000000',
+  verificationCode: '2026',
+  role: 'agronomist' as FarmUserRole,
+  password: ''
+})
 const loading = ref(false)
 const store = useUserStore()
 const router = useRouter()
@@ -91,7 +116,12 @@ const route = useRoute()
 async function onSubmit() {
   loading.value = true
   try {
-    const res = await store.loginApi(form.phone, form.password)
+    const res = await store.loginApi({
+      phone: form.phone,
+      verificationCode: form.verificationCode,
+      role: form.role,
+      password: form.password
+    })
     if (res && res.token) {
       message.success('登录成功！')
       const redirect = (route.query.redirect as string) || '/home'
@@ -100,7 +130,7 @@ async function onSubmit() {
       message.error(res?.message || '登录失败')
     }
   } catch (err: any) {
-    message.error('登录失败，请检查网络')
+    message.error(err?.friendlyMessage || '登录失败，请检查网络')
   } finally {
     loading.value = false
   }
@@ -192,6 +222,24 @@ async function onSubmit() {
   color: var(--glass-text-primary) !important;
   font-size: 16px;
   padding-left: 12px;
+}
+
+.role-select {
+  width: 100%;
+}
+
+.role-select :deep(.ant-select-selector) {
+  height: 50px !important;
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 6px !important;
+  color: var(--glass-text-primary) !important;
+  align-items: center;
+}
+
+.role-select :deep(.ant-select-selection-item) {
+  color: var(--glass-text-primary);
+  font-size: 16px;
 }
 
 :deep(.ant-input) {

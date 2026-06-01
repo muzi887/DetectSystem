@@ -1,42 +1,41 @@
 <template>
-  <div class="app-layout-container">
-    <header class="header">
-      <div class="header-left">
+  <div class="app-shell">
+    <header class="app-glass-header">
+      <div class="brand-cluster">
         <button
           type="button"
-          class="menu-toggle"
+          class="mobile-nav-trigger"
           aria-label="打开导航菜单"
-          @click="drawerOpen = true">
+          @click="mobileNavOpen = true">
           <MenuOutlined />
         </button>
         <div
-          class="logo-area"
+          class="brand-link"
           @click="goHome">
           <img
             src="@/assets/logo.jpg"
             alt="Logo"
-            class="logo-img" />
-          <span class="title">
-            <span class="title-full">青禾智匠 · 作物灾害监测预警系统</span>
-            <span class="title-short">青禾智匠</span>
+            class="brand-logo" />
+          <span class="brand-title">
+            <span class="brand-title-full">青禾智匠 · 作物灾害监测预警系统</span>
+            <span class="brand-title-short">青禾智匠</span>
           </span>
         </div>
       </div>
 
-      <div class="header-right">
-        <div class="search-area" ref="searchAreaRef">
-          <div class="search-input-wrap">
+      <div class="header-tools">
+        <div class="global-search-box" ref="globalSearchRef">
+          <div class="global-search-control">
             <input
-              ref="searchInputRef"
               v-model="searchKeyword"
               type="text"
-              class="search-input"
+              class="global-search-input"
               placeholder="全局搜索..."
               @input="onSearchInput(($event.target as HTMLInputElement)?.value ?? '')"
               @keydown.enter="onSearch(searchKeyword)" />
             <button
               type="button"
-              class="search-btn"
+              class="global-search-button"
               @click="onSearch(searchKeyword)"
               aria-label="搜索">
               <SearchOutlined />
@@ -78,16 +77,16 @@
           </Teleport>
         </div>
 
-        <div class="user-profile">
+        <div class="account-menu">
           <a-dropdown placement="bottomRight">
-            <div class="user-info-trigger">
+            <div class="account-trigger">
               <a-avatar
                 style="background-color: #87d068"
                 :size="32">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
-              <span class="username">{{ userStore.userInfo?.name || '管理员' }}</span>
-              <DownOutlined class="arrow-icon" />
+              <span class="account-name">{{ userStore.userInfo?.name || '管理员' }}</span>
+              <DownOutlined class="account-arrow" />
             </div>
 
             <template #overlay>
@@ -115,30 +114,30 @@
       </div>
     </header>
 
-    <nav class="nav-bar desktop-nav">
+    <nav class="desktop-main-nav">
       <router-link
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        class="nav-item">
+        class="desktop-main-nav__item">
         {{ item.label }}
       </router-link>
     </nav>
 
     <a-drawer
-      v-model:open="drawerOpen"
+      v-model:open="mobileNavOpen"
       placement="left"
       title="功能导航"
       :width="280"
-      class="nav-drawer"
+      class="mobile-nav-drawer"
       :body-style="{ padding: 0 }">
-      <nav class="drawer-nav">
+      <nav class="mobile-drawer-nav">
         <router-link
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="drawer-nav-item"
-          @click="drawerOpen = false">
+          class="mobile-drawer-nav__item"
+          @click="mobileNavOpen = false">
           {{ item.label }}
         </router-link>
       </nav>
@@ -177,8 +176,8 @@ const navItems = [
 
 const router = useRouter()
 const userStore = useUserStore()
-const drawerOpen = ref(false)
-const searchAreaRef = ref<HTMLElement | null>(null)
+const mobileNavOpen = ref(false)
+const globalSearchRef = ref<HTMLElement | null>(null)
 const searchDropdownRef = ref<HTMLElement | null>(null)
 
 const {
@@ -208,8 +207,8 @@ function onSearch(value: string) {
 }
 
 function updateDropdownPosition() {
-  if (searchAreaRef.value) {
-    const rect = searchAreaRef.value.getBoundingClientRect()
+  if (globalSearchRef.value) {
+    const rect = globalSearchRef.value.getBoundingClientRect()
     searchDropdownStyle.value = {
       position: 'fixed',
       top: `${rect.bottom + 4}px`,
@@ -222,7 +221,7 @@ function updateDropdownPosition() {
 
 function handleClickOutside(e: MouseEvent) {
   const target = e.target as Node
-  const inSearch = searchAreaRef.value?.contains(target)
+  const inSearch = globalSearchRef.value?.contains(target)
   const inDropdown = searchDropdownRef.value?.contains(target)
   if (!inSearch && !inDropdown) {
     closeSearch()
@@ -250,7 +249,7 @@ watch(
 watch(
   () => router.currentRoute.value.path,
   () => {
-    drawerOpen.value = false
+    mobileNavOpen.value = false
   }
 )
 
@@ -278,7 +277,7 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-.app-layout-container {
+.app-shell {
   width: 100%;
   height: 100vh;
   background-image: image-set(
@@ -319,8 +318,8 @@ const handleLogout = () => {
   z-index: 1;
 }
 
-/* Header 置于内容之上，避免被遮挡 */
-.header {
+/* 顶栏需要压在内容层之上，保证搜索框和用户菜单可点 */
+.app-glass-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -336,7 +335,7 @@ const handleLogout = () => {
   gap: 12px;
 }
 
-.header-left {
+.brand-cluster {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -344,7 +343,7 @@ const handleLogout = () => {
   flex: 1;
 }
 
-.menu-toggle {
+.mobile-nav-trigger {
   display: none;
   align-items: center;
   justify-content: center;
@@ -361,11 +360,11 @@ const handleLogout = () => {
   transition: background 0.2s;
 }
 
-.menu-toggle:hover {
+.mobile-nav-trigger:hover {
   background: rgb(255 255 255 / 18%);
 }
 
-.logo-area {
+.brand-link {
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -374,12 +373,12 @@ const handleLogout = () => {
   flex-shrink: 1;
 }
 
-.logo-img {
+.brand-logo {
   height: 40px;
   margin-right: 15px;
 }
 
-.title {
+.brand-title {
   font-size: 22px;
   font-family: var(--font-serif);
   font-weight: bold;
@@ -390,11 +389,11 @@ const handleLogout = () => {
   text-overflow: ellipsis;
 }
 
-.title-short {
+.brand-title-short {
   display: none;
 }
 
-.header-right {
+.header-tools {
   display: flex;
   align-items: center;
   gap: 20px;
@@ -403,13 +402,13 @@ const handleLogout = () => {
   z-index: 10;
 }
 
-.search-area {
+.global-search-box {
   position: relative;
   z-index: 1;
   pointer-events: auto;
 }
 
-.search-input-wrap {
+.global-search-control {
   display: inline-flex;
   width: 260px;
   border-radius: 4px;
@@ -418,7 +417,7 @@ const handleLogout = () => {
   border: 1px solid rgb(255 255 255 / 30%);
 }
 
-.search-input {
+.global-search-input {
   flex: 1;
   padding: 6px 12px;
   font-size: 14px;
@@ -428,11 +427,11 @@ const handleLogout = () => {
   outline: none;
 }
 
-.search-input::placeholder {
+.global-search-input::placeholder {
   color: rgb(255 255 255 / 60%);
 }
 
-.search-btn {
+.global-search-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,11 +444,11 @@ const handleLogout = () => {
   transition: background 0.2s;
 }
 
-.search-btn:hover {
+.global-search-button:hover {
   background: #3d5a3d;
 }
 
-.user-info-trigger {
+.account-trigger {
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -459,12 +458,12 @@ const handleLogout = () => {
   border: 1px solid transparent;
 }
 
-.user-info-trigger:hover {
+.account-trigger:hover {
   background-color: rgb(255 255 255 / 10%);
   border-color: rgb(255 255 255 / 20%);
 }
 
-.username {
+.account-name {
   margin: 0 8px;
   font-size: 15px;
   font-weight: 500;
@@ -472,7 +471,7 @@ const handleLogout = () => {
   font-family: var(--font-sans);
 }
 
-.nav-bar {
+.desktop-main-nav {
   display: flex;
   justify-content: center;
   background-color: rgb(90 110 90 / 85%);
@@ -482,7 +481,7 @@ const handleLogout = () => {
   flex-shrink: 0;
 }
 
-.nav-item {
+.desktop-main-nav__item {
   padding: 14px 30px;
   color: rgb(255 255 255 / 90%);
   text-decoration: none;
@@ -495,28 +494,28 @@ const handleLogout = () => {
   letter-spacing: 1px;
 }
 
-.nav-item:hover {
+.desktop-main-nav__item:hover {
   background-color: rgb(0 0 0 / 10%);
   color: #fff;
 }
 
 .router-link-active.router-link-exact-active,
-.nav-item.active {
+.desktop-main-nav__item.active {
   background-color: rgb(0 0 0 / 20%);
   color: #fff;
   text-shadow: 0 0 10px rgb(255 255 255 / 50%);
 }
 
 @media (width <= 992px) {
-  .header {
+  .app-glass-header {
     padding: 10px 16px;
   }
 
-  .menu-toggle {
+  .mobile-nav-trigger {
     display: flex;
   }
 
-  .desktop-nav {
+  .desktop-main-nav {
     display: none;
   }
 
@@ -524,26 +523,26 @@ const handleLogout = () => {
     padding: 16px;
   }
 
-  .search-input-wrap {
+  .global-search-control {
     width: 180px;
   }
 
-  .title-full {
+  .brand-title-full {
     display: none;
   }
 
-  .title-short {
+  .brand-title-short {
     display: inline;
     letter-spacing: 1px;
   }
 
-  .title {
+  .brand-title {
     font-size: 18px;
   }
 }
 
 @media (width <= 576px) {
-  .header {
+  .app-glass-header {
     padding: 8px 12px;
   }
 
@@ -551,24 +550,24 @@ const handleLogout = () => {
     padding: 12px;
   }
 
-  .logo-img {
+  .brand-logo {
     height: 32px;
     margin-right: 8px;
   }
 
-  .search-area {
+  .global-search-box {
     display: none;
   }
 
-  .username {
+  .account-name {
     display: none;
   }
 
-  .user-info-trigger {
+  .account-trigger {
     padding: 4px 8px;
   }
 
-  .header-right {
+  .header-tools {
     gap: 8px;
   }
 }
@@ -653,32 +652,32 @@ const handleLogout = () => {
 
 <style>
 /* Drawer 挂载 body */
-.nav-drawer .ant-drawer-header {
+.mobile-nav-drawer .ant-drawer-header {
   background: rgb(50 70 50 / 98%);
   border-bottom: 1px solid rgb(255 255 255 / 15%);
 }
 
-.nav-drawer .ant-drawer-title {
+.mobile-nav-drawer .ant-drawer-title {
   color: #eef1ea;
   font-family: var(--font-serif);
   font-weight: 600;
 }
 
-.nav-drawer .ant-drawer-close {
+.mobile-nav-drawer .ant-drawer-close {
   color: rgb(255 255 255 / 75%);
 }
 
-.nav-drawer .ant-drawer-body {
+.mobile-nav-drawer .ant-drawer-body {
   background: rgb(40 55 40 / 98%);
   padding: 0;
 }
 
-.drawer-nav {
+.mobile-drawer-nav {
   display: flex;
   flex-direction: column;
 }
 
-.drawer-nav-item {
+.mobile-drawer-nav__item {
   display: block;
   padding: 16px 24px;
   color: rgb(255 255 255 / 90%);
@@ -691,12 +690,12 @@ const handleLogout = () => {
   transition: background 0.2s;
 }
 
-.drawer-nav-item:hover {
+.mobile-drawer-nav__item:hover {
   background: rgb(255 255 255 / 8%);
   color: #fff;
 }
 
-.drawer-nav-item.router-link-active {
+.mobile-drawer-nav__item.router-link-active {
   background: rgb(0 0 0 / 25%);
   color: #fff;
   border-left: 3px solid #73d13d;

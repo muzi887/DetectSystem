@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <main class="main-content">
+    <main class="main-content page-main-shell page-main-shell--scroll">
       <div class="content-wrapper glass-page">
         <a-card :bordered="false">
           <template #title>
@@ -326,14 +326,6 @@ const handleIdentify = () => handleConfirm()
 </script>
 
 <style scoped>
-.main-content {
-  flex-grow: 1;
-  padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-}
-
 .glass-page :deep(.ant-card-body) {
   padding: 24px 32px;
 }
@@ -557,10 +549,6 @@ const handleIdentify = () => handleConfirm()
 }
 
 @media (width <= 992px) {
-  .main-content {
-    padding: 16px;
-  }
-
   .analysis-body-container {
     flex-direction: column;
     gap: 24px;
@@ -572,10 +560,6 @@ const handleIdentify = () => handleConfirm()
 }
 
 @media (width <= 576px) {
-  .main-content {
-    padding: 12px;
-  }
-
   .avatar-uploader :deep(.ant-upload.ant-upload-select-picture-card) {
     width: 200px;
     height: 200px;

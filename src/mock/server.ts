@@ -1,12 +1,22 @@
 import jsonServer from 'json-server'
 import path from 'path'
 import fs from 'fs'
+import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
+
+interface AgriMockCore {
+  handleFarmLogin: (db: any, body: any) => { status: number; body: any }
+  buildNdviSummary: (db: any) => any
+  buildSoilMoistureTrend: (db: any) => any
+  evaluateDisasterRules: (db: any, body: any) => any
+}
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const dbPath = path.join(__dirname, 'db.json')
+const require = createRequire(import.meta.url)
+const agriMockCore = require('../../deploy/api_mock/agriMockCore.cjs') as AgriMockCore
 
 const server = jsonServer.create()
 const router = jsonServer.router(dbPath)
@@ -14,6 +24,25 @@ const middlewares = jsonServer.defaults()
 
 server.use(middlewares)
 server.use(jsonServer.bodyParser)
+
+function readDb(res: Response) {
+  let raw = ''
+  try {
+    raw = fs.readFileSync(dbPath, 'utf-8')
+  } catch (err) {
+    console.error('read db.json failed:', err)
+    res.status(500).jsonp({ message: '无法读取 db.json' })
+    return null
+  }
+
+  try {
+    return JSON.parse(raw)
+  } catch (err) {
+    console.error('parse db.json failed:', err)
+    res.status(500).jsonp({ message: 'db.json 解析错误' })
+    return null
+  }
+}
 
 server.use((req: Request, _res: Response, next) => {
   if (req.method === 'GET') {
@@ -28,36 +57,28 @@ server.use((req: Request, _res: Response, next) => {
 })
 
 server.post('/login', (req: Request, res: Response) => {
-  const { phone, password } = req.body as { phone?: string; password?: string }
+  const db = readDb(res)
+  if (!db) return
+  const result = agriMockCore.handleFarmLogin(db, req.body)
+  return res.status(result.status).jsonp(result.body)
+})
 
-  let raw = ''
-  try {
-    raw = fs.readFileSync(dbPath, 'utf-8')
-  } catch (err) {
-    console.error('read db.json failed:', err)
-    return res.status(500).jsonp({ message: '无法读取 db.json' })
-  }
+server.get('/ndvi/summary', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  return res.jsonp(agriMockCore.buildNdviSummary(db))
+})
 
-  let db: any
-  try {
-    db = JSON.parse(raw)
-  } catch (err) {
-    console.error('parse db.json failed:', err)
-    return res.status(500).jsonp({ message: 'db.json 解析错误' })
-  }
+server.get('/soilMoisture/trend', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  return res.jsonp(agriMockCore.buildSoilMoistureTrend(db))
+})
 
-  const users = db.users || db.user || []
-  const user = users.find((u: any) => u.phone === phone && u.password == password)
-
-  if (user) {
-    const token = 'mock-token-' + Date.now()
-    return res.jsonp({
-      token,
-      user: { id: user.id, name: user.name, phone: user.phone, role: user.role }
-    })
-  }
-
-  return res.status(401).jsonp({ message: '手机号或密码错误' })
+server.post('/disasterRules/evaluate', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  return res.jsonp(agriMockCore.evaluateDisasterRules(db, req.body))
 })
 
 server.use(router)

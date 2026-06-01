@@ -104,3 +104,56 @@
 .glass-loading-mask .loading-content {
   text-align: center;
 }
+
+.page-main-shell {
+  flex-grow: 1;
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.page-main-shell--scroll {
+  overflow-y: auto;
+}
+
+.page-card-fill > .ant-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-card-fill > .ant-card > .ant-card-body {
+  flex-grow: 1;
+  display: flex;
+}
+
+@media (width <= 992px) {
+  .page-main-shell {
+    padding: 16px;
+  }
+
+  .page-grid-stack-md {
+    grid-template-columns: 1fr !important;
+    height: auto;
+  }
+
+  .page-card-body-stack-md > .ant-card {
+    height: auto;
+  }
+
+  .page-card-body-stack-md > .ant-card > .ant-card-body {
+    flex-direction: column;
+    padding: 16px;
+  }
+}
+
+@media (width <= 576px) {
+  .page-main-shell {
+    padding: 12px;
+  }
+
+  .page-card-body-stack-md > .ant-card > .ant-card-body {
+    padding: 12px;
+  }
+}

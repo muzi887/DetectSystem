@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <main class="main-content">
+    <main class="main-content page-main-shell">
       <div class="content-wrapper glass-page">
         <a-card :bordered="false">
           <template #title>
@@ -130,6 +130,8 @@ import GlassEmpty from '@/components/GlassEmpty.vue'
 import { reactive, ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
+import { getAlertLevelColor, getAlertLevelText } from '@/utils/alertLevel'
+import { formatTime } from '@/utils/formatTime'
 
 const dataStore = useDataStore()
 
@@ -148,27 +150,8 @@ const createFormModal = reactive({
 })
 const createModalVisible = ref(false)
 
-const levelColors: Record<string, string> = {
-  low: 'blue',
-  medium: 'orange',
-  high: 'red',
-  warning: 'gold',
-  critical: '#a70000'
-}
-const levelText: Record<string, string> = {
-  low: '低',
-  medium: '中',
-  high: '高',
-  warning: '警告',
-  critical: '危急'
-}
-
-function getLevelColor(level: string | undefined) {
-  return levelColors[level || 'medium']
-}
-function getLevelText(level: string | undefined) {
-  return levelText[level || 'medium']
-}
+const getLevelColor = getAlertLevelColor
+const getLevelText = getAlertLevelText
 
 const fetchAlerts = async () => {
   try {
@@ -227,16 +210,6 @@ const handleDelete = async (id: number) => {
   }
 }
 
-const formatTime = (t?: number) => {
-  if (!t) return '-'
-  const d = new Date(t)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${d.getFullYear()}-${mm}-${dd} ${hh}:${mi}`
-}
-
 const filterOption = (input: string, option: any) => {
   return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
 }
@@ -248,12 +221,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.main-content {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
 .refresh-btn {
   background-color: var(--glass-bg-subtle) !important;
   border-color: var(--glass-border-strong) !important;
@@ -362,10 +329,6 @@ onMounted(() => {
 }
 
 @media (width <= 992px) {
-  .main-content {
-    padding: 16px;
-  }
-
   .alert-title-wrapper {
     flex-direction: column;
     align-items: flex-start;
@@ -382,10 +345,6 @@ onMounted(() => {
 }
 
 @media (width <= 576px) {
-  .main-content {
-    padding: 12px;
-  }
-
   .glass-page :deep(.ant-card-body) {
     padding: 12px 16px 16px;
   }
