@@ -32,57 +32,30 @@
   "monitorPoints": [
     {
       "id": 1,
-      "name": "监测站A - 平原",
-      "lat": 35,
-      "lng": 139,
+      "name": "监测站 · 河间市",
+      "lat": 38.4467,
+      "lng": 116.0994,
       "temp": 28,
       "soilMoisture": 30,
       "status": "normal"
     },
     {
       "id": 2,
-      "name": "监测站B - 丘陵",
-      "lat": 35.1,
-      "lng": 139.1,
+      "name": "监测站 · 雄县",
+      "lat": 38.994,
+      "lng": 116.1077,
       "temp": 33,
       "soilMoisture": 12,
       "status": "warning"
     },
     {
       "id": 3,
-      "name": "监测站C - 山谷",
-      "lat": 35.02,
-      "lng": 139.08,
+      "name": "监测站 · 栾城区",
+      "lat": 37.9002,
+      "lng": 114.6478,
       "temp": 15,
       "soilMoisture": 65,
       "status": "normal"
-    },
-    {
-      "id": 4,
-      "name": "数据中心D - 海岸",
-      "lat": 34.9,
-      "lng": 139.2,
-      "temp": 38,
-      "soilMoisture": 20,
-      "status": "critical"
-    },
-    {
-      "id": 5,
-      "name": "监测站E - 森林",
-      "lat": 35.15,
-      "lng": 138.95,
-      "temp": 25,
-      "soilMoisture": 55,
-      "status": "normal"
-    },
-    {
-      "id": 6,
-      "name": "基站F - 山顶",
-      "lat": 35.18,
-      "lng": 139.12,
-      "temp": 29,
-      "soilMoisture": 25,
-      "status": "warning"
     }
   ],
   "alerts": [
@@ -112,7 +85,7 @@
     },
     {
       "id": 4,
-      "pointId": 4,
+      "pointId": 2,
       "level": "critical",
       "message": "核心温度达到危险阈值！",
       "time": 1762832156560,
@@ -128,7 +101,7 @@
     },
     {
       "id": 6,
-      "pointId": 6,
+      "pointId": 2,
       "level": "warning",
       "message": "土壤水分低于警戒线",
       "time": 1762847700263,
@@ -136,7 +109,7 @@
     },
     {
       "id": 7,
-      "pointId": 5,
+      "pointId": 1,
       "level": "low",
       "message": "网络信号弱，数据上传延迟",
       "time": 1762847704528,
@@ -153,7 +126,7 @@
     {
       "time": 1762949548866,
       "handled": true,
-      "pointId": 7,
+      "pointId": 1,
       "level": "medium",
       "message": "温度异常升高，超过阈值",
       "id": 9
@@ -163,15 +136,15 @@
       "handled": true,
       "pointId": 2,
       "level": "medium",
-      "message": "手动触发：监测站B - 丘陵 状态异常",
+      "message": "手动触发：监测站 · 雄县 状态异常",
       "id": 10
     },
     {
       "time": 1763648904363,
       "handled": false,
-      "pointId": 5,
+      "pointId": 1,
       "level": "medium",
-      "message": "手动触发：监测站E - 森林 状态异常",
+      "message": "手动触发：监测站 · 河间市 状态异常",
       "id": 11
     },
     {
@@ -201,17 +174,17 @@
     {
       "time": 1764430457108,
       "handled": true,
-      "pointId": 5,
+      "pointId": 1,
       "level": "medium",
-      "message": "手动触发：监测站E - 森林 状态异常",
+      "message": "手动触发：监测站 · 河间市 状态异常",
       "id": 15
     },
     {
       "time": 1764430462344,
       "handled": true,
-      "pointId": 5,
+      "pointId": 1,
       "level": "medium",
-      "message": "手动触发：监测站E - 森林 状态异常",
+      "message": "手动触发：监测站 · 河间市 状态异常",
       "id": 16
     },
     {
@@ -219,7 +192,7 @@
       "handled": true,
       "pointId": 2,
       "level": "medium",
-      "message": "手动触发：监测站B - 丘陵 状态异常",
+      "message": "手动触发：监测站 · 雄县 状态异常",
       "id": 17
     },
     {
@@ -243,7 +216,7 @@
       "handled": true,
       "pointId": 3,
       "level": "medium",
-      "message": "手动触发：监测站C - 山谷 状态异常",
+      "message": "手动触发：监测站 · 栾城区 状态异常",
       "id": 20
     },
     {
@@ -251,7 +224,7 @@
       "handled": true,
       "pointId": 1,
       "level": "medium",
-      "message": "手动触发：监测站A - 平原 状态异常",
+      "message": "手动触发：监测站 · 河间市 状态异常",
       "id": 21
     },
     {
@@ -307,7 +280,7 @@
       "handled": false,
       "pointId": 3,
       "level": "medium",
-      "message": "手动触发：监测站C - 山谷 状态异常",
+      "message": "手动触发：监测站 · 栾城区 状态异常",
       "id": 28
     },
     {

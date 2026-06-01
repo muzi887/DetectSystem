@@ -158,19 +158,18 @@ function renderMarkers() {
 
 async function initMap() {
   if (!mapRef.value) return
-  const darkTileLayer = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  const gaodeSatelliteLayer = L.tileLayer(
+    'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
     {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
+      attribution: '&copy; <a href="https://www.amap.com/">高德地图</a>',
+      subdomains: ['1', '2', '3', '4'],
+      maxZoom: 18
     }
   )
 
   map = L.map(mapRef.value, {
-    layers: [darkTileLayer]
-  }).setView([35.05, 139.05], 9)
+    layers: [gaodeSatelliteLayer]
+  }).setView([38.44, 115.95], 8)
 
   markerCluster = L.markerClusterGroup()
   markerCluster.addTo(map)

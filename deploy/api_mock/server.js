@@ -2,17 +2,30 @@ const jsonServer = require('json-server')
 const path = require('path')
 const fs = require('fs')
 
+const dbPath = path.join(__dirname, 'db.json')
+
 const server = jsonServer.create()
-const router = jsonServer.router(path.join(__dirname, 'db.json'))
+const router = jsonServer.router(dbPath)
 const middlewares = jsonServer.defaults()
 
 server.use(middlewares)
 server.use(jsonServer.bodyParser)
 
+server.use((req, res, next) => {
+  if (req.method === 'GET') {
+    try {
+      const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'))
+      router.db.setState(db)
+    } catch (err) {
+      console.error('reload db.json failed:', err)
+    }
+  }
+  next()
+})
+
 server.post('/login', (req, res) => {
   const { phone, password } = req.body || {}
 
-  const dbPath = path.join(__dirname, 'db.json')
   let raw = ''
   try {
     raw = fs.readFileSync(dbPath, 'utf-8')

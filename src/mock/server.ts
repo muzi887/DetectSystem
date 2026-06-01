@@ -6,18 +6,30 @@ import type { Request, Response } from 'express'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const dbPath = path.join(__dirname, 'db.json')
 
 const server = jsonServer.create()
-const router = jsonServer.router(path.join(__dirname, 'db.json'))
+const router = jsonServer.router(dbPath)
 const middlewares = jsonServer.defaults()
 
 server.use(middlewares)
 server.use(jsonServer.bodyParser)
 
+server.use((req: Request, _res: Response, next) => {
+  if (req.method === 'GET') {
+    try {
+      const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'))
+      router.db.setState(db)
+    } catch (err) {
+      console.error('reload db.json failed:', err)
+    }
+  }
+  next()
+})
+
 server.post('/login', (req: Request, res: Response) => {
   const { phone, password } = req.body as { phone?: string; password?: string }
 
-  const dbPath = path.join(__dirname, 'db.json')
   let raw = ''
   try {
     raw = fs.readFileSync(dbPath, 'utf-8')
