@@ -116,7 +116,7 @@
 
     <nav class="desktop-main-nav">
       <router-link
-        v-for="item in navItems"
+        v-for="item in visibleNavItems"
         :key="item.to"
         :to="item.to"
         class="desktop-main-nav__item">
@@ -133,7 +133,7 @@
       :body-style="{ padding: 0 }">
       <nav class="mobile-drawer-nav">
         <router-link
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.to"
           :to="item.to"
           class="mobile-drawer-nav__item"
@@ -150,9 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { useUserStore, type FarmUserRole } from '@/stores/user'
 import { message, Modal } from 'ant-design-vue'
 import {
   UserOutlined,
@@ -164,18 +164,22 @@ import {
 } from '@ant-design/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
 
-const navItems = [
-  { to: '/home', label: '首页' },
-  { to: '/related-data', label: '相关数据' },
-  { to: '/map', label: '灾害实时监测' },
-  { to: '/analysis', label: '智能分析' },
-  { to: '/warnings', label: '灾害预警' },
-  { to: '/decision', label: '智慧决策' },
-  { to: '/about', label: '关于我们' }
-]
-
 const router = useRouter()
 const userStore = useUserStore()
+
+const navItems: { to: string; label: string; requiresRole: FarmUserRole }[] = [
+  { to: '/home', label: '首页', requiresRole: 'cooperative' },
+  { to: '/related-data', label: '相关数据', requiresRole: 'agronomist' },
+  { to: '/map', label: '灾害实时监测', requiresRole: 'agronomist' },
+  { to: '/analysis', label: '智能分析', requiresRole: 'agronomist' },
+  { to: '/warnings', label: '灾害预警', requiresRole: 'agronomist' },
+  { to: '/decision', label: '智慧决策', requiresRole: 'agronomist' },
+  { to: '/about', label: '关于我们', requiresRole: 'cooperative' }
+]
+
+const visibleNavItems = computed(() =>
+  navItems.filter((item) => userStore.canEnter(item.requiresRole))
+)
 const mobileNavOpen = ref(false)
 const globalSearchRef = ref<HTMLElement | null>(null)
 const searchDropdownRef = ref<HTMLElement | null>(null)
@@ -479,6 +483,8 @@ const handleLogout = () => {
   box-shadow: 0 4px 10px rgb(0 0 0 / 10%);
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 90;
 }
 
 .desktop-main-nav__item {

@@ -31,11 +31,24 @@ export function createMonitorDivIcon(point: MonitorPointLike) {
   })
 }
 
-export function buildMonitorPopupHtml(point: MonitorPointLike, alerts: Alert[]) {
+export function buildMonitorPopupHtml(
+  point: MonitorPointLike,
+  alerts: Alert[],
+  options?: { readonly?: boolean }
+) {
   const unhandled = alerts.find((a) => a.pointId === point.id && !a.handled)
   const alertInfo = unhandled
     ? `<div class="popup-alert-info">未处理预警: ${unhandled.message}</div>`
     : ''
+
+  const actions = options?.readonly
+    ? ''
+    : `
+      <div class="popup-actions">
+        <button data-action="trigger" data-id="${point.id}" class="popup-btn trigger">手动触发</button>
+        <button data-action="close" data-id="${point.id}" class="popup-btn close">标记解决</button>
+      </div>
+    `
 
   return `
     <div class="leaflet-popup-content-themed">
@@ -44,10 +57,7 @@ export function buildMonitorPopupHtml(point: MonitorPointLike, alerts: Alert[]) 
       <div class="popup-info">土壤湿度: <strong>${point.soilMoisture}%</strong></div>
       <div class="popup-info">状态: <strong style="color:${getMonitorStatusColor(point.status)}">${getMonitorStatusLabel(point.status)}</strong></div>
       ${alertInfo}
-      <div class="popup-actions">
-        <button data-action="trigger" data-id="${point.id}" class="popup-btn trigger">手动触发</button>
-        <button data-action="close" data-id="${point.id}" class="popup-btn close">标记解决</button>
-      </div>
+      ${actions}
     </div>
   `
 }

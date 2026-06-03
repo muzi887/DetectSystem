@@ -120,7 +120,7 @@ pnpm build
 # 浏览器 Ctrl+Shift+R 强刷
 ```
 
-**Mock 有改动时**：同步 `src/mock/db.json` → `deploy/api_mock/db.json` 后上传，并在服务器 `npm install --registry=https://registry.npmjs.org`，重启 Node 项目。
+**Mock 有改动时**：先执行 `pnpm sync:mock-db`（将 `fields` / `ndviLayers` / `moistureLayers` 同步到 `deploy/api_mock/db.json`），再上传 `deploy/api_mock/`，并在服务器 `npm install --registry=https://registry.npmjs.org`，重启 Node 项目。
 
 详细步骤见 [deploy/宝塔部署-不用PM2.md](deploy/宝塔部署-不用PM2.md)；故障排查见 [deploy/线上故障排查笔记.md](deploy/线上故障排查笔记.md)。
 

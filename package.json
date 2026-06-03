@@ -11,6 +11,7 @@
     "prettier": "prettier --write .",
     "lint:css": "stylelint --fix 'src/**/*.{css,scss,vue}'",
     "mock": "tsx watch src/mock/server.ts",
+    "sync:mock-db": "node scripts/sync-mock-db.mjs",
     "optimize-assets": "node scripts/optimize-assets.mjs"
   },
   "dependencies": {

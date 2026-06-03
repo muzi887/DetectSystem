@@ -299,5 +299,142 @@
       "message": "[AI识别] 监测到 桃 - 桃疮痂病 (置信度: 93.0%)",
       "id": 30
     }
+  ],
+  "fields": [
+    {
+      "id": "hejian",
+      "name": "1号地块（河间市）",
+      "monitorPointId": 1,
+      "bounds": [
+        [
+          38.42,
+          116.04
+        ],
+        [
+          38.48,
+          116.12
+        ]
+      ]
+    },
+    {
+      "id": "xiongxian",
+      "name": "2号地块（雄县）",
+      "monitorPointId": 2,
+      "bounds": [
+        [
+          38.94,
+          116.02
+        ],
+        [
+          38.99,
+          116.14
+        ]
+      ]
+    },
+    {
+      "id": "luancheng",
+      "name": "3号地块（栾城区）",
+      "monitorPointId": 3,
+      "bounds": [
+        [
+          37.86,
+          114.58
+        ],
+        [
+          37.94,
+          114.72
+        ]
+      ]
+    }
+  ],
+  "ndviLayers": [
+    {
+      "id": 1,
+      "fieldId": "hejian",
+      "date": "2026-05-20",
+      "imageAsset": "ndvi-heatmap",
+      "bounds": [
+        [
+          38.42,
+          116.04
+        ],
+        [
+          38.48,
+          116.12
+        ]
+      ],
+      "source": "DJI Mavic 3M",
+      "ndviMin": 0.2,
+      "ndviMax": 0.85
+    },
+    {
+      "id": 2,
+      "fieldId": "hejian",
+      "date": "2026-05-01",
+      "imageAsset": "ndvi-heatmap",
+      "bounds": [
+        [
+          38.42,
+          116.04
+        ],
+        [
+          38.48,
+          116.12
+        ]
+      ],
+      "source": "DJI Mavic 3M"
+    },
+    {
+      "id": 3,
+      "fieldId": "xiongxian",
+      "date": "2026-05-20",
+      "imageAsset": "ndvi-heatmap",
+      "bounds": [
+        [
+          38.94,
+          116.02
+        ],
+        [
+          38.99,
+          116.14
+        ]
+      ],
+      "source": "DJI Mavic 3M"
+    },
+    {
+      "id": 4,
+      "fieldId": "luancheng",
+      "date": "2026-05-20",
+      "imageAsset": "ndvi-heatmap",
+      "bounds": [
+        [
+          37.86,
+          114.58
+        ],
+        [
+          37.94,
+          114.72
+        ]
+      ],
+      "source": "DJI Mavic 3M"
+    }
+  ],
+  "moistureLayers": [
+    {
+      "id": 1,
+      "date": "2026-05-20",
+      "imageAsset": "soil-moisture-heatmap",
+      "bounds": [
+        [
+          37.88,
+          114.6
+        ],
+        [
+          37.92,
+          114.7
+        ]
+      ],
+      "source": "Sentinel-2"
+    }
   ]
 }

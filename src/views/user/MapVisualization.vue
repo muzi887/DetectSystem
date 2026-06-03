@@ -45,83 +45,19 @@ import {
   invalidateLeafletSize,
   removeLeafletMap
 } from '@/composables/useLeafletBase'
-import {
-  buildMonitorPopupHtml,
-  createMonitorDivIcon
-} from '@/composables/useMonitorMarkers'
+import { createMonitorPointLayer } from '@/composables/useMonitorPointLayer'
 import * as L from 'leaflet'
-import 'leaflet.markercluster'
 import 'leaflet/dist/leaflet.css'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 const dataStore = useDataStore()
 const mapRef = ref<HTMLDivElement | null>(null)
 
 let map: L.Map | null = null
-let markerCluster: L.MarkerClusterGroup | null = null
-const markersById = new Map<number, L.Marker>()
-
-const buildPopupHtml = (point: any) => buildMonitorPopupHtml(point, dataStore.alerts)
+let monitorLayer: ReturnType<typeof createMonitorPointLayer> | null = null
 
 function renderMarkers() {
-  if (!markerCluster || !map) return
-  markerCluster.clearLayers()
-  markersById.clear()
-
-  for (const p of dataStore.monitorPoints) {
-    const icon = createMonitorDivIcon(p)
-    const marker = L.marker([p.lat, p.lng], { icon })
-    marker.bindPopup(buildPopupHtml(p))
-
-    marker.on('popupopen', (e) => {
-      const container = e.popup?.getElement()
-      if (!container) return
-
-      const triggerBtn = container.querySelector('.trigger') as HTMLButtonElement | null
-      const closeBtn = container.querySelector('.close') as HTMLButtonElement | null
-
-      if (triggerBtn) {
-        triggerBtn.onclick = async () => {
-          triggerBtn.disabled = true
-          try {
-            await dataStore.createAlert({
-              pointId: p.id,
-              level: 'medium',
-              message: `手动触发：${p.name} 状态异常`
-            })
-            marker.setPopupContent(buildPopupHtml(p))
-          } catch (err) {
-            message.error('触发预警失败')
-          } finally {
-            triggerBtn.disabled = false
-          }
-        }
-      }
-
-      if (closeBtn) {
-        closeBtn.onclick = async () => {
-          const unhandled = dataStore.unhandledAlerts.find((a) => a.pointId === p.id)
-          if (!unhandled) {
-            message.info('该点暂无未处理预警')
-            return
-          }
-          closeBtn.disabled = true
-          try {
-            await dataStore.updateAlert(unhandled.id, { handled: true })
-            marker.setPopupContent(buildPopupHtml(p))
-          } catch (err) {
-            message.error('关闭预警失败')
-          } finally {
-            closeBtn.disabled = false
-          }
-        }
-      }
-    })
-
-    markersById.set(p.id, marker)
-    markerCluster.addLayer(marker)
-  }
+  if (!monitorLayer || !map) return
+  monitorLayer.render(dataStore.monitorPoints, dataStore.alerts)
   zoomToAll()
 }
 
@@ -133,8 +69,35 @@ async function initMap() {
     tile: 'gaodeSatellite'
   })
 
-  markerCluster = L.markerClusterGroup()
-  markerCluster.addTo(map)
+  monitorLayer = createMonitorPointLayer(map, {
+    onTriggerAlert: async (p) => {
+      try {
+        await dataStore.createAlert({
+          pointId: p.id,
+          level: 'medium',
+          message: `手动触发：${p.name} 状态异常`
+        })
+      } catch {
+        message.error('触发预警失败')
+        throw new Error('trigger failed')
+      }
+    },
+    onResolveAlert: async (p) => {
+      const unhandled = dataStore.unhandledAlerts.find((a) => a.pointId === p.id)
+      if (!unhandled) {
+        message.info('该点暂无未处理预警')
+        return false
+      }
+      try {
+        await dataStore.updateAlert(unhandled.id, { handled: true })
+        return true
+      } catch {
+        message.error('关闭预警失败')
+        return false
+      }
+    }
+  })
+
   invalidateLeafletSize(map)
 }
 
@@ -145,8 +108,8 @@ async function refreshData() {
 }
 
 function zoomToAll() {
-  if (!markerCluster || !map) return
-  const layers = markerCluster.getLayers()
+  if (!monitorLayer || !map) return
+  const layers = monitorLayer.cluster.getLayers()
   if (layers.length > 0) {
     const group = L.featureGroup(layers as L.Layer[])
     map.fitBounds(group.getBounds().pad(0.2))
@@ -163,16 +126,15 @@ onMounted(async () => {
   watch(
     () => dataStore.alerts,
     () => {
-      for (const p of dataStore.monitorPoints) {
-        const mk = markersById.get(p.id)
-        if (mk) mk.setPopupContent(buildPopupHtml(p))
-      }
+      monitorLayer?.updatePopups(dataStore.monitorPoints, dataStore.alerts)
     },
     { deep: true }
   )
 })
 
 onBeforeUnmount(() => {
+  monitorLayer?.detach()
+  monitorLayer = null
   removeLeafletMap(map)
   map = null
 })
@@ -207,7 +169,7 @@ onBeforeUnmount(() => {
 .map-container {
   width: 100%;
   height: 100%;
-  min-height: 400px; /* Leaflet 需要容器高度 */
+  min-height: 400px;
   border-radius: 0 0 12px 12px;
   z-index: 1;
 }
@@ -222,14 +184,14 @@ onBeforeUnmount(() => {
   color: var(--glass-text-primary) !important;
 }
 
-:deep(.custom-marker) {
+.map-container :deep(.custom-marker) {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
 
-:deep(.marker-dot) {
+.map-container :deep(.marker-dot) {
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -237,7 +199,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 8px rgb(0 0 0 / 50%);
 }
 
-:deep(.marker-label) {
+.map-container :deep(.marker-label) {
   font-size: 12px;
   color: white;
   text-shadow: 1px 1px 2px black;

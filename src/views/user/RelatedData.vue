@@ -43,23 +43,32 @@
           <div
             v-if="currentTab === 'drone' || currentTab === 'gis'"
             class="full-content map-visual">
-            <picture>
-              <source
-                :srcset="mapImageWebp"
-                type="image/webp" />
-              <img
-                :src="mapImageSrc"
-                :alt="currentTab === 'drone' ? 'NDVI 植被指数分析' : '土壤湿度空间分布热力图'"
-                class="map-image"
-                loading="lazy"
-                decoding="async" />
-            </picture>
+            <NdviLayerControls v-if="currentTab === 'drone'" />
+            <RemoteSensingMap
+              ref="remoteMapRef"
+              :key="currentTab"
+              :mode="currentTab === 'drone' ? 'ndvi' : 'moisture'"
+              :image-url="remoteRasterLayer.imageUrl"
+              :bounds="remoteRasterLayer.bounds"
+              :show-monitor-points="currentTab === 'gis'"
+              :monitor-points="dataStore.monitorPoints"
+              :monitor-alerts="dataStore.alerts" />
             <div class="map-caption">
               <h3 class="font-heading">
                 {{ currentTab === 'drone' ? 'NDVI 植被指数' : '土壤墒情分布' }}
               </h3>
               <p class="map-source">
-                来源：{{ currentTab === 'drone' ? 'DJI Mavic 3M' : 'Sentinel-2' }}
+                来源：{{ mapDataSource }}
+              </p>
+              <p
+                v-if="currentTab === 'drone' && remoteStore.selectedNdviDate"
+                class="map-meta">
+                影像日期：{{ remoteStore.selectedNdviDate }}
+              </p>
+              <p
+                v-if="currentTab === 'gis' && remoteStore.selectedMoistureDate"
+                class="map-meta">
+                影像日期：{{ remoteStore.selectedMoistureDate }} · 监测点为地面传感器
               </p>
             </div>
             <div
@@ -77,8 +86,8 @@
                   :title="step.label" />
               </div>
               <div class="legend-labels">
-                <span>{{ legendSteps[0].label }}</span>
-                <span>{{ legendSteps[legendSteps.length - 1].label }}</span>
+                <span>{{ legendSteps[0]?.label }}</span>
+                <span>{{ legendSteps[legendSteps.length - 1]?.label }}</span>
               </div>
             </div>
           </div>
@@ -147,16 +156,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
+import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
+import { NDVI_DEMO_LAYER, MOISTURE_DEMO_LAYER } from '@/constants/remoteSensingLayers'
 import { useDataStore } from '@/stores/data.ts'
+import { useRemoteSensingStore } from '@/stores/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import ndviHeatmap from '@/assets/ndvi-heatmap.jpg'
-import ndviHeatmapWebp from '@/assets/ndvi-heatmap.webp'
-import soilMoistureHeatmap from '@/assets/soil-moisture-heatmap.jpg'
-import soilMoistureHeatmapWebp from '@/assets/soil-moisture-heatmap.webp'
 
 const dataStore = useDataStore()
+const remoteStore = useRemoteSensingStore()
 const loading = ref(false)
 
 const currentTab = ref('sensor')
@@ -183,16 +193,31 @@ const tabs = [
 ]
 
 const currentTitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.title)
-const currentSubtitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.subtitle)
+const currentSubtitle = computed(() => {
+  const base = tabs.find((t) => t.key === currentTab.value)?.subtitle ?? ''
+  if (currentTab.value === 'drone' && remoteStore.selectedNdviDate) {
+    const fieldName =
+      remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ??
+      remoteStore.selectedFieldId
+    return `${base} · ${fieldName} · ${remoteStore.selectedNdviDate}`
+  }
+  return base
+})
 const currentTabName = computed(() => tabs.find((t) => t.key === currentTab.value)?.label)
 
-const mapImageSrc = computed(() =>
-  currentTab.value === 'drone' ? ndviHeatmap : soilMoistureHeatmap
-)
+const remoteMapRef = ref<InstanceType<typeof RemoteSensingMap> | null>(null)
 
-const mapImageWebp = computed(() =>
-  currentTab.value === 'drone' ? ndviHeatmapWebp : soilMoistureHeatmapWebp
-)
+const remoteRasterLayer = computed(() => {
+  if (currentTab.value === 'drone') {
+    return remoteStore.currentNdviRaster ?? NDVI_DEMO_LAYER
+  }
+  if (currentTab.value === 'gis') {
+    return remoteStore.currentMoistureRaster ?? MOISTURE_DEMO_LAYER
+  }
+  return NDVI_DEMO_LAYER
+})
+
+const mapDataSource = computed(() => remoteRasterLayer.value.source)
 
 const ndviLegend = [
   { label: '低 (裸地/胁迫)', color: '#8b4513' },
@@ -231,10 +256,15 @@ const aiConclusion = computed(() => {
     }
   }
 
+  if (currentTab.value === 'drone') {
+    const fieldName =
+      remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ?? '当前地块'
+    return `${fieldName} 出现轻微缺氮光谱特征，建议针对该区域进行无人机变量施肥。`
+  }
+
   const otherConclusions: Record<string, string> = {
-    drone: '区域 A3 出现轻微缺氮光谱特征，建议针对该地块进行无人机变量施肥。',
     weather: '未来 3 天无明显降雨，蒸腾作用强烈，请注意保墒。',
-    gis: '土壤水分热力图显示田块西北角长期处于低湿状态，建议检查滴灌管道。'
+    gis: '土壤水分热力图显示栾城区一带墒情偏高，河间—雄县段偏干，建议分区灌溉。'
   }
   return otherConclusions[currentTab.value] || '数据分析中...'
 })
@@ -305,6 +335,9 @@ const switchTab = async (key: string) => {
     await nextTick()
     chartInstance?.resize()
     renderSensorChart()
+  } else if (key === 'drone' || key === 'gis') {
+    await nextTick()
+    remoteMapRef.value?.invalidate()
   }
 }
 
@@ -329,22 +362,40 @@ const handleDownload = () => {
   message.success(`已下载《${currentTabName.value}分析简报.pdf》`)
 }
 
+function onWindowResize() {
+  chartInstance?.resize()
+  if (currentTab.value === 'drone' || currentTab.value === 'gis') {
+    remoteMapRef.value?.invalidate()
+  }
+}
+
 onMounted(async () => {
   loading.value = true
   try {
+    const tasks: Promise<unknown>[] = [
+      remoteStore.fetchAll().catch(() => {
+        message.warning('遥感图层加载失败，已使用本地演示数据')
+      })
+    ]
     if (dataStore.alerts.length === 0) {
-      await dataStore.fetchAlerts()
+      tasks.push(dataStore.fetchAlerts())
     }
+    if (dataStore.monitorPoints.length === 0) {
+      tasks.push(dataStore.fetchMonitorPoints())
+    }
+    await Promise.all(tasks)
     await nextTick()
     renderSensorChart()
   } finally {
     loading.value = false
   }
-  window.addEventListener('resize', () => chartInstance?.resize())
+  window.addEventListener('resize', onWindowResize)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () => chartInstance?.resize())
+  window.removeEventListener('resize', onWindowResize)
+  chartInstance?.dispose()
+  chartInstance = null
 })
 
 watch(
@@ -356,6 +407,13 @@ watch(
   },
   { deep: true }
 )
+
+watch(remoteRasterLayer, async () => {
+  if (currentTab.value === 'drone' || currentTab.value === 'gis') {
+    await nextTick()
+    remoteMapRef.value?.invalidate()
+  }
+})
 </script>
 
 <style scoped>
@@ -421,19 +479,12 @@ watch(
   overflow: hidden;
 }
 
-.map-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-
 .map-caption {
   position: absolute;
   left: 12px;
   bottom: 12px;
-  z-index: 2;
+  z-index: 4;
+  pointer-events: none;
   max-width: min(280px, 55%);
   padding: 10px 14px;
   border-radius: 8px;
@@ -455,11 +506,18 @@ watch(
   color: var(--glass-text-muted);
 }
 
+.map-meta {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: rgb(255 255 255 / 55%);
+}
+
 .map-legend {
   position: absolute;
   right: 12px;
   bottom: 12px;
-  z-index: 2;
+  z-index: 4;
+  pointer-events: none;
   min-width: 140px;
   padding: 10px 12px;
   border-radius: 8px;
