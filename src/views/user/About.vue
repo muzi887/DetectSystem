@@ -18,9 +18,9 @@
           <div class="vision-text">
             我们是河北地质大学
             <strong>坤灵智巡创工队</strong>
-            ，参加 2025–2026 年「挑战杯」大学生创业计划竞赛。本 Web 监测系统由
+            ，专注智慧农业监测与灾害预警服务。本 Web 监测系统由
             <strong>张晓琳</strong>
-            （信息工程学院）完成开发与线上部署；团队在地信、测绘、运营等方面协同完成。
+            完成开发与线上部署；团队在地信、测绘、运营等方面协同完成。
           </div>
 
           <img
@@ -153,11 +153,11 @@
       <div class="glass-panel footer-panel">
         <div class="footer-inner">
           <p class="contest-info">
-            本项目为
-            <strong>2025-2026年“挑战杯”大学生创业计划竞赛</strong>
-            参赛作品
+            本平台由
+            <strong>坤灵智巡创工队</strong>
+            开发，面向智慧农业监测与灾害预警场景
           </p>
-          <p class="school-info">参赛学校：河北地质大学 &nbsp;|&nbsp; 团队：坤灵智巡创工队</p>
+          <p class="school-info">河北地质大学 &nbsp;|&nbsp; 坤灵智巡创工队</p>
           <div class="contact-action">
             <a
               href="mailto:kunling-smart@hgu.edu.cn"
@@ -222,7 +222,7 @@ const advisor = {
   title: '讲师',
   college: '土地科学与空间规划学院',
   message:
-    '寄语：把地信所学落到田间，用可落地的系统守护粮安。祝坤灵智巡在挑战杯中行稳致远。'
+    '寄语：把地信所学落到田间，用可落地的系统守护粮安。愿坤灵智巡行稳致远，让预警更早一步。'
 }
 
 const teamMembers = ref([
@@ -237,7 +237,7 @@ const teamMembers = ref([
     name: '张晓琳',
     role: '技术总监',
     major: '计算机科学与技术专业',
-    desc: '专业成绩扎实，熟悉 C++ 与 Vue 开发流程，对 Web 与人工智能应用有浓厚兴趣。',
+    desc: '专业成绩扎实，熟悉 C++，C# 与 Vue 开发流程，对 Web 与人工智能应用有浓厚兴趣。',
     avatar: TEAM_AVATAR
   },
   {

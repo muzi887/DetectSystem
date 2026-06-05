@@ -9,6 +9,13 @@
           </div>
 
           <div class="header-actions">
+            <a-select
+              v-if="currentTab === 'weather'"
+              v-model:value="selectedWeatherPointId"
+              class="weather-point-select"
+              popup-class-name="weather-point-select-dropdown"
+              :options="weatherPointOptions"
+              placeholder="选择监测站" />
             <a-button
               type="primary"
               shape="round"
@@ -25,7 +32,9 @@
           </div>
         </div>
 
-        <div class="chart-wrapper">
+        <div
+          class="chart-wrapper"
+          :class="{ 'chart-wrapper--weather': currentTab === 'weather' }">
           <div
             v-if="loading"
             class="glass-loading-mask">
@@ -113,21 +122,20 @@
           <div
             v-if="currentTab === 'weather'"
             class="weather-grid">
-            <a-card
-              class="weather-card"
-              title="实时温度">
-              32°C
-            </a-card>
-            <a-card
-              class="weather-card"
-              title="相对湿度">
-              65%
-            </a-card>
-            <a-card
-              class="weather-card"
-              title="降水概率">
-              15%
-            </a-card>
+            <template v-if="weatherMetrics.length">
+              <a-card
+                v-for="item in weatherMetrics"
+                :key="item.label"
+                class="weather-card"
+                :title="item.label">
+                {{ item.value }}
+              </a-card>
+            </template>
+            <div
+              v-else
+              class="weather-empty">
+              暂无该监测站气象读数
+            </div>
           </div>
         </div>
 
@@ -177,7 +185,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
 import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
 import { NDVI_DEMO_LAYER, MOISTURE_DEMO_LAYER } from '@/constants/remoteSensingLayers'
-import { useDataStore } from '@/stores/data.ts'
+import { useDataStore, type WeatherReading } from '@/stores/data.ts'
 import { useRemoteSensingStore } from '@/stores/remoteSensing'
 import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
@@ -189,6 +197,74 @@ const remoteStore = useRemoteSensingStore()
 const loading = ref(false)
 
 const currentTab = ref('sensor')
+const selectedWeatherPointId = ref<number>(1)
+
+const weatherPointOptions = computed(() =>
+  dataStore.monitorPoints.map((point) => ({
+    value: point.id,
+    label: point.name
+  }))
+)
+
+function formatWeatherMetrics(reading: WeatherReading) {
+  const rainLabel =
+    reading.hourlyRain <= 0
+      ? '0.0 mm（无降水）'
+      : `${reading.hourlyRain.toFixed(1)} mm`
+
+  return [
+    { label: '土壤体积含水率', value: `${reading.soilVwc.toFixed(1)} %vol` },
+    { label: '10cm土壤温度', value: `${reading.soilTemp10cm.toFixed(1)} ℃` },
+    { label: '土壤EC电导率', value: `${reading.soilEc.toFixed(0)} μS/cm` },
+    { label: '空气温度', value: `${reading.airTemp.toFixed(1)} ℃` },
+    { label: '空气相对湿度', value: `${reading.airRh.toFixed(1)} %RH` },
+    { label: '瞬时风速', value: `${reading.windSpeed.toFixed(1)} m/s` },
+    {
+      label: '风向',
+      value: `${reading.windDirection}°（${reading.windDirectionText}）`
+    },
+    { label: '大气气压', value: `${reading.pressure.toFixed(1)} hPa` },
+    { label: '小时降雨量', value: rainLabel }
+  ]
+}
+
+const selectedWeatherReading = computed(() =>
+  dataStore.getWeatherReadingByPointId(selectedWeatherPointId.value)
+)
+
+const weatherMetrics = computed(() => {
+  const reading = selectedWeatherReading.value
+  return reading ? formatWeatherMetrics(reading) : []
+})
+
+function getWeatherPointName(pointId: number) {
+  return (
+    dataStore.monitorPoints.find((point) => point.id === pointId)?.name ??
+    `监测站 #${pointId}`
+  )
+}
+
+function buildWeatherAiConclusion(reading: WeatherReading, pointName: string) {
+  const rainPart =
+    reading.hourlyRain <= 0
+      ? '当前无降水'
+      : `近 1 小时降雨 ${reading.hourlyRain.toFixed(1)} mm`
+  const humidityPart =
+    reading.airRh < 40
+      ? '，空气偏干'
+      : reading.airRh > 60
+        ? '，空气湿度较高'
+        : ''
+  const soilPart =
+    reading.soilVwc < 20
+      ? '，土壤墒情偏低，建议适时补灌'
+      : reading.soilVwc > 35
+        ? '，土壤墒情充足'
+        : '，蒸腾作用较强，建议关注墒情'
+
+  return `${pointName}：${rainPart}（相对湿度 ${reading.airRh.toFixed(1)}%RH），土壤体积含水率 ${reading.soilVwc.toFixed(1)}%vol${humidityPart}${soilPart}。`
+}
+
 const tabs = [
   {
     key: 'sensor',
@@ -206,7 +282,7 @@ const tabs = [
     key: 'weather',
     label: '气象数据 (天)',
     title: '气象站实时数据',
-    subtitle: '局地小气候实时监测'
+    subtitle: '土壤墒情与局地小气候实时监测'
   },
   { key: 'gis', label: 'GIS 数据 (图)', title: '地理信息可视化', subtitle: '土壤墒情热力分布图' }
 ]
@@ -214,6 +290,10 @@ const tabs = [
 const currentTitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.title)
 const currentSubtitle = computed(() => {
   const base = tabs.find((t) => t.key === currentTab.value)?.subtitle ?? ''
+  if (currentTab.value === 'weather') {
+    const pointName = getWeatherPointName(selectedWeatherPointId.value)
+    return `${pointName} · 土壤墒情与局地小气候实时监测`
+  }
   if (currentTab.value === 'drone' && remoteStore.selectedNdviDate) {
     const fieldName =
       remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ??
@@ -331,10 +411,15 @@ const aiConclusion = computed(() => {
       : GIS_DEFAULT_AI
   }
 
-  const otherConclusions: Record<string, string> = {
-    weather: '未来 3 天无明显降雨，蒸腾作用强烈，请注意保墒。'
+  if (currentTab.value === 'weather') {
+    const reading = selectedWeatherReading.value
+    if (!reading) {
+      return '气象读数加载中或暂无数据，请切换监测站或稍后重试。'
+    }
+    return buildWeatherAiConclusion(reading, getWeatherPointName(selectedWeatherPointId.value))
   }
-  return otherConclusions[currentTab.value] || '数据分析中...'
+
+  return '数据分析中...'
 })
 
 const sensorChartRef = ref<HTMLDivElement | null>(null)
@@ -460,6 +545,13 @@ onMounted(async () => {
     if (dataStore.monitorPoints.length === 0) {
       tasks.push(dataStore.fetchMonitorPoints())
     }
+    if (dataStore.weatherReadings.length === 0) {
+      tasks.push(
+        dataStore.fetchWeatherReadings().catch(() => {
+          message.warning('气象读数加载失败，请检查 Mock 服务')
+        })
+      )
+    }
     await Promise.all(tasks)
     await nextTick()
     renderSensorChart()
@@ -491,6 +583,24 @@ watch(remoteRasterLayer, async () => {
     remoteMapRef.value?.invalidate()
   }
 })
+
+watch(currentTab, (tab) => {
+  if (tab !== 'weather') return
+  const field = remoteStore.fields.find((item) => item.id === remoteStore.selectedFieldId)
+  if (field?.monitorPointId) {
+    selectedWeatherPointId.value = field.monitorPointId
+  }
+})
+
+watch(
+  () => dataStore.monitorPoints,
+  (points) => {
+    if (points.length && !points.some((point) => point.id === selectedWeatherPointId.value)) {
+      selectedWeatherPointId.value = points[0].id
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -641,21 +751,89 @@ watch(remoteRasterLayer, async () => {
   color: var(--glass-text-muted);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.weather-point-select {
+  min-width: 180px;
+}
+
+.weather-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--glass-text-muted);
+  font-size: 14px;
+}
+
+.chart-wrapper--weather {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .weather-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 40px;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 16px;
+  padding: 24px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .weather-card {
+  min-width: 0;
+  width: 100%;
+  min-height: 110px;
+  height: 100%;
   background: var(--glass-bg-subtle) !important;
   border: 1px solid var(--glass-border) !important;
   color: var(--glass-text-primary) !important;
   text-align: center;
-  font-size: 32px;
+  font-size: 20px;
   font-weight: bold;
   text-shadow: var(--glass-text-shadow);
+}
+
+:deep(.weather-card.ant-card) {
+  min-width: 0;
+  width: 100%;
+  min-height: 110px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.weather-card .ant-card-head) {
+  min-height: auto;
+  padding: 0 12px;
+}
+
+:deep(.weather-card .ant-card-head-title) {
+  white-space: normal;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 12px 0;
+}
+
+:deep(.weather-card .ant-card-body) {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px 16px;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 :deep(.ant-card-head-title) {
@@ -759,7 +937,8 @@ watch(remoteRasterLayer, async () => {
   }
 
   .weather-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(110px, 1fr);
     padding: 20px;
   }
 
@@ -795,7 +974,8 @@ watch(remoteRasterLayer, async () => {
   }
 
   .weather-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(100px, auto);
     padding: 16px;
     gap: 12px;
   }

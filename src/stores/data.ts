@@ -16,11 +16,29 @@ export interface Alert {
 
 export type CreateAlertPayload = Omit<Alert, 'id'>
 
+export interface WeatherReading {
+  id: number
+  pointId: number
+  updatedAt: string
+  soilVwc: number
+  soilTemp10cm: number
+  soilEc: number
+  airTemp: number
+  airRh: number
+  windSpeed: number
+  windDirection: number
+  windDirectionText: string
+  pressure: number
+  hourlyRain: number
+}
+
 export const useDataStore = defineStore('data', () => {
   const monitorPoints = ref<Array<any>>([])
   const alerts = ref<Array<any>>([])
+  const weatherReadings = ref<WeatherReading[]>([])
   const loadingPoints = ref(false)
   const loadingAlerts = ref(false)
+  const loadingWeather = ref(false)
   const unhandledAlerts = computed(() => alerts.value.filter((alert) => !alert.handled))
 
   async function fetchMonitorPoints() {
@@ -65,6 +83,23 @@ export const useDataStore = defineStore('data', () => {
     } finally {
       loadingPoints.value = false
     }
+  }
+
+  async function fetchWeatherReadings() {
+    loadingWeather.value = true
+    try {
+      const res = await http.get('/weatherReadings')
+      weatherReadings.value = res.data || []
+    } catch (e) {
+      console.error('fetchWeatherReadings error', e)
+      throw e
+    } finally {
+      loadingWeather.value = false
+    }
+  }
+
+  function getWeatherReadingByPointId(pointId: number): WeatherReading | undefined {
+    return weatherReadings.value.find((item) => item.pointId === pointId)
   }
 
   async function fetchAlerts(force: boolean = false) {
@@ -117,10 +152,14 @@ export const useDataStore = defineStore('data', () => {
   return {
     monitorPoints,
     alerts,
+    weatherReadings,
     unhandledAlerts,
     loadingPoints,
     loadingAlerts,
+    loadingWeather,
     fetchMonitorPoints,
+    fetchWeatherReadings,
+    getWeatherReadingByPointId,
     fetchAlerts,
     createAlert,
     updateAlert,

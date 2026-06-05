@@ -58,6 +58,53 @@
       "status": "normal"
     }
   ],
+  "weatherReadings": [
+    {
+      "id": 1,
+      "pointId": 1,
+      "updatedAt": "2026-06-05T14:00:00+08:00",
+      "soilVwc": 25.3,
+      "soilTemp10cm": 29.1,
+      "soilEc": 227,
+      "airTemp": 33.2,
+      "airRh": 38.7,
+      "windSpeed": 2.3,
+      "windDirection": 185,
+      "windDirectionText": "偏南风",
+      "pressure": 998.6,
+      "hourlyRain": 0
+    },
+    {
+      "id": 2,
+      "pointId": 2,
+      "updatedAt": "2026-06-05T14:00:00+08:00",
+      "soilVwc": 12.8,
+      "soilTemp10cm": 31.5,
+      "soilEc": 312,
+      "airTemp": 35.6,
+      "airRh": 28.4,
+      "windSpeed": 3.1,
+      "windDirection": 220,
+      "windDirectionText": "偏西南风",
+      "pressure": 997.2,
+      "hourlyRain": 0
+    },
+    {
+      "id": 3,
+      "pointId": 3,
+      "updatedAt": "2026-06-05T14:00:00+08:00",
+      "soilVwc": 38.6,
+      "soilTemp10cm": 22.4,
+      "soilEc": 185,
+      "airTemp": 26.8,
+      "airRh": 62.5,
+      "windSpeed": 1.8,
+      "windDirection": 90,
+      "windDirectionText": "偏东风",
+      "pressure": 1001.3,
+      "hourlyRain": 0.6
+    }
+  ],
   "alerts": [
     {
       "id": 1,
