@@ -24,10 +24,25 @@ export interface MonitorPointLayerOptions {
   onResolveAlert?: (point: MonitorPointRecord) => Promise<boolean>
 }
 
+export interface HighlightPointOptions {
+  /** 查墒情点击位置；传入时用 fitBounds 同时框住点击处与监测站 */
+  queryLatLng?: L.LatLng
+  maxZoom?: number
+}
+
+const FIT_BOTH_POPUPS_PADDING: L.PointExpression = [100, 100]
+
+const LAYER_POPUP_OPTIONS: L.PopupOptions = {
+  autoPan: false,
+  autoClose: false,
+  closeOnClick: false
+}
+
 export function createMonitorPointLayer(map: L.Map, options: MonitorPointLayerOptions = {}) {
   const cluster = L.markerClusterGroup()
   cluster.addTo(map)
   const markersById = new Map<number, L.Marker>()
+  let highlightPopup: L.Popup | null = null
 
   function popupHtml(point: MonitorPointRecord, alerts: Alert[]) {
     return buildMonitorPopupHtml(point, alerts, { readonly: options.readonly })
@@ -69,7 +84,26 @@ export function createMonitorPointLayer(map: L.Map, options: MonitorPointLayerOp
     })
   }
 
+  function dismissHighlight() {
+    highlightPopup?.remove()
+    highlightPopup = null
+  }
+
+  function openMarkerPopupLayer(marker: L.Marker) {
+    const popup = marker.getPopup()
+    if (!popup) return
+
+    dismissHighlight()
+    popup.options.autoPan = LAYER_POPUP_OPTIONS.autoPan
+    popup.options.autoClose = LAYER_POPUP_OPTIONS.autoClose
+    popup.options.closeOnClick = LAYER_POPUP_OPTIONS.closeOnClick
+    popup.setLatLng(marker.getLatLng())
+    popup.addTo(map)
+    highlightPopup = popup
+  }
+
   function render(points: MonitorPointRecord[], alerts: Alert[]) {
+    dismissHighlight()
     cluster.clearLayers()
     markersById.clear()
 
@@ -90,9 +124,35 @@ export function createMonitorPointLayer(map: L.Map, options: MonitorPointLayerOp
   }
 
   function detach() {
+    dismissHighlight()
     map.removeLayer(cluster)
     markersById.clear()
   }
 
-  return { render, updatePopups, detach, cluster }
+  function highlightPoint(pointId: number, options: HighlightPointOptions = {}) {
+    const marker = markersById.get(pointId)
+    if (!marker) return
+
+    const maxZoom = options.maxZoom ?? 14
+    const markerLatLng = marker.getLatLng()
+
+    cluster.zoomToShowLayer(marker, () => {
+      if (options.queryLatLng) {
+        const bounds = L.latLngBounds(options.queryLatLng, markerLatLng)
+        map.fitBounds(bounds, {
+          padding: FIT_BOTH_POPUPS_PADDING,
+          maxZoom,
+          animate: true,
+          duration: 0.8
+        })
+      } else {
+        map.flyTo(markerLatLng, maxZoom, { duration: 0.8 })
+      }
+      map.once('moveend', () => {
+        openMarkerPopupLayer(marker)
+      })
+    })
+  }
+
+  return { render, updatePopups, detach, dismissHighlight, highlightPoint, cluster }
 }

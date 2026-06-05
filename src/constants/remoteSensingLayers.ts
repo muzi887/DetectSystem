@@ -1,4 +1,5 @@
 import ndviHeatmap from '@/assets/ndvi-heatmap.webp'
+import ndviHeatmapMay20 from '@/assets/ndvi-heatmap-may20.webp'
 import soilMoistureHeatmap from '@/assets/soil-moisture-heatmap.webp'
 import type { RasterBounds, RasterLayerView } from '@/types/remoteSensing'
 
@@ -6,6 +7,7 @@ export type { RasterBounds, RasterLayerView }
 
 export const REMOTE_SENSING_ASSETS: Record<string, string> = {
   'ndvi-heatmap': ndviHeatmap,
+  'ndvi-heatmap-may20': ndviHeatmapMay20,
   'soil-moisture-heatmap': soilMoistureHeatmap
 }
 

@@ -325,7 +325,7 @@
       "id": 1,
       "fieldId": "hejian",
       "date": "2026-05-20",
-      "imageAsset": "ndvi-heatmap",
+      "imageAsset": "ndvi-heatmap-may20",
       "bounds": [[38.42, 116.04], [38.48, 116.12]],
       "source": "DJI Mavic 3M",
       "ndviMin": 0.2,

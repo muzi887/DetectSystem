@@ -33,12 +33,23 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
   const selectedFieldId = ref('')
   const selectedNdviDate = ref('')
   const selectedMoistureDate = ref('')
+  const compareEnabled = ref(false)
+  const compareNdviDate = ref('')
+  const compareOpacity = ref(0.5)
   const loading = ref(false)
   const loadError = ref<string | null>(null)
 
   const layersForField = computed(() =>
     ndviLayers.value.filter((l) => l.fieldId === selectedFieldId.value)
   )
+
+  const compareDatesForField = computed(() =>
+    layersForField.value
+      .map((l) => l.date)
+      .filter((date) => date !== selectedNdviDate.value)
+  )
+
+  const canCompareNdvi = computed(() => compareDatesForField.value.length > 0)
 
   const currentNdviLayer = computed(
     () =>
@@ -62,6 +73,42 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
     currentMoistureLayer.value ? toRasterView(currentMoistureLayer.value) : null
   )
 
+  const compareNdviLayer = computed(() =>
+    compareEnabled.value && compareNdviDate.value
+      ? layersForField.value.find((l) => l.date === compareNdviDate.value) ?? null
+      : null
+  )
+
+  const compareNdviRaster = computed(() =>
+    compareNdviLayer.value ? toRasterView(compareNdviLayer.value) : null
+  )
+
+  function resetCompare() {
+    compareEnabled.value = false
+    compareNdviDate.value = ''
+  }
+
+  function syncCompareDateForField() {
+    const options = compareDatesForField.value
+    if (options.length === 0) {
+      resetCompare()
+      return
+    }
+    if (!options.includes(compareNdviDate.value)) {
+      compareNdviDate.value = latestDate(options)
+    }
+  }
+
+  function setCompareEnabled(enabled: boolean) {
+    if (enabled && !canCompareNdvi.value) return
+    compareEnabled.value = enabled
+    if (!enabled) {
+      compareNdviDate.value = ''
+      return
+    }
+    syncCompareDateForField()
+  }
+
   function syncNdviDateForField() {
     const ndviDates = layersForField.value.map((l) => l.date)
     if (ndviDates.length) {
@@ -74,16 +121,27 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
 
   function selectField(fieldId: string) {
     selectedFieldId.value = fieldId
+    resetCompare()
     syncNdviDateForField()
+  }
+
+  function onNdviDateChange() {
+    if (compareEnabled.value) syncCompareDateForField()
   }
 
   function initSelection() {
     if (fields.value.length) {
       const hasField = fields.value.some((f) => f.id === selectedFieldId.value)
-      if (!hasField) selectedFieldId.value = fields.value[0].id
+      if (!hasField) selectedFieldId.value = fields.value[0]?.id ?? ''
     }
 
     syncNdviDateForField()
+
+    if (!canCompareNdvi.value) {
+      resetCompare()
+    } else if (compareEnabled.value) {
+      syncCompareDateForField()
+    }
 
     const moistureDates = moistureLayers.value.map((l) => l.date)
     if (moistureDates.length) {
@@ -120,16 +178,26 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
     selectedFieldId,
     selectedNdviDate,
     selectedMoistureDate,
+    compareEnabled,
+    compareNdviDate,
+    compareOpacity,
     loading,
     loadError,
     layersForField,
+    compareDatesForField,
+    canCompareNdvi,
     currentNdviLayer,
     currentMoistureLayer,
     currentNdviRaster,
     currentMoistureRaster,
+    compareNdviLayer,
+    compareNdviRaster,
     fetchAll,
     initSelection,
     selectField,
-    syncNdviDateForField
+    syncNdviDateForField,
+    setCompareEnabled,
+    onNdviDateChange,
+    resetCompare
   }
 })

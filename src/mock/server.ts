@@ -10,6 +10,11 @@ interface AgriMockCore {
   buildNdviSummary: (db: any) => any
   buildSoilMoistureTrend: (db: any) => any
   evaluateDisasterRules: (db: any, body: any) => any
+  queryMoistureByNearestPoint: (
+    db: any,
+    lat: unknown,
+    lng: unknown
+  ) => { ok: boolean; status: number; body: any }
 }
 
 const __filename = fileURLToPath(import.meta.url)
@@ -79,6 +84,13 @@ server.post('/disasterRules/evaluate', (req: Request, res: Response) => {
   const db = readDb(res)
   if (!db) return
   return res.jsonp(agriMockCore.evaluateDisasterRules(db, req.body))
+})
+
+server.get('/moisture/value', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = agriMockCore.queryMoistureByNearestPoint(db, req.query.lat, req.query.lng)
+  return res.status(result.status).jsonp(result.body)
 })
 
 server.use(router)

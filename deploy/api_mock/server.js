@@ -5,7 +5,8 @@ const {
   handleFarmLogin,
   buildNdviSummary,
   buildSoilMoistureTrend,
-  evaluateDisasterRules
+  evaluateDisasterRules,
+  queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
@@ -71,6 +72,13 @@ server.post('/disasterRules/evaluate', (req, res) => {
   const db = readDb(res)
   if (!db) return
   return res.jsonp(evaluateDisasterRules(db, req.body))
+})
+
+server.get('/moisture/value', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = queryMoistureByNearestPoint(db, req.query.lat, req.query.lng)
+  return res.status(result.status).jsonp(result.body)
 })
 
 server.use(router)

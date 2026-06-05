@@ -1,18 +1,25 @@
 /* Leaflet 动态 DOM，须全局样式 */
 
 .leaflet-popup-content-wrapper {
-  background: rgb(40 50 38 / 90%) !important;
+  background: rgb(40 50 38 / 94%) !important;
   color: #eef1ea !important;
   border: 1px solid rgb(255 255 255 / 20%);
   border-radius: 8px !important;
   box-shadow: 0 4px 30px rgb(0 0 0 / 20%) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .leaflet-popup-tip {
-  background: rgb(40 50 38 / 90%) !important;
+  background: rgb(40 50 38 / 94%) !important;
   border-left: 1px solid rgb(255 255 255 / 20%);
   border-bottom: 1px solid rgb(255 255 255 / 20%);
+}
+
+/* Leaflet 用 transform 定位 Popup，子像素易导致文字发糊 */
+.leaflet-popup {
+  backface-visibility: hidden;
 }
 
 .leaflet-popup-content {

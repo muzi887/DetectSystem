@@ -38,7 +38,7 @@
           <div
             v-show="currentTab === 'sensor'"
             ref="sensorChartRef"
-            class="full-content"></div>
+            class="full-content sensor-chart"></div>
 
           <div
             v-if="currentTab === 'drone' || currentTab === 'gis'"
@@ -50,9 +50,13 @@
               :mode="currentTab === 'drone' ? 'ndvi' : 'moisture'"
               :image-url="remoteRasterLayer.imageUrl"
               :bounds="remoteRasterLayer.bounds"
+              :compare-image-url="ndviCompareImageUrl"
+              :compare-opacity="remoteStore.compareOpacity"
               :show-monitor-points="currentTab === 'gis'"
+              :enable-moisture-query="currentTab === 'gis'"
               :monitor-points="dataStore.monitorPoints"
-              :monitor-alerts="dataStore.alerts" />
+              :monitor-alerts="dataStore.alerts"
+              @moisture-query="onMoistureQuery" />
             <div class="map-caption">
               <h3 class="font-heading">
                 {{ currentTab === 'drone' ? 'NDVI 植被指数' : '土壤墒情分布' }}
@@ -64,11 +68,25 @@
                 v-if="currentTab === 'drone' && remoteStore.selectedNdviDate"
                 class="map-meta">
                 影像日期：{{ remoteStore.selectedNdviDate }}
+                <template v-if="remoteStore.compareEnabled && remoteStore.compareNdviDate">
+                  · 对比 {{ remoteStore.compareNdviDate }}
+                  · 历史透明度 {{ Math.round(remoteStore.compareOpacity * 100) }}%
+                </template>
               </p>
               <p
                 v-if="currentTab === 'gis' && remoteStore.selectedMoistureDate"
                 class="map-meta">
                 影像日期：{{ remoteStore.selectedMoistureDate }} · 监测点为地面传感器
+              </p>
+              <p
+                v-if="currentTab === 'gis'"
+                class="map-meta map-meta--hint">
+                点击地图可查询该位置墒情（演示：最近监测点）
+              </p>
+              <p
+                v-if="currentTab === 'gis' && lastMoistureQuery"
+                class="map-meta">
+                最近查值：{{ lastMoistureQuery.moisture }}% · {{ lastMoistureQuery.pointName }}
               </p>
             </div>
             <div
@@ -161,6 +179,7 @@ import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue
 import { NDVI_DEMO_LAYER, MOISTURE_DEMO_LAYER } from '@/constants/remoteSensingLayers'
 import { useDataStore } from '@/stores/data.ts'
 import { useRemoteSensingStore } from '@/stores/remoteSensing'
+import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -199,13 +218,22 @@ const currentSubtitle = computed(() => {
     const fieldName =
       remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ??
       remoteStore.selectedFieldId
-    return `${base} · ${fieldName} · ${remoteStore.selectedNdviDate}`
+    const datePart = `${fieldName} · ${remoteStore.selectedNdviDate}`
+    if (remoteStore.compareEnabled && remoteStore.compareNdviDate) {
+      return `${base} · ${datePart} · 对比 ${remoteStore.compareNdviDate}`
+    }
+    return `${base} · ${datePart}`
   }
   return base
 })
 const currentTabName = computed(() => tabs.find((t) => t.key === currentTab.value)?.label)
 
 const remoteMapRef = ref<InstanceType<typeof RemoteSensingMap> | null>(null)
+const lastMoistureQuery = ref<MoistureQueryResult | null>(null)
+
+function onMoistureQuery(result: MoistureQueryResult) {
+  lastMoistureQuery.value = result
+}
 
 const remoteRasterLayer = computed(() => {
   if (currentTab.value === 'drone') {
@@ -215,6 +243,11 @@ const remoteRasterLayer = computed(() => {
     return remoteStore.currentMoistureRaster ?? MOISTURE_DEMO_LAYER
   }
   return NDVI_DEMO_LAYER
+})
+
+const ndviCompareImageUrl = computed(() => {
+  if (currentTab.value !== 'drone' || !remoteStore.compareEnabled) return undefined
+  return remoteStore.compareNdviRaster?.imageUrl
 })
 
 const mapDataSource = computed(() => remoteRasterLayer.value.source)
@@ -239,6 +272,38 @@ const legendSteps = computed(() =>
   currentTab.value === 'drone' ? ndviLegend : soilLegend
 )
 
+const GIS_DEFAULT_AI =
+  '土壤水分热力图显示栾城区一带墒情偏高，河间—雄县段偏干，建议分区灌溉。'
+
+function formatMoistureSourceLabel(source: string) {
+  return source === 'nearest-point' ? '最近监测点' : source
+}
+
+function moistureLevelHint(moisture: number) {
+  if (moisture <= 20) return '墒情偏低，与参考站传感器读数一致，建议关注灌溉'
+  if (moisture >= 60) return '墒情偏高，与参考站传感器读数一致，建议留意排水'
+  return '墒情适中，与参考站传感器读数一致'
+}
+
+function buildGisAiConclusion(query: MoistureQueryResult) {
+  const sourceLabel = formatMoistureSourceLabel(query.source)
+  const levelHint = moistureLevelHint(query.moisture)
+  return `${query.pointName} 附近墒情约 ${query.moisture}%（${sourceLabel}），${levelHint}。已定位至 ${query.pointName} 传感器。`
+}
+
+function buildDroneAiConclusion() {
+  const fieldName =
+    remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ?? '当前地块'
+  if (
+    remoteStore.compareEnabled &&
+    remoteStore.compareNdviDate &&
+    remoteStore.selectedNdviDate
+  ) {
+    return `${fieldName} 当前期 ${remoteStore.selectedNdviDate} 与对比期 ${remoteStore.compareNdviDate} 的 NDVI 影像叠加显示植被指数变化，长势较好区域可从画面上绿色加深区域辨识，建议结合田间踏查确认变量施肥范围。`
+  }
+  return `${fieldName} 出现轻微缺氮光谱特征，建议针对该区域进行无人机变量施肥。`
+}
+
 const aiConclusion = computed(() => {
   if (currentTab.value === 'sensor') {
     const alerts = dataStore.alerts || []
@@ -257,14 +322,17 @@ const aiConclusion = computed(() => {
   }
 
   if (currentTab.value === 'drone') {
-    const fieldName =
-      remoteStore.fields.find((f) => f.id === remoteStore.selectedFieldId)?.name ?? '当前地块'
-    return `${fieldName} 出现轻微缺氮光谱特征，建议针对该区域进行无人机变量施肥。`
+    return buildDroneAiConclusion()
+  }
+
+  if (currentTab.value === 'gis') {
+    return lastMoistureQuery.value
+      ? buildGisAiConclusion(lastMoistureQuery.value)
+      : GIS_DEFAULT_AI
   }
 
   const otherConclusions: Record<string, string> = {
-    weather: '未来 3 天无明显降雨，蒸腾作用强烈，请注意保墒。',
-    gis: '土壤水分热力图显示栾城区一带墒情偏高，河间—雄县段偏干，建议分区灌溉。'
+    weather: '未来 3 天无明显降雨，蒸腾作用强烈，请注意保墒。'
   }
   return otherConclusions[currentTab.value] || '数据分析中...'
 })
@@ -300,9 +368,14 @@ function renderSensorChart() {
 
   chartInstance.setOption({
     backgroundColor: 'transparent',
-    grid: { top: '15%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    grid: { top: '12%', left: '3%', right: '4%', bottom: 40, containLabel: true },
     tooltip: { trigger: 'axis', formatter: '{b} <br/> 报警数量: {c} 次' },
-    xAxis: { type: 'category', boundaryGap: false, data: labels, axisLabel: { color: '#fff' } },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: labels,
+      axisLabel: { color: '#fff', margin: 10 }
+    },
     yAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
@@ -326,10 +399,14 @@ function renderSensorChart() {
       }
     ]
   })
+  chartInstance.resize()
 }
 
 const switchTab = async (key: string) => {
   if (key === currentTab.value) return
+  if (currentTab.value === 'gis' && key !== 'gis') {
+    lastMoistureQuery.value = null
+  }
   currentTab.value = key
   if (key === 'sensor') {
     await nextTick()
@@ -474,6 +551,11 @@ watch(remoteRasterLayer, async () => {
   height: 100%;
 }
 
+.sensor-chart {
+  box-sizing: border-box;
+  padding-bottom: 8px;
+}
+
 .map-visual {
   position: relative;
   overflow: hidden;
@@ -510,6 +592,11 @@ watch(remoteRasterLayer, async () => {
   margin: 4px 0 0;
   font-size: 11px;
   color: rgb(255 255 255 / 55%);
+}
+
+.map-meta--hint {
+  color: rgb(255 255 255 / 45%);
+  font-style: italic;
 }
 
 .map-legend {

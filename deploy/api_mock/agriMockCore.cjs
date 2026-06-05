@@ -105,6 +105,63 @@ function buildSoilMoistureTrend(db) {
   }
 }
 
+function toRad(deg) {
+  return (deg * Math.PI) / 180
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const earthRadiusKm = 6371
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function queryMoistureByNearestPoint(db, lat, lng) {
+  const points = getMonitorPoints(db)
+  if (!points.length) {
+    return {
+      ok: false,
+      status: 404,
+      body: { message: '无监测点数据' }
+    }
+  }
+
+  const latNum = Number(lat)
+  const lngNum = Number(lng)
+  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+    return {
+      ok: false,
+      status: 400,
+      body: { message: '请提供有效的 lat、lng 查询参数' }
+    }
+  }
+
+  let nearest = points[0]
+  let minDistKm = Infinity
+  for (const point of points) {
+    const distKm = haversineKm(latNum, lngNum, Number(point.lat), Number(point.lng))
+    if (distKm < minDistKm) {
+      minDistKm = distKm
+      nearest = point
+    }
+  }
+
+  return {
+    ok: true,
+    status: 200,
+    body: {
+      moisture: Number(nearest.soilMoisture),
+      source: 'nearest-point',
+      nearestPointId: nearest.id,
+      pointName: nearest.name,
+      distanceKm: Number(minDistKm.toFixed(1))
+    }
+  }
+}
+
 function evaluateDisasterRules(db, body = {}) {
   const points = getMonitorPoints(db)
   const pointId = Number(body.pointId || points[0]?.id || 0)
@@ -157,5 +214,6 @@ module.exports = {
   handleFarmLogin,
   buildNdviSummary,
   buildSoilMoistureTrend,
-  evaluateDisasterRules
+  evaluateDisasterRules,
+  queryMoistureByNearestPoint
 }

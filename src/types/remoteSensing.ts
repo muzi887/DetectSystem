@@ -34,3 +34,12 @@ export interface RasterLayerView {
   date: string
   source: string
 }
+
+/** GET /moisture/value 点击查墒情（P1-4 Mock 方案 A） */
+export interface MoistureQueryResult {
+  moisture: number
+  source: 'nearest-point' | string
+  nearestPointId: number
+  pointName: string
+  distanceKm: number
+}
