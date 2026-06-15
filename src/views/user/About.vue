@@ -16,11 +16,9 @@
           <p class="slogan-sub">—— 坤灵智巡，让灾害预警“跑”在成灾前</p>
 
           <div class="vision-text">
-            我们是河北地质大学
-            <strong>坤灵智巡创工队</strong>
-            ，专注智慧农业监测与灾害预警服务。本 Web 监测系统由
-            <strong>张晓琳</strong>
-            完成开发与线上部署；团队在地信、测绘、运营等方面协同完成。
+            我们是
+            <strong>河北地质大学</strong>
+            坤灵智巡创工队，队员来自地信、测绘、运营等专业。团队自主开发了这套 Web 监测预警系统，目前已部署上线，供合作社与农技推广场景演示使用。
           </div>
 
           <img
@@ -154,7 +152,7 @@
         <div class="footer-inner">
           <p class="contest-info">
             本平台由
-            <strong>坤灵智巡创工队</strong>
+            <strong>河北地质大学</strong>
             开发，面向智慧农业监测与灾害预警场景
           </p>
           <p class="school-info">河北地质大学 &nbsp;|&nbsp; 坤灵智巡创工队</p>

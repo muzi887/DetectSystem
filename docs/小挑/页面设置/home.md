@@ -85,7 +85,7 @@
     <main class="main-content">
       <div class="dashboard-panel welcome">
         <h2>欢迎！</h2>
-        <p>AI作物灾害智慧监测预警系统为您提供最新、最准确的农情数据和预警信息。</p>
+        <p>AI技术赋能下的作物灾害智慧监测预警系统为您提供最新、最准确的农情数据和预警信息。</p>
         <div class="quick-links">
           <router-link
             to="/map"

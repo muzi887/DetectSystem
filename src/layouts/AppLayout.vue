@@ -17,8 +17,8 @@
             alt="Logo"
             class="brand-logo" />
           <span class="brand-title">
-            <span class="brand-title-full">青禾智匠 · 作物灾害监测预警系统</span>
-            <span class="brand-title-short">青禾智匠</span>
+            <span class="brand-title-full">AI技术赋能下的作物灾害智慧监测预警系统</span>
+            <span class="brand-title-short">AI作物灾害监测预警系统</span>
           </span>
         </div>
       </div>

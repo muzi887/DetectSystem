@@ -12,9 +12,9 @@ from docx.oxml.ns import qn
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DOC_PATH = PROJECT_ROOT / "docs" / "作物灾害预警系统使用说明.docx"
+DOC_PATH = PROJECT_ROOT / "docs" / "AI技术赋能下的作物灾害智慧监测预警系统V1.0.4使用说明.docx"
 # 输出到原文档（脚本会先删除已有的源程序清单部分，再添加，不会重复）
-OUTPUT_PATH = PROJECT_ROOT / "docs" / "作物灾害预警系统使用说明.docx"
+OUTPUT_PATH = PROJECT_ROOT / "docs" / "AI技术赋能下的作物灾害智慧监测预警系统V1.0.4使用说明.docx"
 
 LINES_PER_PAGE = 50
 PAGES_FRONT = 30
@@ -240,7 +240,7 @@ def main():
         doc.save(str(OUTPUT_PATH))
         print(f"已保存到: {OUTPUT_PATH}")
     except PermissionError:
-        alt_path = PROJECT_ROOT / "docs" / "作物灾害预警系统使用说明_含源码.docx"
+        alt_path = PROJECT_ROOT / "docs" / "AI技术赋能下的作物灾害智慧监测预警系统V1.0.4使用说明_含源码.docx"
         doc.save(str(alt_path))
         print(f"原文件被占用（可能正在 Word 中打开），已保存到: {alt_path}")
         print("请关闭 Word 中的文档后重试，或直接使用新生成的文件。")
