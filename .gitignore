@@ -28,3 +28,12 @@ dist*.zip
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ML training — ml-bjj 细则见 ml-bjj/.gitignore
+ml/
+ml-v2/
+ml-bjj*.zip
+ml-bjj.zip.*

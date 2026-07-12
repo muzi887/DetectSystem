@@ -12,6 +12,7 @@
     "lint:css": "stylelint --fix 'src/**/*.{css,scss,vue}'",
     "mock": "tsx watch src/mock/server.ts",
     "sync:mock-db": "node scripts/sync-mock-db.mjs",
+    "sync:knowledge": "node scripts/sync-knowledge.mjs",
     "optimize-assets": "node scripts/optimize-assets.mjs"
   },
   "dependencies": {

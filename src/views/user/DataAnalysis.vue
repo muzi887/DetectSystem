@@ -50,10 +50,9 @@
                     <a-select
                       v-model:value="formState.cropType"
                       style="flex-grow: 1">
-                      <a-select-option value="peach">桃</a-select-option>
-                      <a-select-option value="apple">苹果</a-select-option>
                       <a-select-option value="wheat">小麦</a-select-option>
-                      <a-select-option value="rice">水稻</a-select-option>
+                      <a-select-option value="corn">玉米</a-select-option>
+                      <a-select-option value="tomato">番茄</a-select-option>
                     </a-select>
                     <a-button @click="handleIdentify">识别</a-button>
                   </div>
@@ -118,6 +117,16 @@
                   :stroke-color="confidenceStrokeColor"
                   :show-info="false" />
               </div>
+              <p
+                v-if="needsManualReview"
+                class="result-review-hint">
+                置信度偏低，建议人工复核后再生成高等级预警。
+              </p>
+              <TreatmentGuidePanel
+                v-if="treatmentItem"
+                :item="treatmentItem"
+                :disclaimer="treatmentDisclaimer"
+                :manual-review="needsManualReview" />
               <p class="result-hint">结果已同步写入预警列表，可在灾害预警页查看与处理。</p>
               <a-button
                 type="link"
@@ -145,23 +154,25 @@ import { PlusOutlined, LoadingOutlined, ExperimentOutlined } from '@ant-design/i
 import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import TreatmentGuidePanel from '@/components/TreatmentGuidePanel.vue'
 import { analyzeImage } from '@/api/analysis.ts'
+import { useTreatmentGuide } from '@/composables/useTreatmentGuide'
 import { useDataStore } from '@/stores/data'
 import { useRouter } from 'vue-router'
 
 const store = useDataStore()
 const router = useRouter()
+const { getTreatment, disclaimer: treatmentDisclaimer } = useTreatmentGuide()
 
 const formState = reactive({
-  cropType: 'peach',
+  cropType: 'wheat',
   additionalInfo: ''
 })
 
 const cropLabels: Record<string, string> = {
-  peach: '桃',
-  apple: '苹果',
   wheat: '小麦',
-  rice: '水稻'
+  corn: '玉米',
+  tomato: '番茄'
 }
 
 const categories = [
@@ -170,7 +181,7 @@ const categories = [
   { key: 'climate', name: '气候灾害识别' },
   { key: 'other', name: '其他' }
 ]
-const selectedCategory = ref('disaster')
+const selectedCategory = ref('pest')
 
 interface AnalysisResultView {
   result: string
@@ -210,6 +221,16 @@ const confidenceStrokeColor = computed(() => {
   if (p >= 80) return '#73d13d'
   if (p >= 60) return '#faad14'
   return '#ff4d4f'
+})
+
+const needsManualReview = computed(() => {
+  if (!analysisResult.value) return false
+  return confidencePercent.value < 70 && !analysisResult.value.isHealthy
+})
+
+const treatmentItem = computed(() => {
+  if (!analysisResult.value) return null
+  return getTreatment(analysisResult.value.result)
 })
 
 function formatAnalyzedAt(ts: number) {
@@ -531,6 +552,12 @@ const handleIdentify = () => handleConfirm()
 .confidence-label strong {
   color: var(--glass-text-primary);
   font-size: 18px;
+}
+
+.result-review-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #faad14;
 }
 
 .result-hint {

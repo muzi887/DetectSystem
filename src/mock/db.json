@@ -168,7 +168,7 @@
       "level": "medium",
       "message": "传感器校准建议",
       "time": 1762850173196,
-      "handled": false
+      "handled": true
     },
     {
       "time": 1762949548866,
@@ -188,7 +188,7 @@
     },
     {
       "time": 1763648904363,
-      "handled": false,
+      "handled": true,
       "pointId": 1,
       "level": "medium",
       "message": "手动触发：监测站 · 河间市 状态异常",
@@ -369,6 +369,30 @@
       "level": "low",
       "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 82.0%)",
       "id": 33
+    },
+    {
+      "time": 1783562393215,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 91.4%)",
+      "id": 34
+    },
+    {
+      "time": 1783821573045,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 84.5%)",
+      "id": 35
+    },
+    {
+      "time": 1783822643716,
+      "handled": false,
+      "pointId": 1,
+      "level": "high",
+      "message": "[AI识别] 监测到 番茄 - 番茄早疫病 (置信度: 90.5%)",
+      "id": 36
     }
   ],
   "fields": [

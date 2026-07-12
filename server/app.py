@@ -1,3 +1,4 @@
+# 已废弃：Mock 推理。v3 真实推理请使用 ml-bjj/serving/app.py（端口 5000）。
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dataclasses import dataclass

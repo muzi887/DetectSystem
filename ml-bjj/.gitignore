@@ -1,0 +1,19 @@
+# Virtual env & Python cache
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Datasets (raw wheat/plantvillage, bjj_cls, hard_cases, local_test, archives)
+data/
+
+# Model weights & training runs (keep pest-cls-meta.json)
+models/*.pt
+models/*.onnx
+models/runs/
+
+# Source archives (redundant after extract; see 京津冀AI模型精简方案-v3 §0.6)
+archive.zip
+archive_*.zip

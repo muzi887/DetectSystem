@@ -25,7 +25,7 @@
 - **前端**：Vue 3、TypeScript、Vite、Ant Design Vue、Pinia、Vue Router
 - **地图**：Leaflet、Leaflet.markercluster
 - **图表**：ECharts
-- **后端**：JSON Server（模拟 REST）、Flask（病害识别 AI 接口）
+- **后端**：JSON Server（模拟 REST · 3000）、Flask（v3 病害识别 · `ml-bjj/serving/app.py` · 5000）
 
 ---
 
@@ -58,10 +58,12 @@ npm install
    pnpm mock
    ```
 
-3. **可选**：AI 病害识别（需 Python 3，端口 5000）：
+3. **AI 病害识别**（需 Python 3 + ml-bjj 虚拟环境，端口 5000）：
    ```bash
-   python server/app.py
+   ml-bjj\.venv\Scripts\Activate.ps1   # Windows
+   python ml-bjj/serving/app.py
    ```
+   详见 `docs/互联网+/网站/项目启动说明.md`（三终端启动）。
 
 ### 访问地址
 

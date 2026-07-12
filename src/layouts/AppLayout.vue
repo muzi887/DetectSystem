@@ -300,6 +300,7 @@ const handleLogout = () => {
 
 .content-slot {
   flex-grow: 1;
+  min-height: 0;
   box-sizing: border-box;
   padding: 20px 40px;
   overflow-y: auto;
