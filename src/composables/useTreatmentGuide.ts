@@ -15,8 +15,27 @@ function resolveByLabel(label: string): TreatmentItem | null {
   return null
 }
 
+const MISSING_TREATMENT: TreatmentItem = {
+  crop: '通用',
+  crop_en: 'general',
+  aliases: [],
+  summary: '暂无该类防治条目，请以田间复核与当地植保意见为准。',
+  risk_level: 'medium',
+  symptoms: [],
+  measures: {
+    agronomic: ['保留清晰样本照片，送农技员复核后再用药。']
+  },
+  timing: '',
+  safety: '在确认病名之前不要盲目施药。'
+}
+
 export function getTreatment(label: string): TreatmentItem {
-  return resolveByLabel(label) ?? catalog.items['健康']
+  const found = resolveByLabel(label)
+  if (found) return found
+  return {
+    ...MISSING_TREATMENT,
+    summary: `暂无「${label.trim()}」的防治条目，请以田间复核与当地植保意见为准。`
+  }
 }
 
 export function parseDiseaseFromAlert(message: string): string | null {

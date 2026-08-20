@@ -53,6 +53,7 @@
                       <a-select-option value="wheat">小麦</a-select-option>
                       <a-select-option value="corn">玉米</a-select-option>
                       <a-select-option value="tomato">番茄</a-select-option>
+                      <a-select-option value="rice">水稻</a-select-option>
                     </a-select>
                     <a-button @click="handleIdentify">识别</a-button>
                   </div>
@@ -127,13 +128,15 @@
                 :item="treatmentItem"
                 :disclaimer="treatmentDisclaimer"
                 :manual-review="needsManualReview" />
-              <p class="result-hint">结果已同步写入预警列表，可在灾害预警页查看与处理。</p>
-              <a-button
-                type="link"
-                class="goto-warnings-btn"
-                @click="router.push('/warnings')">
-                前往预警列表 →
-              </a-button>
+              <template v-if="!analysisResult.isHealthy">
+                <p class="result-hint">结果已同步写入预警列表，可在灾害预警页查看与处理。</p>
+                <a-button
+                  type="link"
+                  class="goto-warnings-btn"
+                  @click="router.push('/warnings')">
+                  前往预警列表 →
+                </a-button>
+              </template>
             </div>
             <div
               v-else
@@ -172,7 +175,8 @@ const formState = reactive({
 const cropLabels: Record<string, string> = {
   wheat: '小麦',
   corn: '玉米',
-  tomato: '番茄'
+  tomato: '番茄',
+  rice: '水稻'
 }
 
 const categories = [
@@ -314,8 +318,10 @@ const handleConfirm = async () => {
 
     const aiResult = response.data.result as string
     const aiConfidence = response.data.confidence as number
+    const rawLevel = response.data.level as string
+    const level =
+      rawLevel === 'low' || rawLevel === 'medium' || rawLevel === 'high' ? rawLevel : 'medium'
     const isHealthy = aiResult.includes('健康')
-    const alertLevel = isHealthy ? 'low' : 'high'
     const cropName = cropLabels[formState.cropType] ?? formState.cropType
 
     analysisResult.value = {
@@ -327,12 +333,16 @@ const handleConfirm = async () => {
       analyzedAt: Date.now()
     }
 
-    await store.createAlert({
-      pointId: 1,
-      level: alertLevel,
-      message: `[AI识别] 监测到 ${cropName} - ${aiResult} (置信度: ${(aiConfidence <= 1 ? aiConfidence * 100 : aiConfidence).toFixed(1)}%)`,
-      handled: false
-    })
+    if (!isHealthy) {
+      const defaultPointId = store.filteredMonitorPoints[0]?.id ?? store.monitorPoints[0]?.id ?? 1
+      const pct = (aiConfidence <= 1 ? aiConfidence * 100 : aiConfidence).toFixed(1)
+      await store.createAlert({
+        pointId: defaultPointId,
+        level,
+        message: `[AI识别] 监测到 ${cropName} - ${aiResult} (置信度: ${pct}%)`,
+        handled: false
+      })
+    }
 
     message.success('分析完成！请查看下方结果卡片。')
   } catch (error) {
