@@ -1,10 +1,10 @@
 """
-京津冀 v3 精简数据集：小麦（Kaggle）+ PlantVillage 玉米/番茄 → bjj_cls
+从 Kaggle 小麦包 + PlantVillage 玉米/番茄 整理为 8 类 bjj_cls（历史 v3 流程）
 
 用法（项目根目录 DetectSystem）：
-  python ml-bjj/scripts/prepare_bjj.py
+  python ml-bjj/scripts/prepare_from_wheat_plantvillage.py
 
-  python ml-bjj/scripts/prepare_bjj.py ^
+  python ml-bjj/scripts/prepare_from_wheat_plantvillage.py ^
     --wheat-source ml-bjj/data/wheatPlantDiseases/data ^
     --plantvillage-source "ml-bjj/data/plantvillage dataset/color" ^
     --output ml-bjj/data/bjj_cls
@@ -24,7 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# 原始数据（仅 prepare_bjj.py 读取；train_cls.py 不读）
+# 原始数据（仅 prepare_from_wheat_plantvillage.py 读取；train_cls.py 不读）
 # - wheatPlantDiseases：Kaggle 小麦图，英文类名，供合并为 5 类小麦相关 v3 标签
 # - plantvillage dataset/color：玉米/番茄公开数据集，5 个文件夹 → 3 类 v3 标签 + 健康
 DEFAULT_WHEAT = ROOT / "data" / "wheatPlantDiseases" / "data"

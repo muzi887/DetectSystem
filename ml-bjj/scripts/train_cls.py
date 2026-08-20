@@ -1,7 +1,7 @@
 """
 京津冀 v3 图像分类 — 训练脚本
 
-前置：已运行 prepare_bjj.py 生成 ml-bjj/data/bjj_cls/
+前置：已运行 prepare_from_class_folders.py（或历史脚本 prepare_from_wheat_plantvillage.py）生成 ml-bjj/data/bjj_cls/
 
 用法（项目根目录 DetectSystem）：
   python ml-bjj/scripts/train_cls.py
@@ -99,7 +99,8 @@ def main() -> None:
     if not (data_dir / "train").is_dir():
         raise SystemExit(
             f"找不到训练数据 {data_dir / 'train'}\n"
-            "请先运行 prepare_bjj.py，见 docs/互联网+/京津冀AI模型精简方案-v3.md"
+            "请先运行 prepare_from_class_folders.py（当前中文类文件夹流程），\n"
+            "或历史脚本 prepare_from_wheat_plantvillage.py（小麦+PlantVillage→8类）"
         )
 
     print(f"数据目录: {data_dir}")
