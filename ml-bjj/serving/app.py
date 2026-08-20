@@ -14,6 +14,7 @@ import sys
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
+from urllib.request import urlopen
 
 import torch
 from flask import Flask, jsonify, request
@@ -26,6 +27,7 @@ if str(SERVE_DIR) not in sys.path:
 
 from analysis_store import append_record, list_records, recent_records, stats_by_label, update_record  # noqa: E402
 from crop_filter import CANONICAL_CLASSES, classes_for_crop  # noqa: E402
+from disease_env_rules import apply_disease_env_rules  # noqa: E402
 from inference import PredictResult, get_classifier, resolve_weights_path  # noqa: E402
 from knowledge import get_treatment_item, load_catalog  # noqa: E402
 from predict_utils import needs_review, rank_topk  # noqa: E402
@@ -128,6 +130,35 @@ def classify_level(result: str, confidence: float) -> str:
     return "medium"
 
 
+def parse_env_from_request() -> dict | None:
+    keys = ("airTemp", "airRh", "soilVwc")
+    env: dict = {}
+    for key in keys:
+        raw = request.form.get(key)
+        if raw not in (None, ""):
+            env[key] = float(raw)
+    return env or None
+
+
+def fetch_point_weather(point_id: int) -> dict | None:
+    origin = os.environ.get("ML_BJJ_MOCK_ORIGIN", "http://127.0.0.1:3000")
+    try:
+        with urlopen(f"{origin}/weatherReadings", timeout=2) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+    if not isinstance(rows, list):
+        return None
+    for row in rows:
+        if int(row.get("pointId") or 0) == point_id:
+            return {
+                "airTemp": row.get("airTemp"),
+                "airRh": row.get("airRh"),
+                "soilVwc": row.get("soilVwc"),
+            }
+    return None
+
+
 @app.route("/api/analysis/image", methods=["POST"])
 def analyze_image():
     if "file" not in request.files:
@@ -159,6 +190,13 @@ def analyze_image():
             point_id = int(point_raw) if point_raw.strip() else None
         except ValueError:
             point_id = None
+
+        env = parse_env_from_request()
+        if env is None and point_id is not None:
+            env = fetch_point_weather(point_id)
+        env_out = apply_disease_env_rules(pred.label, level, env, treatment.get("timing"))
+        level = env_out["level"]
+
         saved = append_record(
             records_path(),
             {
@@ -184,6 +222,7 @@ def analyze_image():
                 "model_version": model_version_payload(meta),
                 "treatment": treatment,
                 "recordId": saved["id"],
+                "env_context": {**(env or {}), **env_out},
                 "details": {
                     "received_crop": crop_type,
                     "crop_label": CROP_LABELS.get(crop_type, "未知作物"),
