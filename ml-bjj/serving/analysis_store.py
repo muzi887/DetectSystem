@@ -44,6 +44,18 @@ def append_record(path: Path, record: dict) -> dict:
         return row
 
 
+def update_record(path: Path, record_id: int, **fields) -> dict | None:
+    with _LOCK:
+        rows = _read(path)
+        found = None
+        for row in rows:
+            if row.get("id") == record_id:
+                row.update(fields)
+                found = row
+        _write(path, rows)
+        return found
+
+
 def recent_records(path: Path, limit: int = 20) -> list[dict]:
     rows = list_records(path)
     ordered = sorted(rows, key=lambda item: item.get("createdAt") or "", reverse=True)

@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 
@@ -24,7 +24,7 @@ SERVE_DIR = Path(__file__).resolve().parent
 if str(SERVE_DIR) not in sys.path:
     sys.path.insert(0, str(SERVE_DIR))
 
-from analysis_store import append_record, list_records, recent_records, stats_by_label  # noqa: E402
+from analysis_store import append_record, list_records, recent_records, stats_by_label, update_record  # noqa: E402
 from crop_filter import CANONICAL_CLASSES, classes_for_crop  # noqa: E402
 from inference import PredictResult, get_classifier, resolve_weights_path  # noqa: E402
 from knowledge import get_treatment_item, load_catalog  # noqa: E402
@@ -49,6 +49,14 @@ RECORDS_DEFAULT = Path(__file__).resolve().parent / "data" / "analysis_records.j
 def records_path() -> Path:
     env = os.environ.get("ML_BJJ_RECORDS")
     return Path(env) if env else RECORDS_DEFAULT
+
+
+HARD_CASES_PENDING = Path(__file__).resolve().parents[1] / "data" / "hard_cases" / "pending"
+
+
+def hard_cases_pending_root() -> Path:
+    env = os.environ.get("ML_BJJ_HARD_CASES")
+    return Path(env) if env else HARD_CASES_PENDING
 
 
 def use_mock() -> bool:
@@ -232,6 +240,31 @@ def analysis_recent():
 @app.route("/api/analysis/stats", methods=["GET"])
 def analysis_stats():
     return jsonify(stats_by_label(records_path())), 200
+
+
+@app.route("/api/analysis/feedback", methods=["POST"])
+def analysis_feedback():
+    label = (request.form.get("correctedLabel") or "").strip()
+    if label not in CANONICAL_CLASSES:
+        return jsonify({"error": "correctedLabel 不在 23 类中"}), 400
+    if "file" not in request.files:
+        return jsonify({"error": "未找到文件"}), 400
+    file = request.files["file"]
+    try:
+        validate_upload(file)
+        dest_dir = hard_cases_pending_root() / label
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        suffix = Path(file.filename or "img.jpg").suffix.lower() or ".jpg"
+        dest = dest_dir / f"{stamp}_{Path(file.filename or 'img').stem}{suffix}"
+        file.save(dest)
+        record_id = request.form.get("recordId")
+        parsed_id = int(record_id) if record_id and str(record_id).isdigit() else None
+        if parsed_id is not None:
+            update_record(records_path(), parsed_id, correctedLabel=label)
+        return jsonify({"ok": True, "savedPath": str(dest), "recordId": parsed_id}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/api/treatments", methods=["GET"])

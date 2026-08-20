@@ -60,3 +60,32 @@ def test_stats_endpoint(monkeypatch, tmp_path: Path):
     assert res.status_code == 200
     assert res.get_json()["total"] == 1
     assert res.get_json()["counts"][0]["label"] == "稻瘟病"
+
+
+def test_feedback_writes_hard_case(monkeypatch, tmp_path: Path):
+    import app as serving_app
+    from analysis_store import append_record
+
+    store = tmp_path / "records.json"
+    pending = tmp_path / "hard_cases" / "pending"
+    row = append_record(store, {"label": "水稻褐斑病", "confidence": 0.55, "cropType": "rice"})
+    monkeypatch.setattr(serving_app, "records_path", lambda: store)
+    monkeypatch.setattr(serving_app, "hard_cases_pending_root", lambda: pending)
+
+    res = serving_app.app.test_client().post(
+        "/api/analysis/feedback",
+        data={
+            "correctedLabel": "稻瘟病",
+            "recordId": str(row["id"]),
+            "file": (_jpeg(), "wrong.jpg", "image/jpeg"),
+        },
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["ok"] is True
+    saved = Path(body["savedPath"])
+    assert saved.is_file()
+    assert "稻瘟病" in str(saved)
+    updated = serving_app.app.test_client().get("/api/analysis/history").get_json()
+    assert updated["records"][0]["correctedLabel"] == "稻瘟病"
