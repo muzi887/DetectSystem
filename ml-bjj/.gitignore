@@ -7,9 +7,12 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Datasets (raw wheat/plantvillage, bjj_cls, hard_cases, local_test, archives)
-/data/
+# Ignore contents, not the directory, so nested .gitkeep can be re-included.
+/data/*
 !/data/hard_cases/
+/data/hard_cases/*
 !/data/hard_cases/pending/
+/data/hard_cases/pending/*
 !/data/hard_cases/pending/.gitkeep
 
 # Runtime analysis records (keep the directory)

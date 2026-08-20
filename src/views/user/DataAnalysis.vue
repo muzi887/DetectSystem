@@ -123,6 +123,19 @@
                 class="result-review-hint">
                 置信度偏低，建议人工复核后再生成高等级预警。
               </p>
+              <div
+                v-if="needsManualReview && analysisResult && fileList[0]?.originFileObj"
+                class="feedback-box">
+                <a-input
+                  v-model:value="correctedLabel"
+                  placeholder="实际病名（须与 23 类一致）" />
+                <a-button
+                  type="primary"
+                  :loading="feedbackSubmitting"
+                  @click="handleFeedback">
+                  提交纠错
+                </a-button>
+              </div>
               <TreatmentGuidePanel
                 v-if="treatmentItem"
                 :item="treatmentItem"
@@ -158,7 +171,7 @@ import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import TreatmentGuidePanel from '@/components/TreatmentGuidePanel.vue'
-import { analyzeImage } from '@/api/analysis.ts'
+import { analyzeImage, submitAnalysisFeedback } from '@/api/analysis.ts'
 import { useTreatmentGuide } from '@/composables/useTreatmentGuide'
 import { useDataStore } from '@/stores/data'
 import { useRouter } from 'vue-router'
@@ -203,6 +216,9 @@ const uploadProgress = ref<number>(0)
 const imageUrl = ref<string>('')
 const analyzing = ref(false)
 const analysisResult = ref<AnalysisResultView | null>(null)
+const recordId = ref<number | null>(null)
+const correctedLabel = ref('')
+const feedbackSubmitting = ref(false)
 
 const cropLabel = computed(
   () => cropLabels[analysisResult.value?.cropType ?? formState.cropType] ?? formState.cropType
@@ -307,13 +323,16 @@ const handleConfirm = async () => {
 
   analyzing.value = true
   analysisResult.value = null
+  recordId.value = null
+  correctedLabel.value = ''
 
   try {
     const response = await analyzeImage({
       file: fileList.value[0].originFileObj,
       cropType: formState.cropType,
       category: selectedCategory.value,
-      additionalInfo: formState.additionalInfo
+      additionalInfo: formState.additionalInfo,
+      pointId: store.filteredMonitorPoints[0]?.id ?? store.monitorPoints[0]?.id
     })
 
     const aiResult = response.data.result as string
@@ -323,6 +342,9 @@ const handleConfirm = async () => {
       rawLevel === 'low' || rawLevel === 'medium' || rawLevel === 'high' ? rawLevel : 'medium'
     const isHealthy = aiResult.includes('健康')
     const cropName = cropLabels[formState.cropType] ?? formState.cropType
+
+    const rawRecordId = response.data.recordId
+    recordId.value = typeof rawRecordId === 'number' ? rawRecordId : null
 
     analysisResult.value = {
       result: aiResult,
@@ -350,6 +372,29 @@ const handleConfirm = async () => {
     console.error('Error:', error)
   } finally {
     analyzing.value = false
+  }
+}
+
+const handleFeedback = async () => {
+  const file = fileList.value[0]?.originFileObj
+  const label = correctedLabel.value.trim()
+  if (!file || !label) {
+    message.warning('请填写实际病名')
+    return
+  }
+  feedbackSubmitting.value = true
+  try {
+    await submitAnalysisFeedback({
+      file,
+      correctedLabel: label,
+      recordId: recordId.value ?? undefined
+    })
+    message.success('已写入难例队列')
+  } catch (error) {
+    message.error('纠错提交失败，请核对病名是否属于 23 类。')
+    console.error('Feedback error:', error)
+  } finally {
+    feedbackSubmitting.value = false
   }
 }
 
@@ -568,6 +613,16 @@ const handleIdentify = () => handleConfirm()
   margin: 0 0 12px;
   font-size: 13px;
   color: #faad14;
+}
+
+.feedback-box {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.feedback-box :deep(.ant-input) {
+  flex: 1;
 }
 
 .result-hint {
