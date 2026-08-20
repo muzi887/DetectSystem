@@ -9,6 +9,9 @@ __pycache__/
 # Datasets (raw wheat/plantvillage, bjj_cls, hard_cases, local_test, archives)
 data/
 
+# Runtime analysis records (keep the directory)
+serving/data/analysis_records.json
+
 # Model weights & training runs (keep pest-cls-meta.json)
 models/*.pt
 models/*.onnx

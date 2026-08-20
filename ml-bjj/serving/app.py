@@ -24,6 +24,7 @@ SERVE_DIR = Path(__file__).resolve().parent
 if str(SERVE_DIR) not in sys.path:
     sys.path.insert(0, str(SERVE_DIR))
 
+from analysis_store import append_record, list_records, recent_records, stats_by_label  # noqa: E402
 from crop_filter import CANONICAL_CLASSES, classes_for_crop  # noqa: E402
 from inference import PredictResult, get_classifier, resolve_weights_path  # noqa: E402
 from knowledge import get_treatment_item, load_catalog  # noqa: E402
@@ -42,6 +43,12 @@ CROP_LABELS = {
     "rice": "水稻",
 }
 META_PATH = Path(__file__).resolve().parents[1] / "models" / "pest-cls-meta.json"
+RECORDS_DEFAULT = Path(__file__).resolve().parent / "data" / "analysis_records.json"
+
+
+def records_path() -> Path:
+    env = os.environ.get("ML_BJJ_RECORDS")
+    return Path(env) if env else RECORDS_DEFAULT
 
 
 def use_mock() -> bool:
@@ -139,6 +146,24 @@ def analyze_image():
         treatment, _found = get_treatment_item(pred.label)
         meta = load_model_meta()
 
+        point_raw = request.form.get("pointId") or ""
+        try:
+            point_id = int(point_raw) if point_raw.strip() else None
+        except ValueError:
+            point_id = None
+        saved = append_record(
+            records_path(),
+            {
+                "pointId": point_id,
+                "label": pred.label,
+                "confidence": pred.confidence,
+                "cropType": crop_type,
+                "level": level,
+                "needs_review": pred.needs_review,
+                "imagePath": None,
+            },
+        )
+
         return jsonify(
             {
                 "code": 200,
@@ -150,6 +175,7 @@ def analyze_image():
                 "needs_review": pred.needs_review,
                 "model_version": model_version_payload(meta),
                 "treatment": treatment,
+                "recordId": saved["id"],
                 "details": {
                     "received_crop": crop_type,
                     "crop_label": CROP_LABELS.get(crop_type, "未知作物"),
@@ -190,6 +216,22 @@ def health():
             "engine": engine_name(),
         }
     ), 200
+
+
+@app.route("/api/analysis/history", methods=["GET"])
+def analysis_history():
+    return jsonify({"records": list_records(records_path())}), 200
+
+
+@app.route("/api/analysis/recent", methods=["GET"])
+def analysis_recent():
+    limit = int(request.args.get("limit") or 20)
+    return jsonify({"records": recent_records(records_path(), limit=limit)}), 200
+
+
+@app.route("/api/analysis/stats", methods=["GET"])
+def analysis_stats():
+    return jsonify(stats_by_label(records_path())), 200
 
 
 @app.route("/api/treatments", methods=["GET"])
