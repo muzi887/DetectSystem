@@ -2,6 +2,10 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http'
 import { deriveMonitorStatus } from '@/utils/monitorStatus'
+import {
+  DEFAULT_MONITOR_REGION,
+  type MonitorRegionId
+} from '@/constants/monitorRegions'
 
 export type AlertLevel = 'low' | 'medium' | 'high' | 'critical' | 'warning'
 
@@ -36,10 +40,34 @@ export const useDataStore = defineStore('data', () => {
   const monitorPoints = ref<Array<any>>([])
   const alerts = ref<Array<any>>([])
   const weatherReadings = ref<WeatherReading[]>([])
+  const selectedRegion = ref<MonitorRegionId>(DEFAULT_MONITOR_REGION)
   const loadingPoints = ref(false)
   const loadingAlerts = ref(false)
   const loadingWeather = ref(false)
-  const unhandledAlerts = computed(() => alerts.value.filter((alert) => !alert.handled))
+
+  const regionPointIds = computed(() => {
+    const ids = new Set<number>()
+    for (const point of monitorPoints.value) {
+      if (point.region === selectedRegion.value) ids.add(point.id)
+    }
+    return ids
+  })
+
+  const filteredMonitorPoints = computed(() =>
+    monitorPoints.value.filter((point) => point.region === selectedRegion.value)
+  )
+
+  const filteredAlerts = computed(() =>
+    alerts.value.filter((alert) => regionPointIds.value.has(alert.pointId))
+  )
+
+  const unhandledAlerts = computed(() =>
+    filteredAlerts.value.filter((alert) => !alert.handled)
+  )
+
+  function setSelectedRegion(region: MonitorRegionId) {
+    selectedRegion.value = region
+  }
 
   async function fetchMonitorPoints() {
     loadingPoints.value = true
@@ -69,6 +97,7 @@ export const useDataStore = defineStore('data', () => {
 
           return {
             ...item,
+            region: item.region || 'jjj',
             status,
             temp: fixedTemp.toFixed(1),
             soilMoisture: fixedMoisture.toFixed(1),
@@ -153,10 +182,14 @@ export const useDataStore = defineStore('data', () => {
     monitorPoints,
     alerts,
     weatherReadings,
+    selectedRegion,
+    filteredMonitorPoints,
+    filteredAlerts,
     unhandledAlerts,
     loadingPoints,
     loadingAlerts,
     loadingWeather,
+    setSelectedRegion,
     fetchMonitorPoints,
     fetchWeatherReadings,
     getWeatherReadingByPointId,

@@ -256,7 +256,7 @@ const alertPage = ref(1)
 const activeCollapseKeys = ref<string[]>([])
 
 const unhandledAlerts = computed(() => {
-  const pointsMap = new Map(dataStore.monitorPoints.map((p) => [p.id, p]))
+  const pointsMap = new Map(dataStore.filteredMonitorPoints.map((p) => [p.id, p]))
   return dataStore.unhandledAlerts
     .map((alert) => {
       const point = pointsMap.get(alert.pointId)
@@ -466,7 +466,7 @@ const getLevelText = getAlertLevelText
 
 function renderMapMarkers() {
   if (!monitorLayer) return
-  monitorLayer.render(dataStore.monitorPoints, dataStore.alerts)
+  monitorLayer.render(dataStore.filteredMonitorPoints, dataStore.filteredAlerts)
 }
 
 function initMap() {
@@ -529,7 +529,7 @@ watch(
 )
 
 watch(
-  () => dataStore.monitorPoints,
+  () => dataStore.filteredMonitorPoints,
   () => {
     renderMapMarkers()
     if (selectedArea.value) {
@@ -540,11 +540,19 @@ watch(
 )
 
 watch(
-  () => dataStore.alerts,
+  () => dataStore.filteredAlerts,
   () => {
-    monitorLayer?.updatePopups(dataStore.monitorPoints, dataStore.alerts)
+    monitorLayer?.updatePopups(dataStore.filteredMonitorPoints, dataStore.filteredAlerts)
   },
   { deep: true }
+)
+
+watch(
+  () => dataStore.selectedRegion,
+  () => {
+    renderMapMarkers()
+    syncDefaultSelection()
+  }
 )
 </script>
 

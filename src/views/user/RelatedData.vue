@@ -63,8 +63,8 @@
               :compare-opacity="remoteStore.compareOpacity"
               :show-monitor-points="currentTab === 'gis'"
               :enable-moisture-query="currentTab === 'gis'"
-              :monitor-points="dataStore.monitorPoints"
-              :monitor-alerts="dataStore.alerts"
+              :monitor-points="dataStore.filteredMonitorPoints"
+              :monitor-alerts="dataStore.filteredAlerts"
               @moisture-query="onMoistureQuery" />
             <div class="map-caption">
               <h3 class="font-heading">
@@ -200,7 +200,7 @@ const currentTab = ref('sensor')
 const selectedWeatherPointId = ref<number>(1)
 
 const weatherPointOptions = computed(() =>
-  dataStore.monitorPoints.map((point) => ({
+  dataStore.filteredMonitorPoints.map((point) => ({
     value: point.id,
     label: point.name
   }))
@@ -239,6 +239,7 @@ const weatherMetrics = computed(() => {
 
 function getWeatherPointName(pointId: number) {
   return (
+    dataStore.filteredMonitorPoints.find((point) => point.id === pointId)?.name ??
     dataStore.monitorPoints.find((point) => point.id === pointId)?.name ??
     `监测站 #${pointId}`
   )
@@ -386,7 +387,7 @@ function buildDroneAiConclusion() {
 
 const aiConclusion = computed(() => {
   if (currentTab.value === 'sensor') {
-    const alerts = dataStore.alerts || []
+    const alerts = dataStore.filteredAlerts || []
     const criticalCount = alerts.filter(
       (a: any) => a.level === 'critical' || a.level === 'high'
     ).length
@@ -430,7 +431,7 @@ function buildTrendSeries() {
   const dayMs = 24 * 60 * 60 * 1000
   const labels: string[] = []
   const counts: number[] = []
-  const alerts = dataStore.alerts || []
+  const alerts = dataStore.filteredAlerts || []
 
   for (let i = 6; i >= 0; i--) {
     const start = new Date(now - i * dayMs)
@@ -568,7 +569,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => dataStore.alerts,
+  () => dataStore.filteredAlerts,
   () => {
     if (currentTab.value === 'sensor') {
       renderSensorChart()
@@ -593,13 +594,26 @@ watch(currentTab, (tab) => {
 })
 
 watch(
-  () => dataStore.monitorPoints,
+  () => dataStore.filteredMonitorPoints,
   (points) => {
     if (points.length && !points.some((point) => point.id === selectedWeatherPointId.value)) {
       selectedWeatherPointId.value = points[0].id
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => dataStore.selectedRegion,
+  () => {
+    const points = dataStore.filteredMonitorPoints
+    if (points.length) {
+      selectedWeatherPointId.value = points[0].id
+    }
+    if (currentTab.value === 'sensor') {
+      renderSensorChart()
+    }
+  }
 )
 </script>
 

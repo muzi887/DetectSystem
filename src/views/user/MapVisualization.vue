@@ -7,6 +7,9 @@
         <template #title>
           <div class="glass-card-title">地图 - 监测点实时分布</div>
         </template>
+        <template #extra>
+          <span class="map-region-hint">当前区域：{{ currentRegionLabel }}</span>
+        </template>
         <div
           ref="mapRef"
           class="map-container"></div>
@@ -36,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -46,6 +49,7 @@ import {
   removeLeafletMap
 } from '@/composables/useLeafletBase'
 import { createMonitorPointLayer } from '@/composables/useMonitorPointLayer'
+import { getMonitorRegion } from '@/constants/monitorRegions'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -55,17 +59,22 @@ const mapRef = ref<HTMLDivElement | null>(null)
 let map: L.Map | null = null
 let monitorLayer: ReturnType<typeof createMonitorPointLayer> | null = null
 
+const currentRegionLabel = computed(
+  () => getMonitorRegion(dataStore.selectedRegion).label
+)
+
 function renderMarkers() {
   if (!monitorLayer || !map) return
-  monitorLayer.render(dataStore.monitorPoints, dataStore.alerts)
+  monitorLayer.render(dataStore.filteredMonitorPoints, dataStore.filteredAlerts)
   zoomToAll()
 }
 
 async function initMap() {
   if (!mapRef.value) return
+  const region = getMonitorRegion(dataStore.selectedRegion)
   map = createLeafletBaseMap(mapRef.value, {
-    center: [38.44, 115.95],
-    zoom: 8,
+    center: region.center,
+    zoom: region.zoom,
     tile: 'gaodeSatellite'
   })
 
@@ -113,7 +122,10 @@ function zoomToAll() {
   if (layers.length > 0) {
     const group = L.featureGroup(layers as L.Layer[])
     map.fitBounds(group.getBounds().pad(0.2))
+    return
   }
+  const region = getMonitorRegion(dataStore.selectedRegion)
+  map.setView(region.center, region.zoom)
 }
 
 onMounted(async () => {
@@ -121,12 +133,13 @@ onMounted(async () => {
   await refreshData()
   renderMarkers()
 
-  watch(() => dataStore.monitorPoints, renderMarkers, { deep: true })
+  watch(() => dataStore.filteredMonitorPoints, renderMarkers, { deep: true })
+  watch(() => dataStore.selectedRegion, renderMarkers)
 
   watch(
-    () => dataStore.alerts,
+    () => dataStore.filteredAlerts,
     () => {
-      monitorLayer?.updatePopups(dataStore.monitorPoints, dataStore.alerts)
+      monitorLayer?.updatePopups(dataStore.filteredMonitorPoints, dataStore.filteredAlerts)
     },
     { deep: true }
   )
@@ -150,6 +163,11 @@ onBeforeUnmount(() => {
 
 .map-page .glass-card-title {
   font-size: 18px;
+}
+
+.map-region-hint {
+  color: rgb(255 255 255 / 70%);
+  font-size: 13px;
 }
 
 .map-card {

@@ -51,7 +51,7 @@ export function useGlobalSearch() {
       }
     }
 
-    const points = dataStore.monitorPoints || []
+    const points = dataStore.filteredMonitorPoints || []
     for (const p of points) {
       const name = (p.name || '').toString()
       if (name && name.toLowerCase().includes(k)) {
@@ -66,7 +66,7 @@ export function useGlobalSearch() {
       }
     }
 
-    const alerts = dataStore.alerts || []
+    const alerts = dataStore.filteredAlerts || []
     const pointMap = new Map(points.map((p: any) => [p.id, p]))
     for (const a of alerts) {
       const msg = (a.message || '').toString()

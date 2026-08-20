@@ -124,25 +124,29 @@
       <div class="glass-panel section-panel">
         <div class="section-header">
           <TrophyOutlined />
-          指导老师
+          导师引领
         </div>
-        <div class="advisor-container">
-          <div class="member-card advisor-card">
+        <div class="advisor-grid">
+          <div
+            v-for="advisor in advisors"
+            :key="advisor.name"
+            class="member-card advisor-card">
             <div class="avatar-wrapper">
               <a-avatar
                 :size="80"
                 :src="advisorDefaultAvatar"
                 class="custom-avatar advisor-avatar">
-                师
+                {{ advisor.name.charAt(0) }}
               </a-avatar>
             </div>
             <div class="info-wrapper text-center">
               <div class="name-row center-row">
                 <span class="name">{{ advisor.name }}</span>
+                <span class="role-tag">{{ advisor.role }}</span>
               </div>
-              <div class="major-row center-row">{{ advisor.title }} · {{ advisor.college }}</div>
+              <div class="major-row center-row">{{ advisor.title }}</div>
               <div class="divider-line"></div>
-              <p class="desc-text center-text">{{ advisor.message }}</p>
+              <p class="desc-text center-text">{{ advisor.bio }}</p>
             </div>
           </div>
         </div>
@@ -215,13 +219,20 @@ const techStack = ref([
   }
 ])
 
-const advisor = {
-  name: '刘兴冉',
-  title: '讲师',
-  college: '土地科学与空间规划学院',
-  message:
-    '寄语：把地信所学落到田间，用可落地的系统守护粮安。愿坤灵智巡行稳致远，让预警更早一步。'
-}
+const advisors = [
+  {
+    name: '刘兴冉',
+    role: '指导教师',
+    title: '副教授 / 地理信息科学教研室副主任',
+    bio: '毕业于中国科学院大学/中国科学院遗传发育与生物学研究所农业资源研究中心，获得理学博士学位。主要研究方向为生态水文、农业水文与水资源。'
+  },
+  {
+    name: '孙丞淼',
+    role: '指导教师',
+    title: '讲师',
+    bio: '博士毕业于西北农林科技大学农业水土工程专业，主要研究方向为作物水分管理、生态水文。'
+  }
+]
 
 const teamMembers = ref([
   {
@@ -559,8 +570,10 @@ const teamMembers = ref([
   text-align: justify;
 }
 
-.advisor-container {
-  display: flex;
+.advisor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
   justify-content: center;
 }
 
@@ -568,7 +581,8 @@ const teamMembers = ref([
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  margin: 0 auto;
   padding: 30px;
 }
 
@@ -589,6 +603,7 @@ const teamMembers = ref([
 
 .center-row {
   justify-content: center;
+  gap: 10px;
 }
 
 .center-text {

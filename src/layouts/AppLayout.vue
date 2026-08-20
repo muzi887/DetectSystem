@@ -24,6 +24,7 @@
       </div>
 
       <div class="header-tools">
+        <RegionSelect />
         <div class="global-search-box" ref="globalSearchRef">
           <div class="global-search-control">
             <input
@@ -163,6 +164,7 @@ import {
   MenuOutlined
 } from '@ant-design/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
+import RegionSelect from '@/components/RegionSelect.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

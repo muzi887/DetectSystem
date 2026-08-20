@@ -104,7 +104,7 @@ const systemStatus = computed(() => {
 
 const monitorPointsCount = computed(() => dataStore.monitorPoints.length)
 
-const recentAlerts = computed(() => dataStore.alerts.slice(0, 3))
+const recentAlerts = computed(() => dataStore.filteredAlerts.slice(0, 3))
 
 const getLevelClass = getAlertLevelClass
 

@@ -93,7 +93,7 @@
             show-search
             :filter-option="filterOption">
             <a-select-option
-              v-for="point in dataStore.monitorPoints"
+              v-for="point in dataStore.filteredMonitorPoints"
               :key="point.id"
               :value="point.id">
               {{ point.name }}
@@ -136,8 +136,8 @@ import { formatTime } from '@/utils/formatTime'
 const dataStore = useDataStore()
 
 const enrichedAlerts = computed(() => {
-  const pointsMap = new Map(dataStore.monitorPoints.map((p) => [p.id, p.name]))
-  return dataStore.alerts.map((alert) => ({
+  const pointsMap = new Map(dataStore.filteredMonitorPoints.map((p) => [p.id, p.name]))
+  return dataStore.filteredAlerts.map((alert) => ({
     ...alert,
     pointName: pointsMap.get(alert.pointId) || `未知监测点 #${alert.pointId}`
   }))
@@ -163,7 +163,9 @@ const fetchAlerts = async () => {
 
 const showCreateModal = () => {
   createFormModal.pointId =
-    dataStore.monitorPoints.length > 0 ? dataStore.monitorPoints[0].id : null
+    dataStore.filteredMonitorPoints.length > 0
+      ? dataStore.filteredMonitorPoints[0].id
+      : null
   createFormModal.level = 'medium'
   createFormModal.message = ''
   createModalVisible.value = true
