@@ -98,6 +98,11 @@ PyTorch 推理、作物掩码、防治库、识别记录 JSON
 | [`项目启动说明.md`](./项目启动说明.md) | 如何启动 Flask 与网站 |
 | [`Flask对Python是否等于NET对CSharp.md`](./Flask对Python是否等于NET对CSharp.md) | Flask 不能当成 Python 的整个 .NET |
 | [`Python线程锁.md`](./Python线程锁.md) | Flask 并发写识别记录时为何加锁 |
+| [`什么是batch.md`](./什么是batch.md) | 一次请求识别多张图 |
+| [`什么是ONNX.md`](./什么是ONNX.md) | 可选的另一种模型推理格式 |
+| [`什么是waitress.md`](./什么是waitress.md) | Windows 上托管 Flask 的生产进程 |
+| [`什么是WSGI服务器.md`](./什么是WSGI服务器.md) | 托管进程与 Flask 之间的接口约定；含 C# 对照 |
+| [`什么是ASGI服务器.md`](./什么是ASGI服务器.md) | 异步 / WebSocket 的后继约定（本仓库不用） |
 | [`../模型/什么是PyTorch.md`](../模型/什么是PyTorch.md) | 推理用的深度学习框架 |
 | [`../模型/作物掩码与推理接入.md`](../模型/作物掩码与推理接入.md) | 接到推理路径（函数层），再由 Flask 对外提供 |
 
