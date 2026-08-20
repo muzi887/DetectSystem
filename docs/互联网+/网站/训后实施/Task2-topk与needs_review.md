@@ -20,10 +20,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 新增 | [`ml-bjj/serving/predict_utils.py`](../../../../ml-bjj/serving/predict_utils.py) |
-| 新增 | [`ml-bjj/tests/test_predict_utils.py`](../../../../ml-bjj/tests/test_predict_utils.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 新增 | [`ml-bjj/serving/predict_utils.py`](../../../../ml-bjj/serving/predict_utils.py) | `rank_topk` 取前三；低置信或 top1−top2 过近则 `needs_review` |
+| 新增 | [`ml-bjj/tests/test_predict_utils.py`](../../../../ml-bjj/tests/test_predict_utils.py) | 验证排序截断、低置信/小间隔需复核、高置信且分得开则不复核 |
 
 ## 代码内容
 

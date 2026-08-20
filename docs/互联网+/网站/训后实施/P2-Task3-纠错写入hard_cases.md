@@ -17,14 +17,14 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) |
-| 修改 | [`ml-bjj/serving/analysis_store.py`](../../../../ml-bjj/serving/analysis_store.py) |
-| 修改 | [`ml-bjj/tests/test_app_p2.py`](../../../../ml-bjj/tests/test_app_p2.py) |
-| 修改 | [`ml-bjj/.gitignore`](../../../../ml-bjj/.gitignore) |
-| 新增 | [`ml-bjj/data/hard_cases/pending/.gitkeep`](../../../../ml-bjj/data/hard_cases/pending/.gitkeep) |
-| 新增 | [`ml-bjj/serving/data/.gitkeep`](../../../../ml-bjj/serving/data/.gitkeep)（Task 2 补记：此前被 `data/` 误忽略） |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) | 新增 `POST /api/analysis/feedback`，把纠错图写入 `hard_cases/pending` |
+| 修改 | [`ml-bjj/serving/analysis_store.py`](../../../../ml-bjj/serving/analysis_store.py) | 新增公开 `update_record`，回写记录上的 `correctedLabel` |
+| 修改 | [`ml-bjj/tests/test_app_p2.py`](../../../../ml-bjj/tests/test_app_p2.py) | 覆盖纠错落盘、路径含正确类名、history 回写 |
+| 修改 | [`ml-bjj/.gitignore`](../../../../ml-bjj/.gitignore) | 只忽略 `/data/` 内容，放行 `pending/.gitkeep`，不再误忽略 `serving/data/` |
+| 新增 | [`ml-bjj/data/hard_cases/pending/.gitkeep`](../../../../ml-bjj/data/hard_cases/pending/.gitkeep) | 保留难例回流目录结构，大图本身不入库 |
+| 新增 | [`ml-bjj/serving/data/.gitkeep`](../../../../ml-bjj/serving/data/.gitkeep) | Task 2 补记：此前被泛匹配 `data/` 误忽略 |
 
 ## 代码内容
 

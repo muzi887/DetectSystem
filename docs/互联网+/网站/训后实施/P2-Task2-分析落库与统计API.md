@@ -17,13 +17,13 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) |
-| 修改 | [`ml-bjj/.gitignore`](../../../../ml-bjj/.gitignore) |
-| 修改 | [`ml-bjj/tests/conftest.py`](../../../../ml-bjj/tests/conftest.py) |
-| 新增 | [`ml-bjj/serving/data/.gitkeep`](../../../../ml-bjj/serving/data/.gitkeep) |
-| 新增 | [`ml-bjj/tests/test_app_p2.py`](../../../../ml-bjj/tests/test_app_p2.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) | 分析成功后落库；提供 history / recent / stats 路由与 `records_path()` |
+| 修改 | [`ml-bjj/.gitignore`](../../../../ml-bjj/.gitignore) | 忽略运行时 `analysis_records.json`，避免把识别记录提交进仓库 |
+| 修改 | [`ml-bjj/tests/conftest.py`](../../../../ml-bjj/tests/conftest.py) | 测试时把记录写到 `tmp_path`，防止污染真实文件 |
+| 新增 | [`ml-bjj/serving/data/.gitkeep`](../../../../ml-bjj/serving/data/.gitkeep) | 保留记录目录，方便本地首次落库 |
+| 新增 | [`ml-bjj/tests/test_app_p2.py`](../../../../ml-bjj/tests/test_app_p2.py) | 覆盖落库、`recordId`、recent / stats HTTP 行为 |
 
 ## 代码内容
 

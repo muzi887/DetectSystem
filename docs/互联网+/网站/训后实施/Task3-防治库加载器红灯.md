@@ -14,10 +14,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 新增 | [`ml-bjj/serving/knowledge.py`](../../../../ml-bjj/serving/knowledge.py) |
-| 新增 | [`ml-bjj/tests/test_treatments_coverage.py`](../../../../ml-bjj/tests/test_treatments_coverage.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 新增 | [`ml-bjj/serving/knowledge.py`](../../../../ml-bjj/serving/knowledge.py) | 加载防治库；按病名取条目，未知类不回落「健康」 |
+| 新增 | [`ml-bjj/tests/test_treatments_coverage.py`](../../../../ml-bjj/tests/test_treatments_coverage.py) | 要求覆盖全部 23 类（本任务故意红灯，Task 4 补绿） |
 
 本任务 **不改** `treatments.json`。
 

@@ -16,10 +16,10 @@ Task 3 的红灯测试要求 `treatments.json` 的 `items` 键覆盖全部 23 �
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`ml-bjj/knowledge/treatments.json`](../../../../ml-bjj/knowledge/treatments.json)（唯一源） |
-| 修改 | [`src/assets/knowledge/treatments.json`](../../../../src/assets/knowledge/treatments.json)（`sync:knowledge` 生成） |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`ml-bjj/knowledge/treatments.json`](../../../../ml-bjj/knowledge/treatments.json) | 防治库唯一源，从 8 类扩到 23 类（补 15 个键） |
+| 修改 | [`src/assets/knowledge/treatments.json`](../../../../src/assets/knowledge/treatments.json) | 前端副本，由 `pnpm run sync:knowledge` 从唯一源生成 |
 
 新增键（15）：
 

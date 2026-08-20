@@ -15,11 +15,11 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) |
-| 修改 | [`vite.config.ts`](../../../../vite.config.ts) |
-| 新增 | [`ml-bjj/tests/test_app_api.py`](../../../../ml-bjj/tests/test_app_api.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`ml-bjj/serving/app.py`](../../../../ml-bjj/serving/app.py) | 加厚 `/health` 与分析响应；新增防治 GET；启动校验 23 类 |
+| 修改 | [`vite.config.ts`](../../../../vite.config.ts) | 把 `/api/analysis`、`/api/treatments` 代理到 Flask:5000 |
+| 新增 | [`ml-bjj/tests/test_app_api.py`](../../../../ml-bjj/tests/test_app_api.py) | 覆盖 health 形状、分析 topk/treatment、防治按病名查询 |
 
 ## 代码内容
 

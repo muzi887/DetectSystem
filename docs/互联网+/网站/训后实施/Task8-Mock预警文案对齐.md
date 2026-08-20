@@ -11,10 +11,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`src/mock/db.json`](../../../../src/mock/db.json) |
-| 新增 | [`ml-bjj/tests/test_alert_copy.py`](../../../../ml-bjj/tests/test_alert_copy.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`src/mock/db.json`](../../../../src/mock/db.json) | `[AI识别]` 样例病名改为 23 类中文键，作物改为麦/玉/茄/稻 |
+| 新增 | [`ml-bjj/tests/test_alert_copy.py`](../../../../ml-bjj/tests/test_alert_copy.py) | 扫描 Mock 预警，解析出的病名必须属于 `CANONICAL_CLASSES` |
 
 ## 代码内容
 

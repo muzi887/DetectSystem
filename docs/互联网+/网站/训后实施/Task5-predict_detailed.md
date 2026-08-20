@@ -15,10 +15,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`ml-bjj/serving/inference.py`](../../../../ml-bjj/serving/inference.py) |
-| 新增 | [`ml-bjj/tests/test_predict_detailed.py`](../../../../ml-bjj/tests/test_predict_detailed.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`ml-bjj/serving/inference.py`](../../../../ml-bjj/serving/inference.py) | `PredictResult` + `predict_detailed`：softmax 后作物掩码，再 rank / needs_review |
+| 新增 | [`ml-bjj/tests/test_predict_detailed.py`](../../../../ml-bjj/tests/test_predict_detailed.py) | 验证小麦掩码生效；旧 `predict` 元组接口仍可用 |
 
 ## 代码内容
 

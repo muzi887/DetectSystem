@@ -17,12 +17,12 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 新增 | [`ml-bjj/serving/crop_filter.py`](../../../../ml-bjj/serving/crop_filter.py) |
-| 新增 | [`ml-bjj/tests/conftest.py`](../../../../ml-bjj/tests/conftest.py) |
-| 新增 | [`ml-bjj/tests/test_crop_filter.py`](../../../../ml-bjj/tests/test_crop_filter.py) |
-| 修改 | [`ml-bjj/requirements.txt`](../../../../ml-bjj/requirements.txt)（增加 `pytest>=8.0.0`） |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 新增 | [`ml-bjj/serving/crop_filter.py`](../../../../ml-bjj/serving/crop_filter.py) | 23 类标签、按作物允许集、`mask_and_renorm` 纯函数 |
+| 新增 | [`ml-bjj/tests/conftest.py`](../../../../ml-bjj/tests/conftest.py) | 把 `ml-bjj/serving` 加入测试 `sys.path` |
+| 新增 | [`ml-bjj/tests/test_crop_filter.py`](../../../../ml-bjj/tests/test_crop_filter.py) | 验证 23 类、作物子集、小麦掩掉水稻后重归一化 |
+| 修改 | [`ml-bjj/requirements.txt`](../../../../ml-bjj/requirements.txt) | 增加 `pytest>=8.0.0`，供 serving 侧单测 |
 
 ## 代码内容
 

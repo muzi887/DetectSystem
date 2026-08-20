@@ -16,10 +16,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 新增 | [`ml-bjj/serving/analysis_store.py`](../../../../ml-bjj/serving/analysis_store.py) |
-| 新增 | [`ml-bjj/tests/test_analysis_store.py`](../../../../ml-bjj/tests/test_analysis_store.py) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 新增 | [`ml-bjj/serving/analysis_store.py`](../../../../ml-bjj/serving/analysis_store.py) | 读写 JSON 识别记录：append / list / recent / stats（带线程锁） |
+| 新增 | [`ml-bjj/tests/test_analysis_store.py`](../../../../ml-bjj/tests/test_analysis_store.py) | 验证自增 id、最近列表倒序、按病名统计 |
 
 ## 代码内容
 

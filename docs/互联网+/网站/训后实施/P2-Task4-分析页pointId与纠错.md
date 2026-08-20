@@ -17,10 +17,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`src/api/analysis.ts`](../../../../src/api/analysis.ts) |
-| 修改 | [`src/views/user/DataAnalysis.vue`](../../../../src/views/user/DataAnalysis.vue) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`src/api/analysis.ts`](../../../../src/api/analysis.ts) | 分析请求带 `pointId`；增加纠错 / recent / stats / model-info 封装 |
+| 修改 | [`src/views/user/DataAnalysis.vue`](../../../../src/views/user/DataAnalysis.vue) | 提交监测点 id；低置信时显示实际病名输入并调用纠错接口 |
 
 ## 代码内容
 

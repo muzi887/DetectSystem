@@ -14,10 +14,10 @@
 
 ## 改动文件
 
-| 操作 | 文件 |
-|------|------|
-| 修改 | [`src/views/user/DataAnalysis.vue`](../../../../src/views/user/DataAnalysis.vue) |
-| 修改 | [`src/composables/useTreatmentGuide.ts`](../../../../src/composables/useTreatmentGuide.ts) |
+| 操作 | 文件 | 作用 |
+|------|------|------|
+| 修改 | [`src/views/user/DataAnalysis.vue`](../../../../src/views/user/DataAnalysis.vue) | 作物下拉增加「水稻」，与 23 类里的稻作病害对齐 |
+| 修改 | [`src/composables/useTreatmentGuide.ts`](../../../../src/composables/useTreatmentGuide.ts) | 未知病名不再回落「健康」防治文案，改为缺失提示 |
 
 ## 代码内容
 
