@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 import timm
@@ -10,8 +11,19 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
+from crop_filter import mask_and_renorm
+from predict_utils import needs_review, rank_topk
+
 ML_BJJ_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WEIGHTS = ML_BJJ_ROOT / "models" / "pest-cls-best.pt"
+
+@dataclass
+class PredictResult:
+    label: str
+    confidence: float
+    topk: list[dict[str, str | float]]
+    needs_review: bool
+
 
 _classifier: PestClassifier | None = None
 
@@ -49,14 +61,26 @@ class PestClassifier:
             ]
         )
 
-    def predict(self, image: Image.Image) -> tuple[str, float]:
+    def predict_detailed(self, image: Image.Image, crop_type: str = "unknown") -> PredictResult:
         img = image.convert("RGB")
         tensor = self.transform(img).unsqueeze(0)
         with torch.no_grad():
             logits = self.model(tensor)
-            probs = torch.softmax(logits, dim=1)[0]
-            conf, idx = probs.max(dim=0)
-        return self.classes[idx.item()], float(conf.item())
+            probs = torch.softmax(logits, dim=1)[0].tolist()
+        filtered = mask_and_renorm(probs, self.classes, crop_type)
+        topk = rank_topk(filtered, self.classes, k=3)
+        label = str(topk[0]["label"])
+        confidence = float(topk[0]["confidence"])
+        return PredictResult(
+            label=label,
+            confidence=confidence,
+            topk=topk,
+            needs_review=needs_review(topk, confidence),
+        )
+
+    def predict(self, image: Image.Image, crop_type: str = "unknown") -> tuple[str, float]:
+        result = self.predict_detailed(image, crop_type)
+        return result.label, result.confidence
 
 
 def get_classifier(weights_path: Path | None = None) -> PestClassifier:
