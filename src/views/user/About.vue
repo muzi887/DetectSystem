@@ -37,6 +37,13 @@
                 Vue 3 前端
                 <br />
                 地图 / 图表 / 预警联动
+                <br />
+                <span v-if="modelInfo.classes_count">
+                  模型 {{ modelInfo.classes_count }} 类
+                  <template v-if="modelInfo.best_val_acc != null">
+                    · 验证 {{ (Number(modelInfo.best_val_acc) * 100).toFixed(2) }}%
+                  </template>
+                </span>
               </p>
             </div>
             <div class="dim-item">
@@ -175,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import {
   RocketOutlined,
@@ -196,8 +203,21 @@ import vueIcon from '@/assets/icons/vue.svg'
 import teamDefaultAvatar from '@/assets/avatars/team-default.svg'
 import advisorDefaultAvatar from '@/assets/avatars/advisor-default.svg'
 import agriMonitoringIllustration from '@/assets/illustrations/agri-monitoring-line.svg'
+import { fetchAnalysisModelInfo } from '@/api/analysis.ts'
 
 const TEAM_AVATAR = teamDefaultAvatar
+
+const modelInfo = ref<{ classes_count?: number; best_val_acc?: number | null }>({})
+
+onMounted(() => {
+  fetchAnalysisModelInfo()
+    .then((res) => {
+      modelInfo.value = res.data ?? {}
+    })
+    .catch(() => {
+      modelInfo.value = {}
+    })
+})
 
 const techStack = ref([
   { name: 'Vue 3', icon: 'img', src: vueIcon, color: '#42b883' },

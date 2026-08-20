@@ -242,6 +242,15 @@ def analysis_stats():
     return jsonify(stats_by_label(records_path())), 200
 
 
+@app.route("/api/analysis/model-info", methods=["GET"])
+def model_info():
+    meta = load_model_meta()
+    payload = model_version_payload(meta)
+    payload["engine"] = engine_name()
+    payload["classes"] = meta.get("classes") or []
+    return jsonify(payload), 200
+
+
 @app.route("/api/analysis/feedback", methods=["POST"])
 def analysis_feedback():
     label = (request.form.get("correctedLabel") or "").strip()

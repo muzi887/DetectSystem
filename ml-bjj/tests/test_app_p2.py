@@ -89,3 +89,20 @@ def test_feedback_writes_hard_case(monkeypatch, tmp_path: Path):
     assert "稻瘟病" in str(saved)
     updated = serving_app.app.test_client().get("/api/analysis/history").get_json()
     assert updated["records"][0]["correctedLabel"] == "稻瘟病"
+
+
+def test_model_info(monkeypatch):
+    import app as serving_app
+
+    monkeypatch.setattr(serving_app, "use_mock", lambda: True)
+    monkeypatch.setattr(
+        serving_app,
+        "load_model_meta",
+        lambda: {"trained_at": "2026-08-20", "best_val_acc": 0.91, "classes": ["健康"] * 23},
+    )
+    res = serving_app.app.test_client().get("/api/analysis/model-info")
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["classes_count"] == 23
+    assert body["engine"] == "mock"
+

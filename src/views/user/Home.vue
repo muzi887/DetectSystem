@@ -68,20 +68,47 @@
               style="padding-top: 20px" />
           </template>
         </a-list>
+        <h3 class="recent-analyses-title">近期识别</h3>
+        <a-list
+          item-layout="horizontal"
+          :data-source="recentAnalyses">
+          <template #renderItem="{ item }">
+            <a-list-item>
+              <a-list-item-meta :description="formatAnalysisTime(item.createdAt)">
+                <template #title>
+                  {{ item.label }} · {{ formatConfidence(item.confidence) }}
+                </template>
+              </a-list-item-meta>
+            </a-list-item>
+          </template>
+          <template #empty>
+            <GlassEmpty
+              description="暂无识别记录"
+              style="padding-top: 12px" />
+          </template>
+        </a-list>
       </div>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useDataStore } from '@/stores/data'
 import AppLayout from '@/layouts/AppLayout.vue'
 import GlassEmpty from '@/components/GlassEmpty.vue'
 import { getAlertLevelClass } from '@/utils/alertLevel'
 import { formatTime } from '@/utils/formatTime'
+import { fetchAnalysisRecent } from '@/api/analysis.ts'
+
+interface RecentAnalysisItem {
+  label: string
+  confidence: number
+  createdAt?: string
+}
 
 const dataStore = useDataStore()
+const recentAnalyses = ref<RecentAnalysisItem[]>([])
 
 const unhandledAlertsCount = computed(() => dataStore.unhandledAlerts.length)
 
@@ -108,9 +135,28 @@ const recentAlerts = computed(() => dataStore.filteredAlerts.slice(0, 3))
 
 const getLevelClass = getAlertLevelClass
 
+function formatConfidence(value: number) {
+  const pct = value <= 1 ? value * 100 : value
+  return `${Math.round(pct)}%`
+}
+
+function formatAnalysisTime(iso?: string) {
+  if (!iso) return ''
+  const parsed = Date.parse(iso)
+  if (Number.isNaN(parsed)) return iso
+  return formatTime(parsed)
+}
+
 onMounted(() => {
   dataStore.fetchAlerts()
   dataStore.fetchMonitorPoints()
+  fetchAnalysisRecent(5)
+    .then((res) => {
+      recentAnalyses.value = Array.isArray(res.data?.records) ? res.data.records : []
+    })
+    .catch(() => {
+      recentAnalyses.value = []
+    })
 })
 </script>
 
@@ -186,6 +232,10 @@ onMounted(() => {
   color: var(--light-green);
   font-weight: bold;
   text-shadow: var(--glass-title-shadow);
+}
+
+.recent-analyses-title {
+  margin-top: 24px !important;
 }
 
 .stat-grid {
