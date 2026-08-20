@@ -33,6 +33,7 @@
     {
       "id": 1,
       "name": "监测站 · 河间市",
+      "region": "jjj",
       "lat": 38.4467,
       "lng": 116.0994,
       "temp": 28,
@@ -42,6 +43,7 @@
     {
       "id": 2,
       "name": "监测站 · 雄县",
+      "region": "jjj",
       "lat": 38.994,
       "lng": 116.1077,
       "temp": 33,
@@ -51,11 +53,62 @@
     {
       "id": 3,
       "name": "监测站 · 栾城区",
+      "region": "jjj",
       "lat": 37.9002,
       "lng": 114.6478,
       "temp": 15,
       "soilMoisture": 65,
       "status": "normal"
+    },
+    {
+      "id": 4,
+      "name": "监测站 · 黑龙江建三江",
+      "region": "northeast",
+      "lat": 47.25,
+      "lng": 132.63,
+      "temp": 22,
+      "soilMoisture": 42,
+      "status": "normal"
+    },
+    {
+      "id": 5,
+      "name": "监测站 · 黑龙江海伦",
+      "region": "northeast",
+      "lat": 47.46,
+      "lng": 126.97,
+      "temp": 24,
+      "soilMoisture": 28,
+      "status": "warning"
+    },
+    {
+      "id": 6,
+      "name": "监测站 · 吉林公主岭",
+      "region": "northeast",
+      "lat": 43.5,
+      "lng": 124.82,
+      "temp": 26,
+      "soilMoisture": 35,
+      "status": "normal"
+    },
+    {
+      "id": 7,
+      "name": "监测站 · 辽宁铁岭",
+      "region": "northeast",
+      "lat": 42.29,
+      "lng": 123.84,
+      "temp": 27,
+      "soilMoisture": 31,
+      "status": "normal"
+    },
+    {
+      "id": 8,
+      "name": "监测站 · 内蒙古通辽",
+      "region": "northeast",
+      "lat": 43.65,
+      "lng": 122.24,
+      "temp": 29,
+      "soilMoisture": 18,
+      "status": "warning"
     }
   ],
   "weatherReadings": [
@@ -103,9 +156,108 @@
       "windDirectionText": "偏东风",
       "pressure": 1001.3,
       "hourlyRain": 0.6
+    },
+    {
+      "id": 4,
+      "pointId": 4,
+      "updatedAt": "2026-08-11T10:00:00+08:00",
+      "soilVwc": 41.2,
+      "soilTemp10cm": 21.6,
+      "soilEc": 198,
+      "airTemp": 23.4,
+      "airRh": 68.2,
+      "windSpeed": 2.6,
+      "windDirection": 135,
+      "windDirectionText": "东南风",
+      "pressure": 1002.1,
+      "hourlyRain": 0.2
+    },
+    {
+      "id": 5,
+      "pointId": 5,
+      "updatedAt": "2026-08-11T10:00:00+08:00",
+      "soilVwc": 27.5,
+      "soilTemp10cm": 24.8,
+      "soilEc": 246,
+      "airTemp": 25.1,
+      "airRh": 52.3,
+      "windSpeed": 3.4,
+      "windDirection": 200,
+      "windDirectionText": "偏南风",
+      "pressure": 999.4,
+      "hourlyRain": 0
+    },
+    {
+      "id": 6,
+      "pointId": 6,
+      "updatedAt": "2026-08-11T10:00:00+08:00",
+      "soilVwc": 34.1,
+      "soilTemp10cm": 25.6,
+      "soilEc": 221,
+      "airTemp": 26.8,
+      "airRh": 55.7,
+      "windSpeed": 2.1,
+      "windDirection": 160,
+      "windDirectionText": "东南风",
+      "pressure": 1000.2,
+      "hourlyRain": 0
+    },
+    {
+      "id": 7,
+      "pointId": 7,
+      "updatedAt": "2026-08-11T10:00:00+08:00",
+      "soilVwc": 30.4,
+      "soilTemp10cm": 26.2,
+      "soilEc": 233,
+      "airTemp": 27.5,
+      "airRh": 49.8,
+      "windSpeed": 2.9,
+      "windDirection": 210,
+      "windDirectionText": "偏西南风",
+      "pressure": 998.8,
+      "hourlyRain": 0
+    },
+    {
+      "id": 8,
+      "pointId": 8,
+      "updatedAt": "2026-08-11T10:00:00+08:00",
+      "soilVwc": 17.6,
+      "soilTemp10cm": 28.9,
+      "soilEc": 278,
+      "airTemp": 30.2,
+      "airRh": 36.5,
+      "windSpeed": 3.8,
+      "windDirection": 240,
+      "windDirectionText": "西南风",
+      "pressure": 996.5,
+      "hourlyRain": 0
     }
   ],
   "alerts": [
+    {
+      "id": 101,
+      "pointId": 5,
+      "level": "high",
+      "message": "[东北示范] 海伦站监测到玉米叶部异常风险升高，建议田间复核。",
+      "time": 1754870400000,
+      "handled": false
+    },
+    {
+      "id": 102,
+      "pointId": 8,
+      "level": "medium",
+      "message": "[东北示范] 通辽站土壤墒情偏低，关注旱情发展。",
+      "time": 1754866800000,
+      "handled": false
+    },
+    {
+      "id": 103,
+      "pointId": 4,
+      "level": "low",
+      "message": "[东北示范] 建三江站水稻长势平稳，维持常规巡查。",
+      "time": 1754863200000,
+      "handled": true
+    },
     {
       "id": 1,
       "pointId": 2,
@@ -199,7 +351,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 水稻 - 稻瘟病 (置信度: 88.0%)",
       "id": 12
     },
     {
@@ -207,7 +359,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 96.0%)",
+      "message": "[AI识别] 监测到 水稻 - 稻颈瘟 (置信度: 96.0%)",
       "id": 13
     },
     {
@@ -215,7 +367,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 apple - 苹果轮纹病 (置信度: 94.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米南方锈病 (置信度: 94.0%)",
       "id": 14
     },
     {
@@ -247,7 +399,7 @@
       "handled": true,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 apple - 健康 (置信度: 98.0%)",
+      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 98.0%)",
       "id": 18
     },
     {
@@ -255,7 +407,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 apple - 苹果腐烂病 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米小斑病 (置信度: 88.0%)",
       "id": 19
     },
     {
@@ -279,7 +431,7 @@
       "handled": true,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 apple - 健康 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 玉米 - 健康 (置信度: 88.0%)",
       "id": 22
     },
     {
@@ -295,7 +447,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃疮痂病 (置信度: 98.0%)",
+      "message": "[AI识别] 监测到 水稻 - 水稻白叶枯病 (置信度: 98.0%)",
       "id": 24
     },
     {
@@ -335,7 +487,7 @@
       "handled": false,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 桃 - 健康 (置信度: 95.0%)",
+      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 95.0%)",
       "id": 29
     },
     {
@@ -343,7 +495,7 @@
       "handled": false,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 桃 - 桃疮痂病 (置信度: 93.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米褐斑病 (置信度: 93.0%)",
       "id": 30
     },
     {
@@ -393,6 +545,14 @@
       "level": "high",
       "message": "[AI识别] 监测到 番茄 - 番茄早疫病 (置信度: 90.5%)",
       "id": 36
+    },
+    {
+      "time": 1785115789213,
+      "handled": false,
+      "pointId": 1,
+      "level": "low",
+      "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 94.5%)",
+      "id": 37
     }
   ],
   "fields": [
