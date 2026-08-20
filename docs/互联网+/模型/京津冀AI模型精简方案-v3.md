@@ -1,8 +1,8 @@
-# 京津冀区域 AI 模型精简方案（v3）
+﻿# 京津冀区域 AI 模型精简方案（v3）
 
 > 面向 **京津冀** 试点：作物聚焦 **小麦、玉米、蔬菜**，病害 **少而精**，与业务场景及网站 Mock 对齐。  
 > **v3 需要重新训练**一个新模型（不能从 v2 的 27 类权重里删类）。v2 见 `[AI模型能力与本土化测试说明.md](./AI模型能力与本土化测试说明.md)`，可备份保留。  
-> **脚本已就绪**：`ml-bjj/scripts/prepare_bjj.py` → `train_cls.py`。  
+> **脚本**：当前用 `prepare_from_class_folders.py`；历史 8 类（小麦 Kaggle + PlantVillage）用 `prepare_from_wheat_plantvillage.py`（原 `prepare_bjj.py`）。再接 `train_cls.py`。
 > **ml-bjj 目录**：见 **[零、ml-bjj 目录规范](#零ml-bjj-目录规范)**（本项目已按此准备）。  
 > **组员训练操作**：见 **[ml-bjj训练操作手册.md](./ml-bjj训练操作手册.md)**（交付版）。  
 > **本人开发操作**：见 **[ml-bjj训练操作手册-开发版.md](./ml-bjj训练操作手册-开发版.md)**（虚拟环境 + 完整流程）。
@@ -22,7 +22,7 @@ DetectSystem/
     .gitignore
     requirements.txt
     scripts/
-      prepare_bjj.py
+      prepare_from_wheat_plantvillage.py
       train_cls.py
       predict.py
     data/
@@ -34,14 +34,14 @@ DetectSystem/
 
 ### 0.2 小麦原始数据 `data/wheatPlantDiseases/`（prepare 输入）
 
-**作用**：Kaggle 小麦病害**原始包**；`prepare_bjj.py` 读取后合并为 v3 小麦相关 5 类，写入 `bjj_cls`。**`train_cls.py` 不读此目录。**
+**作用**：Kaggle 小麦病害**原始包**；`prepare_from_wheat_plantvillage.py` 读取后合并为 v3 小麦相关 5 类，写入 `bjj_cls`。**`train_cls.py` 不读此目录。**
 
 路径：`ml-bjj/data/wheatPlantDiseases/data/{train,valid,test}/`
 
 | split | 文件夹命名（Kaggle 原样） | 说明 |
 |-------|---------------------------|------|
 | `train/` | `Yellow Rust`、`Brown Rust`、`Black Rust`、`Fusarium Head Blight`、`Mildew`、`Aphid`、`Mite`、`Stem fly`、`Healthy` | 9 个 |
-| `valid/` | `yellow_rust_valid`、`brown_rust_valid`、…（共 9 个 `*_valid`） | `prepare_bjj.py` 自动识别 |
+| `valid/` | `yellow_rust_valid`、`brown_rust_valid`、…（共 9 个 `*_valid`） | `prepare_from_wheat_plantvillage.py` 自动识别 |
 | `test/` | `yellow_rust_test`、`brown_rust_test`、…（共 9 个 `*_test`） | 同上 |
 
 整理后 v3 标签：
@@ -58,7 +58,7 @@ DetectSystem/
 
 ### 0.3 PlantVillage 原始数据 `data/plantvillage dataset/color/`（prepare 输入）
 
-**作用**：玉米/番茄**原始公开数据**（5 个文件夹）；`prepare_bjj.py` 读取后写入 `bjj_cls` 的玉米、番茄及「健康」类。**`train_cls.py` 不读此目录。**
+**作用**：玉米/番茄**原始公开数据**（5 个文件夹）；`prepare_from_wheat_plantvillage.py` 读取后写入 `bjj_cls` 的玉米、番茄及「健康」类。**`train_cls.py` 不读此目录。**
 
 路径：`ml-bjj/data/plantvillage dataset/color/`
 
@@ -74,18 +74,18 @@ DetectSystem/
 
 ### 0.4 训练集 `data/bjj_cls/`（train 输入）
 
-**作用**：整理后的 **8 类** train/val，由 `prepare_bjj.py` 从小麦 + PlantVillage **复制、合并、划分** 得到；**`train_cls.py` 只读这里。** 只交付训练任务时可只传本目录（不传 0.2、0.3 原始包）。
+**作用**：整理后的 **8 类** train/val，由 `prepare_from_wheat_plantvillage.py` 从小麦 + PlantVillage **复制、合并、划分** 得到；**`train_cls.py` 只读这里。** 只交付训练任务时可只传本目录（不传 0.2、0.3 原始包）。
 
 ### 0.5 当前 ml-bjj 自检（2026-07-09）
 
 | 项 | 要求 | 状态 |
 |----|------|------|
 | `requirements.txt`、`.gitignore` | 存在 | ✅ |
-| `scripts/` 三个 py | prepare_bjj、train_cls、predict | ✅ |
+| `scripts/` 三个 py | prepare_from_wheat_plantvillage、train_cls、predict | ✅ |
 | 小麦 train 9 类 | Title Case 英文名 | ✅ |
 | 小麦 valid/test 各 9 类 | `*_valid` / `*_test` 命名 | ✅ |
 | PlantVillage `data/.../color/` | 恰好 5 个文件夹 | ✅ |
-| `data/bjj_cls/` | 跑 `prepare_bjj.py` 后应有 8 类 train/val | ✅ 已生成（10756 / 3581） |
+| `data/bjj_cls/` | 跑 `prepare_from_wheat_plantvillage.py` 后应有 8 类 train/val | ✅ 已生成（10756 / 3581） |
 | `.venv/` | 已建并安装依赖 | ✅ |
 | `models/pest-cls-best.pt` | v3 训练后产出 | ✅ **98.99%**（2026-07-08） |
 | `models/pest-cls-meta.json` | 8 类、history | ✅ |
@@ -113,7 +113,7 @@ DetectSystem/
 cd D:\code2\software\vue\program\DetectSystem
 ml-bjj\.venv\Scripts\Activate.ps1
 
-python ml-bjj\scripts\prepare_bjj.py
+python ml-bjj\scripts\prepare_from_wheat_plantvillage.py
 python ml-bjj\scripts\train_cls.py --data-dir ml-bjj/data/bjj_cls --epochs 20
 
 # 抽测（验证集，扩展名以目录内实际文件为准）
@@ -135,7 +135,7 @@ python ml-bjj\scripts\predict.py --image "ml-bjj\data\bjj_cls\val\玉米大斑�
 
 ```text
 data/wheatPlantDiseases/data/ + data/plantvillage dataset/color/5 文件夹
-        ↓  prepare_bjj.py
+        ↓  prepare_from_wheat_plantvillage.py
 ml-bjj/data/bjj_cls/（8 类）
         ↓  train_cls.py
 ml-bjj/models/pest-cls-best.pt（v3 主推；可选再备份为 pest-cls-bjj.pt）
@@ -244,7 +244,7 @@ ml-bjj/models/pest-cls-best.pt（v3 主推；可选再备份为 pest-cls-bjj.pt�
 
 ---
 
-## 五、数据整理（prepare_bjj.py）
+## 五、数据整理（prepare_from_wheat_plantvillage.py）
 
 原始数据规范见 **第零节**。脚本读取 ml-bjj 内小麦 + PlantVillage，输出 `ml-bjj/data/bjj_cls/`（8 类）。
 
@@ -285,7 +285,7 @@ copy ml-v2\models\pest-cls-best.pt ml-bjj\models\pest-cls-v2-27cls.pt
 ### 第 1 步：整理 v3 数据（小麦 + PlantVillage 玉米/番茄 → 8 类）
 
 ```powershell
-python ml-bjj\scripts\prepare_bjj.py
+python ml-bjj\scripts\prepare_from_wheat_plantvillage.py
 ```
 
 默认读取：
@@ -297,7 +297,7 @@ python ml-bjj\scripts\prepare_bjj.py
 路径不同时可显式指定：
 
 ```powershell
-python ml-bjj\scripts\prepare_bjj.py ^
+python ml-bjj\scripts\prepare_from_wheat_plantvillage.py ^
   --wheat-source ml-bjj\data\wheatPlantDiseases\data ^
   --plantvillage-source "ml-bjj\data\plantvillage dataset\color" ^
   --output ml-bjj\data\bjj_cls
@@ -347,7 +347,7 @@ python ml-bjj\scripts\predict.py --image "ml-bjj\data\bjj_cls\val\玉米大斑�
 ## 七、目标数据目录
 
 ```text
-ml-bjj/data/bjj_cls/              # prepare_bjj.py 自动生成
+ml-bjj/data/bjj_cls/              # prepare_from_wheat_plantvillage.py 自动生成
   train/
     健康/
     小麦锈病/
@@ -370,7 +370,7 @@ ml-bjj/data/bjj_cls/              # prepare_bjj.py 自动生成
 
 | 脚本                        | v3 是否使用                              |
 | ------------------------- | ------------------------------------ |
-| `prepare_bjj.py`          | ✅ **用这个**                            |
+| `prepare_from_wheat_plantvillage.py`          | ✅ **用这个**                            |
 | `prepare_plantvillage.py` | ❌ 桃/苹果，v3 不用                         |
 | `prepare_wheat_rice.py`   | ❌ 含水稻，v3 不用                          |
 | `merge_datasets.py`       | ❌ 合并 27 类，v3 不用                      |
@@ -462,10 +462,10 @@ python ml-bjj\scripts\predict.py --image "实地照片.jpg"
 ## 十三、常见问题
 
 **Q：valid/test 文件夹名和 train 不一样可以吗？**  
-A：**可以。** Kaggle 的 `valid/`、`test/` 常用 `yellow_rust_valid` 这类命名；`prepare_bjj.py` 会自动规范化，与 train 下的 `Yellow Rust` 等合并处理。
+A：**可以。** Kaggle 的 `valid/`、`test/` 常用 `yellow_rust_valid` 这类命名；`prepare_from_wheat_plantvillage.py` 会自动规范化，与 train 下的 `Yellow Rust` 等合并处理。
 
 **Q：bjj_cls 目录是空的正常吗？**  
-A：**正常。** 跑完 `prepare_bjj.py` 后才会生成 8 类 train/val。
+A：**正常。** 跑完 `prepare_from_wheat_plantvillage.py` 后才会生成 8 类 train/val。
 
 **Q：精简版是不是要重新训练？**  
 A：**是。** 整理 `bjj_cls` 后必须再跑 `train_cls.py`，得到新的 8 类权重；不要用 `pest-cls-v2-27cls.pt` 作 v3 模型。
