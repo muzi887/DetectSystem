@@ -200,6 +200,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 | [`AI模型训练说明.md`](./AI模型训练说明.md) | 零基础跑通第一次训练 |
 | [`ml-bjj训练操作手册.md`](./ml-bjj训练操作手册.md) | 京津冀 23 类模型训练步骤 |
 | [`作物掩码与推理接入.md`](./作物掩码与推理接入.md) | 按作物过滤概率、接到推理、假模型测试在证明什么 |
+| [`../网站/什么是Flask.md`](../网站/什么是Flask.md) | 推理服务用的 Python Web 框架 |
 | [`../网站/新模型训后-后端丰富说明.md`](../网站/新模型训后-后端丰富说明.md) | 训后推理接口如何使用模型输出 |
 
 ---
