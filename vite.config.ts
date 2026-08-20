@@ -47,6 +47,10 @@ export default defineConfig(({ command, mode }) => {
           target: 'http://127.0.0.1:5000',
           changeOrigin: true
         },
+        '/api/treatments': {
+          target: 'http://127.0.0.1:5000',
+          changeOrigin: true
+        },
         '/api': {
           target: 'http://localhost:3000',
           changeOrigin: true,

@@ -1,5 +1,5 @@
 """
-v3 推理 HTTP 服务（Flask · 端口 5000）。
+23 类推理 HTTP 服务（Flask · 端口 5000）。
 
 启动（项目根 DetectSystem）：
   ml-bjj\\.venv\\Scripts\\Activate.ps1
@@ -8,11 +8,14 @@ v3 推理 HTTP 服务（Flask · 端口 5000）。
 
 from __future__ import annotations
 
+import json
 import os
 import sys
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
+import torch
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from PIL import Image
@@ -21,7 +24,10 @@ SERVE_DIR = Path(__file__).resolve().parent
 if str(SERVE_DIR) not in sys.path:
     sys.path.insert(0, str(SERVE_DIR))
 
-from inference import get_classifier, resolve_weights_path  # noqa: E402
+from crop_filter import CANONICAL_CLASSES, classes_for_crop  # noqa: E402
+from inference import PredictResult, get_classifier, resolve_weights_path  # noqa: E402
+from knowledge import get_treatment_item, load_catalog  # noqa: E402
+from predict_utils import needs_review, rank_topk  # noqa: E402
 
 app = Flask(__name__)
 CORS(app)
@@ -35,10 +41,31 @@ CROP_LABELS = {
     "apple": "苹果",
     "rice": "水稻",
 }
+META_PATH = Path(__file__).resolve().parents[1] / "models" / "pest-cls-meta.json"
 
 
 def use_mock() -> bool:
     return os.environ.get("ML_BJJ_USE_MOCK", "0") == "1"
+
+
+def load_model_meta() -> dict:
+    if META_PATH.is_file():
+        return json.loads(META_PATH.read_text(encoding="utf-8"))
+    return {"trained_at": None, "best_val_acc": None, "classes": []}
+
+
+def model_version_payload(meta: dict | None = None) -> dict:
+    meta = meta if meta is not None else load_model_meta()
+    classes = meta.get("classes") or []
+    return {
+        "trained_at": meta.get("trained_at"),
+        "best_val_acc": meta.get("best_val_acc"),
+        "classes_count": len(classes),
+    }
+
+
+def engine_name() -> str:
+    return "mock" if use_mock() else "bjj-23"
 
 
 def validate_upload(file) -> None:
@@ -52,14 +79,30 @@ def validate_upload(file) -> None:
         raise ValueError("图片内容为空")
 
 
-def mock_predict(file, crop_type: str) -> tuple[str, float]:
+def mock_predict(file, crop_type: str) -> PredictResult:
     raw = file.read()
     file.stream.seek(0)
     digest = sha256(raw).hexdigest()
-    mock_labels = ["健康", "小麦锈病", "小麦赤霉病", "玉米大斑病", "番茄早疫病"]
-    idx = int(digest[-4:], 16) % len(mock_labels)
+    allowed = classes_for_crop(crop_type)
+    labels = [c for c in CANONICAL_CLASSES if allowed is None or c in allowed]
+    idx = int(digest[-4:], 16) % len(labels)
     conf = round(0.78 + (int(digest[:4], 16) % 100) / 500, 4)
-    return mock_labels[idx], min(conf, 0.98)
+    conf = min(conf, 0.98)
+    probs = [0.0] * len(labels)
+    probs[idx] = conf
+    remain = max(0.0, 1.0 - conf)
+    if len(labels) > 1:
+        other = remain / (len(labels) - 1)
+        for i in range(len(labels)):
+            if i != idx:
+                probs[i] = other
+    topk = rank_topk(probs, labels, k=3)
+    return PredictResult(
+        label=labels[idx],
+        confidence=float(conf),
+        topk=topk,
+        needs_review=needs_review(topk, float(conf)),
+    )
 
 
 def classify_level(result: str, confidence: float) -> str:
@@ -87,30 +130,33 @@ def analyze_image():
         validate_upload(file)
 
         if use_mock():
-            result, confidence = mock_predict(file, crop_type)
-            engine = "mock"
+            pred = mock_predict(file, crop_type)
         else:
             img = Image.open(file.stream)
-            result, confidence = get_classifier().predict(img)
-            engine = "v3"
+            pred = get_classifier().predict_detailed(img, crop_type)
 
-        level = classify_level(result, confidence)
-        is_reliable = confidence >= 0.7
+        level = classify_level(pred.label, pred.confidence)
+        treatment, _found = get_treatment_item(pred.label)
+        meta = load_model_meta()
 
         return jsonify(
             {
                 "code": 200,
                 "message": "success",
-                "result": result,
-                "confidence": confidence,
+                "result": pred.label,
+                "confidence": pred.confidence,
                 "level": level,
+                "topk": pred.topk,
+                "needs_review": pred.needs_review,
+                "model_version": model_version_payload(meta),
+                "treatment": treatment,
                 "details": {
                     "received_crop": crop_type,
                     "crop_label": CROP_LABELS.get(crop_type, "未知作物"),
                     "category": category,
                     "additionalInfo": additional_info,
-                    "isReliable": is_reliable,
-                    "engine": engine,
+                    "isReliable": not pred.needs_review,
+                    "engine": engine_name(),
                     "weights": str(resolve_weights_path()) if not use_mock() else None,
                 },
             }
@@ -124,7 +170,37 @@ def analyze_image():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "mock": use_mock()}), 200
+    meta = load_model_meta()
+    classes = meta.get("classes") or []
+    weights = resolve_weights_path()
+    mtime = (
+        datetime.fromtimestamp(weights.stat().st_mtime).isoformat()
+        if weights.is_file()
+        else None
+    )
+    return jsonify(
+        {
+            "status": "ok",
+            "mock": use_mock(),
+            "classes_count": len(classes),
+            "classes": classes,
+            "model_version": model_version_payload(meta),
+            "weights_mtime": mtime,
+            "cuda": bool(torch.cuda.is_available()),
+            "engine": engine_name(),
+        }
+    ), 200
+
+
+@app.route("/api/treatments", methods=["GET"])
+def treatments_all():
+    return jsonify(load_catalog()), 200
+
+
+@app.route("/api/treatments/<label>", methods=["GET"])
+def treatments_one(label: str):
+    item, found = get_treatment_item(label)
+    return jsonify({"label": label, "found": found, "item": item}), 200
 
 
 def main() -> None:
@@ -139,6 +215,13 @@ def main() -> None:
         print(f"[ml-bjj] 加载模型: {weights}")
         clf = get_classifier()
         print(f"[ml-bjj] 模型就绪，{len(clf.classes)} 类: {', '.join(clf.classes)}")
+        meta_classes = load_model_meta().get("classes") or []
+        if meta_classes and list(clf.classes) != list(meta_classes):
+            raise SystemExit(
+                f"权重 classes 与 pest-cls-meta.json 不一致: {len(clf.classes)} vs {len(meta_classes)}"
+            )
+        if len(clf.classes) != 23:
+            raise SystemExit(f"期望 23 类，实际 {len(clf.classes)}: {clf.classes}")
 
     print(f"[ml-bjj] 推理服务: http://127.0.0.1:{port}/api/analysis/image")
     app.run(host="0.0.0.0", port=port, debug=False)
