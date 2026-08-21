@@ -325,6 +325,19 @@ function buildRuleSuggestions(area: EnrichedAlert): string[] {
   const rawMessage = area.message
   const messageLower = rawMessage.toLowerCase()
 
+  if (rawMessage.includes('[自动预警]')) {
+    if (rawMessage.includes('土壤湿度') && rawMessage.includes('低于')) {
+      suggestions.push('墒情持续偏低，建议按地块启动灌溉并复核传感器。')
+    }
+    if (rawMessage.includes('气温') && rawMessage.includes('超过')) {
+      suggestions.push('高温已持续超标，建议启动喷雾/遮阴等田间降温预案。')
+    }
+    if (rawMessage.includes('偏高') || rawMessage.includes('涝')) {
+      suggestions.push('墒情过高，注意排水，避免涝渍。')
+    }
+    if (suggestions.length) return suggestions
+  }
+
   if (area.level === 'critical') {
     suggestions.push('最高优先级处理！立即通知所有相关应急负责人。')
   }

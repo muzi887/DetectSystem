@@ -12,10 +12,15 @@ export type AlertLevel = 'low' | 'medium' | 'high' | 'critical' | 'warning'
 export interface Alert {
   id: number
   pointId: number
+  fieldId?: string | null
   level: AlertLevel
   message: string
   time: number
   handled: boolean
+  source?: 'manual' | 'auto'
+  ruleId?: string
+  chain?: 'env' | 'extreme' | 'pest'
+  draft?: boolean
 }
 
 export type CreateAlertPayload = Omit<Alert, 'id'>
@@ -58,7 +63,9 @@ export const useDataStore = defineStore('data', () => {
   )
 
   const filteredAlerts = computed(() =>
-    alerts.value.filter((alert) => regionPointIds.value.has(alert.pointId))
+    alerts.value.filter(
+      (alert) => regionPointIds.value.has(alert.pointId) && alert.draft !== true
+    )
   )
 
   const unhandledAlerts = computed(() =>

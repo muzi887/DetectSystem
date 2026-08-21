@@ -36,6 +36,8 @@
                         <a-tag :color="getLevelColor(item.level)">
                           {{ getLevelText(item.level) }}
                         </a-tag>
+                        <a-tag v-if="item.source === 'auto'">自动</a-tag>
+                        <a-tag v-else>手动</a-tag>
                         <span class="point-name">{{ item.pointName }}</span>
                         <a-tag :color="item.handled ? 'green' : 'red'">
                           {{ item.handled ? '已处理' : '待处理' }}
