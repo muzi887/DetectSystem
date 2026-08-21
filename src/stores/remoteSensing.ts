@@ -6,7 +6,7 @@ import {
   fetchNdviLayers
 } from '@/api/remoteSensing'
 import { resolveImageAsset } from '@/constants/remoteSensingLayers'
-import type { Field, MoistureLayer, NdviLayer, RasterLayerView } from '@/types/remoteSensing'
+import { fetchPestPredictions } from '@/api/rules'
 
 function latestDate(dates: string[]) {
   return [...dates].sort((a, b) => b.localeCompare(a))[0] ?? ''
@@ -30,6 +30,7 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
   const fields = ref<Field[]>([])
   const ndviLayers = ref<NdviLayer[]>([])
   const moistureLayers = ref<MoistureLayer[]>([])
+  const pestPredictions = ref<Array<{ fieldId: string; riskLevel: string }>>([])
   const selectedFieldId = ref('')
   const selectedNdviDate = ref('')
   const selectedMoistureDate = ref('')
@@ -71,6 +72,12 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
 
   const currentMoistureRaster = computed(() =>
     currentMoistureLayer.value ? toRasterView(currentMoistureLayer.value) : null
+  )
+
+  const selectedFieldHighRisk = computed(() =>
+    pestPredictions.value.some(
+      (row) => row.fieldId === selectedFieldId.value && row.riskLevel === 'high'
+    )
   )
 
   const compareNdviLayer = computed(() =>
@@ -162,6 +169,12 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
       fields.value = fieldsRes.data ?? []
       ndviLayers.value = ndviRes.data ?? []
       moistureLayers.value = moistureRes.data ?? []
+      try {
+        const pestRes = await fetchPestPredictions()
+        pestPredictions.value = pestRes.data ?? []
+      } catch {
+        pestPredictions.value = []
+      }
       initSelection()
     } catch (err: unknown) {
       loadError.value = err instanceof Error ? err.message : '遥感数据加载失败'
@@ -175,6 +188,7 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
     fields,
     ndviLayers,
     moistureLayers,
+    pestPredictions,
     selectedFieldId,
     selectedNdviDate,
     selectedMoistureDate,
@@ -192,6 +206,7 @@ export const useRemoteSensingStore = defineStore('remoteSensing', () => {
     currentMoistureRaster,
     compareNdviLayer,
     compareNdviRaster,
+    selectedFieldHighRisk,
     fetchAll,
     initSelection,
     selectField,

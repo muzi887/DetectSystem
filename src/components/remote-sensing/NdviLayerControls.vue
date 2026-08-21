@@ -12,6 +12,11 @@
         popup-class-name="ndvi-layer-select-dropdown"
         :options="fieldOptions"
         @change="onFieldChange" />
+      <a-tag
+        v-if="selectedFieldHighRisk"
+        color="red">
+        虫情高风险
+      </a-tag>
     </div>
     <div class="control-group">
       <span class="control-label">影像日期</span>
@@ -79,7 +84,8 @@ const {
   compareOpacity,
   layersForField,
   compareDatesForField,
-  canCompareNdvi
+  canCompareNdvi,
+  selectedFieldHighRisk
 } = storeToRefs(store)
 
 const fieldOptions = computed(() =>

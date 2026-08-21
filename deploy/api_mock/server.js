@@ -8,7 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
-const { runChain1OnDb, runChain2OnDb, runAllChains, tickSensorSimulation, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
+const { runChain1OnDb, runChain2OnDb, runChain3OnDb, runAllChains, tickSensorSimulation, profileForPoint, publishAlert, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -94,6 +94,23 @@ server.post('/weather/extreme-events/evaluate', (req, res) => {
   const result = runChain2OnDb(db, new Date())
   writeDb(db)
   return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.post('/pest-risk/evaluate', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain3OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length, predictions: db.pestRiskPredictions })
+})
+
+server.post('/alerts/:id/publish', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const row = publishAlert(db, Number(req.params.id))
+  if (!row) return res.status(404).jsonp({ message: '预警不存在' })
+  writeDb(db)
+  return res.jsonp(row)
 })
 
 server.get('/field-sensors/:pointId/thresholds', (req, res) => {

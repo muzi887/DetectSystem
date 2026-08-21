@@ -1,6 +1,7 @@
 import type { ExtremeEvent, NewAlert, RuleState, SensorSnapshot, ThresholdProfile } from '../types/rules.ts'
 import { DEFAULT_THRESHOLD_PROFILE, evaluateReading } from '../utils/alertRules.ts'
 import { evaluateForecast } from '../utils/extremeWeatherRules.ts'
+import { evaluatePestRisk } from '../utils/pestRiskRules.ts'
 
 export type AlertRow = NewAlert & { id: number }
 
@@ -187,8 +188,88 @@ export function tickSensorSimulation(db: any): void {
   row.soilVwc = tickSoilVwc(Number(row.soilVwc))
 }
 
-export function runChain3OnDb(_db: any, _now: Date): { created: AlertRow[] } {
-  return { created: [] }
+function ndviMid(layer: { ndviMin?: number; ndviMax?: number } | undefined): number {
+  if (!layer) return 0.5
+  const min = Number(layer.ndviMin ?? 0.5)
+  const max = Number(layer.ndviMax ?? 0.5)
+  return (min + max) / 2
+}
+
+function latestNdviByField(db: any): Map<string, any> {
+  const map = new Map<string, any>()
+  for (const layer of db.ndviLayers || []) {
+    const prev = map.get(layer.fieldId)
+    if (!prev || String(layer.date) >= String(prev.date)) {
+      map.set(String(layer.fieldId), layer)
+    }
+  }
+  return map
+}
+
+function recentAiCount(db: any, pointId: number, now: Date): number {
+  const cutoff = now.getTime() - 7 * 24 * 60 * 60 * 1000
+  return (db.alerts || []).filter(
+    (row: any) =>
+      Number(row.pointId) === pointId &&
+      Number(row.time) >= cutoff &&
+      String(row.message || '').includes('[AI识别]')
+  ).length
+}
+
+export function publishAlert(db: any, id: number): any | null {
+  const row = (db.alerts || []).find((item: any) => Number(item.id) === Number(id))
+  if (!row) return null
+  row.draft = false
+  return row
+}
+
+export function runChain3OnDb(db: any, now: Date): { created: AlertRow[] } {
+  if (!Array.isArray(db.fields)) db.fields = []
+  if (!Array.isArray(db.pestRiskPredictions)) db.pestRiskPredictions = []
+  if (!Array.isArray(db.alerts)) db.alerts = []
+  if (!Array.isArray(db.weatherForecast)) db.weatherForecast = []
+
+  const latestNdvi = latestNdviByField(db)
+  const mids = [...latestNdvi.values()].map((layer) => ndviMid(layer))
+  const ndviFieldAvg = mids.length ? mids.reduce((a, b) => a + b, 0) / mids.length : 0.5
+  const predictions: any[] = []
+  const incoming: NewAlert[] = []
+
+  for (const field of db.fields) {
+    const fieldId = String(field.id)
+    const pointId = Number(field.monitorPointId || 0)
+    const forecast = (db.weatherForecast || []).filter((row: any) => Number(row.pointId) === pointId)
+    const profile = profileForPoint(db, pointId) as ThresholdProfile & {
+      crop?: string
+      growthStage?: string
+    }
+    const out = evaluatePestRisk({
+      fieldId,
+      fieldName: field.name || fieldId,
+      pointId,
+      forecast,
+      ndvi: ndviMid(latestNdvi.get(fieldId)),
+      ndviFieldAvg,
+      crop: profile.crop || '小麦',
+      growthStage: profile.growthStage || '拔节',
+      recentAiAlertCount: recentAiCount(db, pointId, now)
+    })
+    predictions.push({
+      id: predictions.length + 1,
+      fieldId,
+      riskLevel: out.riskLevel,
+      factors: out.factors,
+      window: out.window
+    })
+    if (out.draftAlert) {
+      incoming.push({ ...out.draftAlert, time: now.getTime() })
+    }
+  }
+
+  db.pestRiskPredictions = predictions
+  const { alerts, created } = dedupeAlerts(db.alerts, incoming)
+  db.alerts = alerts
+  return { created }
 }
 
 export function runAllChains(db: any, now: Date): { created: AlertRow[] } {

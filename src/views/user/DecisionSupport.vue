@@ -338,6 +338,15 @@ function buildRuleSuggestions(area: EnrichedAlert): string[] {
     if (suggestions.length) return suggestions
   }
 
+  if (rawMessage.includes('[虫情风险]')) {
+    suggestions.push('按预警中的风险因子安排巡田，优先复核高湿与降水窗口。')
+    return suggestions
+  }
+  if (rawMessage.includes('[极端天气]')) {
+    suggestions.push('按极端天气类型执行热害/防涝/防风预案，并提高未来 3 日巡查频次。')
+    return suggestions
+  }
+
   if (area.level === 'critical') {
     suggestions.push('最高优先级处理！立即通知所有相关应急负责人。')
   }

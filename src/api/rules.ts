@@ -8,6 +8,12 @@ export const fetchForecast = () => http.get('/weatherForecast')
 
 export const fetchExtremeEvents = () => http.get('/extremeEvents')
 
+export const evaluatePestRisk = () => http.post('/pest-risk/evaluate')
+
+export const fetchPestPredictions = () => http.get('/pestRiskPredictions')
+
+export const publishAlert = (id: number) => http.post(`/alerts/${id}/publish`)
+
 export const fetchThresholds = (pointId: number) =>
   http.get(`/field-sensors/${pointId}/thresholds`)
 

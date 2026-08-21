@@ -5,7 +5,7 @@ import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
 import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
-import { profileForPoint, runAllChains, runChain1OnDb, runChain2OnDb, tickSensorSimulation } from './persistRules.ts'
+import { profileForPoint, publishAlert, runAllChains, runChain1OnDb, runChain2OnDb, runChain3OnDb, tickSensorSimulation } from './persistRules.ts'
 
 interface AgriMockCore {
   handleFarmLogin: (db: any, body: any) => { status: number; body: any }
@@ -107,6 +107,23 @@ server.post('/weather/extreme-events/evaluate', (_req: Request, res: Response) =
   const result = runChain2OnDb(db, new Date())
   writeDb(db)
   return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.post('/pest-risk/evaluate', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain3OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length, predictions: db.pestRiskPredictions })
+})
+
+server.post('/alerts/:id/publish', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const row = publishAlert(db, Number(req.params.id))
+  if (!row) return res.status(404).jsonp({ message: '预警不存在' })
+  writeDb(db)
+  return res.jsonp(row)
 })
 
 server.get('/field-sensors/:pointId/thresholds', (req: Request, res: Response) => {

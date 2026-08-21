@@ -344,8 +344,134 @@ function tickSensorSimulation(db) {
   row.soilVwc = tickSoilVwc(row.soilVwc)
 }
 
-function runChain3OnDb() {
-  return { created: [] }
+function ndviMid(layer) {
+  if (!layer) return 0.5
+  const min = Number(layer.ndviMin != null ? layer.ndviMin : 0.5)
+  const max = Number(layer.ndviMax != null ? layer.ndviMax : 0.5)
+  return (min + max) / 2
+}
+
+function latestNdviByField(db) {
+  const map = new Map()
+  for (const layer of db.ndviLayers || []) {
+    const prev = map.get(String(layer.fieldId))
+    if (!prev || String(layer.date) >= String(prev.date)) {
+      map.set(String(layer.fieldId), layer)
+    }
+  }
+  return map
+}
+
+function recentAiCount(db, pointId, now) {
+  const cutoff = now.getTime() - 7 * 24 * 60 * 60 * 1000
+  return (db.alerts || []).filter(
+    (row) =>
+      Number(row.pointId) === pointId &&
+      Number(row.time) >= cutoff &&
+      String(row.message || '').includes('[AI识别]')
+  ).length
+}
+
+function evaluatePestRisk(input) {
+  const factors = []
+  const forecast = input.forecast || []
+  const sorted = [...forecast].sort((a, b) => String(a.date).localeCompare(String(b.date)))
+
+  for (let i = 0; i <= sorted.length - 3; i++) {
+    const window = sorted.slice(i, i + 3)
+    if (window.every((d) => Number(d.humidity || 0) > 80)) {
+      factors.push('连续 3 日湿度 > 80%')
+      break
+    }
+  }
+
+  const rain = sorted.slice(0, 7).reduce((sum, d) => sum + Number(d.precipMm || 0), 0)
+  if (rain > 80) factors.push('7 日累计降水偏多')
+
+  if (input.ndviFieldAvg > 0 && input.ndvi < input.ndviFieldAvg * 0.85) {
+    factors.push('NDVI 低于田间均值 15%')
+  }
+
+  const five = sorted.slice(0, 5)
+  if (five.length) {
+    const mean = five.reduce((acc, d) => acc + (Number(d.tempMax) + Number(d.tempMin)) / 2, 0) / five.length
+    if (mean >= 22 && mean <= 28 && String(input.crop).includes('小麦')) {
+      factors.push('气温处于病害流行适温区间')
+    }
+  }
+
+  if (input.recentAiAlertCount >= 2) factors.push('近期 AI 已多次检出病虫害')
+
+  const score = factors.length
+  const riskLevel = score >= 4 ? 'high' : score >= 2 ? 'medium' : 'low'
+  const window = forecast.length ? `${forecast[0].date}~${forecast[forecast.length - 1].date}` : ''
+  const result = { riskLevel, factors, window }
+  if (riskLevel === 'high') {
+    result.draftAlert = {
+      pointId: input.pointId || 0,
+      fieldId: input.fieldId,
+      level: 'high',
+      message: `[虫情风险] 地块 ${input.fieldName} - 风险等级：high（${factors.join('；')}）`,
+      time: Date.now(),
+      handled: false,
+      source: 'auto',
+      ruleId: 'pest_risk',
+      chain: 'pest',
+      draft: true
+    }
+  }
+  return result
+}
+
+function publishAlert(db, id) {
+  const row = (db.alerts || []).find((item) => Number(item.id) === Number(id))
+  if (!row) return null
+  row.draft = false
+  return row
+}
+
+function runChain3OnDb(db, now) {
+  if (!Array.isArray(db.fields)) db.fields = []
+  if (!Array.isArray(db.pestRiskPredictions)) db.pestRiskPredictions = []
+  if (!Array.isArray(db.alerts)) db.alerts = []
+  if (!Array.isArray(db.weatherForecast)) db.weatherForecast = []
+
+  const latestNdvi = latestNdviByField(db)
+  const mids = [...latestNdvi.values()].map((layer) => ndviMid(layer))
+  const ndviFieldAvg = mids.length ? mids.reduce((a, b) => a + b, 0) / mids.length : 0.5
+  const predictions = []
+  const incoming = []
+
+  for (const field of db.fields) {
+    const fieldId = String(field.id)
+    const pointId = Number(field.monitorPointId || 0)
+    const forecast = (db.weatherForecast || []).filter((row) => Number(row.pointId) === pointId)
+    const profile = profileForPoint(db, pointId)
+    const out = evaluatePestRisk({
+      fieldId,
+      fieldName: field.name || fieldId,
+      pointId,
+      forecast,
+      ndvi: ndviMid(latestNdvi.get(fieldId)),
+      ndviFieldAvg,
+      crop: profile.crop || '小麦',
+      growthStage: profile.growthStage || '拔节',
+      recentAiAlertCount: recentAiCount(db, pointId, now || new Date())
+    })
+    predictions.push({
+      id: predictions.length + 1,
+      fieldId,
+      riskLevel: out.riskLevel,
+      factors: out.factors,
+      window: out.window
+    })
+    if (out.draftAlert) incoming.push({ ...out.draftAlert, time: (now || new Date()).getTime() })
+  }
+
+  db.pestRiskPredictions = predictions
+  const { alerts, created } = dedupeAlerts(db.alerts, incoming)
+  db.alerts = alerts
+  return { created }
 }
 
 function runAllChains(db, now) {
@@ -365,5 +491,6 @@ module.exports = {
   runAllChains,
   tickSoilVwc,
   tickSensorSimulation,
-  profileForPoint
+  profileForPoint,
+  publishAlert
 }

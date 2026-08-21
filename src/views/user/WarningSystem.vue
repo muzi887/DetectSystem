@@ -20,6 +20,12 @@
               @click="fetchAlerts">
               刷新
             </a-button>
+            <a-switch
+              v-model:checked="showDrafts"
+              class="draft-switch"
+              checked-children="含草稿"
+              un-checked-children="待办"
+              style="margin-left: 8px" />
           </template>
 
           <a-list
@@ -51,6 +57,11 @@
                   </template>
                 </a-list-item-meta>
                 <template #actions>
+                  <a
+                    v-if="item.draft"
+                    @click="handlePublish(item)">
+                    确认发布
+                  </a>
                   <a
                     v-if="!item.handled"
                     @click="handleToggle(item)">
@@ -134,15 +145,22 @@ import { message } from 'ant-design-vue'
 import { useDataStore } from '@/stores/data'
 import { getAlertLevelColor, getAlertLevelText } from '@/utils/alertLevel'
 import { formatTime } from '@/utils/formatTime'
+import { publishAlert } from '@/api/rules'
 
 const dataStore = useDataStore()
+const showDrafts = ref(false)
 
 const enrichedAlerts = computed(() => {
   const pointsMap = new Map(dataStore.filteredMonitorPoints.map((p) => [p.id, p.name]))
-  return dataStore.filteredAlerts.map((alert) => ({
-    ...alert,
-    pointName: pointsMap.get(alert.pointId) || `未知监测点 #${alert.pointId}`
-  }))
+  const regionIds = new Set(dataStore.filteredMonitorPoints.map((p) => p.id))
+  return dataStore.alerts
+    .filter(
+      (alert) => regionIds.has(alert.pointId) && (showDrafts.value || alert.draft !== true)
+    )
+    .map((alert) => ({
+      ...alert,
+      pointName: pointsMap.get(alert.pointId) || `未知监测点 #${alert.pointId}`
+    }))
 })
 
 const createFormModal = reactive({
@@ -193,6 +211,16 @@ const handleCreateModalOk = async () => {
     await fetchAlerts()
   } catch (e) {
     message.error('创建失败')
+  }
+}
+
+const handlePublish = async (alert: { id: number }) => {
+  try {
+    await publishAlert(alert.id)
+    await fetchAlerts()
+    message.success('已确认发布')
+  } catch (e) {
+    message.error('发布失败')
   }
 }
 
