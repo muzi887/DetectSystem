@@ -96,6 +96,7 @@ PyTorch 推理、作物掩码、防治库、识别记录 JSON
 | 文档 | 内容 |
 |------|------|
 | [`项目启动说明.md`](../项目启动说明.md) | 如何启动 Flask 与网站 |
+| [`什么是Mock.md`](./什么是Mock.md) | 业务数据走 3000，不是 Flask |
 | [`Flask对Python是否等于NET对CSharp.md`](./Flask对Python是否等于NET对CSharp.md) | Flask 不能当成 Python 的整个 .NET |
 | [`Python线程锁.md`](./Python线程锁.md) | Flask 并发写识别记录时为何加锁 |
 | [`什么是batch.md`](./什么是batch.md) | 一次请求识别多张图 |

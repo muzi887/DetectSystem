@@ -1,7 +1,8 @@
 # Rules Task 1：类型、等级映射、链 1 纯函数
 
 > 对应计划：[`规则链-2.0总线实施计划.md`](../实施计划/规则链-2.0总线实施计划.md) Task 1  
-> 状态：✅ 已完成（`tsx --test` 4 passed）
+> 状态：✅ 已完成（`tsx --test` 4 passed）  
+> 三文件怎么读：[`链1-alertRules三文件说明.md`](../概念/链1-alertRules三文件说明.md)
 
 ## 子任务解释
 
