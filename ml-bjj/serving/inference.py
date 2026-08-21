@@ -16,6 +16,7 @@ from predict_utils import needs_review, rank_topk
 
 ML_BJJ_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WEIGHTS = ML_BJJ_ROOT / "models" / "pest-cls-best.pt"
+DEFAULT_ONNX = ML_BJJ_ROOT / "models" / "pest-cls-best.onnx"
 
 @dataclass
 class PredictResult:
@@ -36,6 +37,18 @@ def resolve_weights_path() -> Path:
     return DEFAULT_WEIGHTS
 
 
+def use_onnx() -> bool:
+    return os.environ.get("ML_BJJ_ONNX") == "1"
+
+
+def resolve_onnx_path() -> Path:
+    env = os.environ.get("ML_BJJ_ONNX_PATH")
+    if env:
+        path = Path(env)
+        return path if path.is_absolute() else ML_BJJ_ROOT / path
+    return DEFAULT_ONNX
+
+
 class PestClassifier:
     def __init__(self, weights_path: Path) -> None:
         weights_path = weights_path.resolve()
@@ -49,9 +62,23 @@ class PestClassifier:
 
         self.classes = classes
         self.weights_path = weights_path
-        self.model = timm.create_model(model_name, pretrained=False, num_classes=len(classes))
-        self.model.load_state_dict(ckpt["state_dict"])
-        self.model.eval()
+        self.onnx_session = None
+        if use_onnx():
+            onnx_path = resolve_onnx_path()
+            if onnx_path.is_file():
+                import onnxruntime as ort
+
+                self.onnx_session = ort.InferenceSession(
+                    str(onnx_path),
+                    providers=["CPUExecutionProvider"],
+                )
+
+        if self.onnx_session is None:
+            self.model = timm.create_model(model_name, pretrained=False, num_classes=len(classes))
+            self.model.load_state_dict(ckpt["state_dict"])
+            self.model.eval()
+        else:
+            self.model = None
 
         self.transform = transforms.Compose(
             [
@@ -64,8 +91,13 @@ class PestClassifier:
     def predict_detailed(self, image: Image.Image, crop_type: str = "unknown") -> PredictResult:
         img = image.convert("RGB")
         tensor = self.transform(img).unsqueeze(0)
+        if getattr(self, "onnx_session", None) is not None:
+            logits_np = self.onnx_session.run(None, {"input": tensor.numpy()})[0]
+            logits = torch.from_numpy(logits_np)
+        else:
+            with torch.no_grad():
+                logits = self.model(tensor)
         with torch.no_grad():
-            logits = self.model(tensor)
             probs = torch.softmax(logits, dim=1)[0].tolist()
         filtered = mask_and_renorm(probs, self.classes, crop_type)
         topk = rank_topk(filtered, self.classes, k=3)
