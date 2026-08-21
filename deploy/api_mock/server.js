@@ -8,7 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
-const { runChain1OnDb, runChain2OnDb, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
+const { runChain1OnDb, runChain2OnDb, runAllChains, tickSensorSimulation, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -130,4 +130,14 @@ const HOST = process.env.HOST || '0.0.0.0'
 
 server.listen(PORT, HOST, () => {
   console.log(`JSON Server is running on http://${HOST}:${PORT}`)
+  setInterval(() => {
+    try {
+      const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'))
+      tickSensorSimulation(db)
+      runAllChains(db, new Date())
+      writeDb(db)
+    } catch (err) {
+      console.error('rule-chain interval failed:', err)
+    }
+  }, 60_000)
 })

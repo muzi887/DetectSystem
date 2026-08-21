@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dedupeAlerts, nextAlertId } from './persistRules.ts'
+import { dedupeAlerts, nextAlertId, tickSoilVwc } from './persistRules.ts'
 
 test('dedupe skips unhandled same pointId+ruleId+chain', () => {
   const existing = [
@@ -26,4 +26,9 @@ test('dedupe skips unhandled same pointId+ruleId+chain', () => {
 
 test('nextAlertId is max+1', () => {
   assert.equal(nextAlertId([{ id: 37 }, { id: 12 }]), 38)
+})
+
+test('tick keeps xiongxian in drought band', () => {
+  const next = tickSoilVwc(12.8)
+  assert.ok(next <= 14.5 && next >= 11)
 })

@@ -329,11 +329,41 @@ function runChain2OnDb(db, now) {
   return { created }
 }
 
+function tickSoilVwc(current) {
+  const stepped = Number((Number(current) + 0.4).toFixed(1))
+  if (stepped > 14.5) return 11
+  if (stepped < 11) return 11
+  return stepped
+}
+
+function tickSensorSimulation(db) {
+  if (!Array.isArray(db.weatherReadings)) return
+  const latest = latestWeatherByPoint(db.weatherReadings)
+  const row = latest.get(2)
+  if (!row) return
+  row.soilVwc = tickSoilVwc(row.soilVwc)
+}
+
+function runChain3OnDb() {
+  return { created: [] }
+}
+
+function runAllChains(db, now) {
+  const env = runChain1OnDb(db, now)
+  const extreme = runChain2OnDb(db, now)
+  const pest = runChain3OnDb(db, now)
+  return { created: env.created.concat(extreme.created, pest.created) }
+}
+
 module.exports = {
   DEFAULT_THRESHOLD_PROFILE,
   nextAlertId,
   dedupeAlerts,
   runChain1OnDb,
   runChain2OnDb,
+  runChain3OnDb,
+  runAllChains,
+  tickSoilVwc,
+  tickSensorSimulation,
   profileForPoint
 }

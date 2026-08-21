@@ -171,3 +171,29 @@ export function runChain2OnDb(db: any, now: Date = new Date()): { created: Alert
   db.alerts = alerts
   return { created }
 }
+
+export function tickSoilVwc(current: number): number {
+  const stepped = Number((current + 0.4).toFixed(1))
+  if (stepped > 14.5) return 11
+  if (stepped < 11) return 11
+  return stepped
+}
+
+export function tickSensorSimulation(db: any): void {
+  if (!Array.isArray(db.weatherReadings)) return
+  const latest = latestWeatherByPoint(db.weatherReadings)
+  const row = latest.get(2)
+  if (!row) return
+  row.soilVwc = tickSoilVwc(Number(row.soilVwc))
+}
+
+export function runChain3OnDb(_db: any, _now: Date): { created: AlertRow[] } {
+  return { created: [] }
+}
+
+export function runAllChains(db: any, now: Date): { created: AlertRow[] } {
+  const env = runChain1OnDb(db, now)
+  const extreme = runChain2OnDb(db, now)
+  const pest = runChain3OnDb(db, now)
+  return { created: [...env.created, ...extreme.created, ...pest.created] }
+}

@@ -164,10 +164,12 @@ import {
   MenuOutlined
 } from '@ant-design/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
+import { useAlertEngine } from '@/composables/useAlertEngine'
 import RegionSelect from '@/components/RegionSelect.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+useAlertEngine()
 
 const navItems: { to: string; label: string; requiresRole: FarmUserRole }[] = [
   { to: '/home', label: '首页', requiresRole: 'cooperative' },

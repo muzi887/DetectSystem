@@ -5,7 +5,7 @@ import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
 import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
-import { profileForPoint, runChain1OnDb, runChain2OnDb } from './persistRules.ts'
+import { profileForPoint, runAllChains, runChain1OnDb, runChain2OnDb, tickSensorSimulation } from './persistRules.ts'
 
 interface AgriMockCore {
   handleFarmLogin: (db: any, body: any) => { status: number; body: any }
@@ -141,4 +141,14 @@ server.use(router)
 const PORT = Number(process.env.MOCK_PORT || 3000)
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`JSON Server is running on http://localhost:${PORT}`)
+  setInterval(() => {
+    try {
+      const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'))
+      tickSensorSimulation(db)
+      runAllChains(db, new Date())
+      writeDb(db)
+    } catch (err) {
+      console.error('rule-chain interval failed:', err)
+    }
+  }, 60_000)
 })
