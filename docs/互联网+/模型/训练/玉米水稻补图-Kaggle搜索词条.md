@@ -32,7 +32,6 @@
 
 | 中文类 | 推荐搜索词 |
 |--------|------------|
-| 稻瘟病 | `rice blast` / `Magnaporthe oryzae` / `leaf blast rice` |
 | 稻颈瘟 | `rice neck blast` / `neck blast rice` / `panicle blast rice` |
 | 水稻叶鞘腐败病 | `rice leaf scald` / `rice sheath rot`（注意：有的库把 LeafScald / Sheath rot 分开标） |
 | 水稻窄条斑病 | `narrow brown leaf spot rice` / `Cercospora oryzae` |
