@@ -22,6 +22,22 @@ export const analyzeImage = (data: AnalysisData) => {
   return http.post('/analysis/image', formData)
 }
 
+export const analyzeBatch = (data: {
+  files: File[]
+  cropType: string
+  category?: string
+  additionalInfo?: string
+  pointId?: number
+}) => {
+  const formData = new FormData()
+  data.files.forEach((file) => formData.append('files', file))
+  formData.append('cropType', data.cropType)
+  if (data.category) formData.append('category', data.category)
+  if (data.additionalInfo) formData.append('additionalInfo', data.additionalInfo)
+  if (data.pointId != null) formData.append('pointId', String(data.pointId))
+  return http.post('/analysis/batch', formData)
+}
+
 export const fetchAnalysisRecent = (limit = 20) =>
   http.get('/analysis/recent', { params: { limit } })
 

@@ -159,6 +159,72 @@ def fetch_point_weather(point_id: int) -> dict | None:
     return None
 
 
+def parse_point_id() -> int | None:
+    point_raw = request.form.get("pointId") or ""
+    try:
+        return int(point_raw) if point_raw.strip() else None
+    except ValueError:
+        return None
+
+
+def _analyze_one(
+    file,
+    crop_type: str,
+    category: str,
+    additional_info: str,
+    point_id: int | None,
+    env: dict | None,
+) -> dict:
+    validate_upload(file)
+    if use_mock():
+        pred = mock_predict(file, crop_type)
+    else:
+        img = Image.open(file.stream)
+        pred = get_classifier().predict_detailed(img, crop_type)
+
+    level = classify_level(pred.label, pred.confidence)
+    treatment, _found = get_treatment_item(pred.label)
+    meta = load_model_meta()
+    if env is None and point_id is not None:
+        env = fetch_point_weather(point_id)
+    env_out = apply_disease_env_rules(pred.label, level, env, treatment.get("timing"))
+    level = env_out["level"]
+    saved = append_record(
+        records_path(),
+        {
+            "pointId": point_id,
+            "label": pred.label,
+            "confidence": pred.confidence,
+            "cropType": crop_type,
+            "level": level,
+            "needs_review": pred.needs_review,
+            "imagePath": None,
+        },
+    )
+    return {
+        "code": 200,
+        "message": "success",
+        "result": pred.label,
+        "confidence": pred.confidence,
+        "level": level,
+        "topk": pred.topk,
+        "needs_review": pred.needs_review,
+        "model_version": model_version_payload(meta),
+        "treatment": treatment,
+        "recordId": saved["id"],
+        "env_context": {**(env or {}), **env_out},
+        "details": {
+            "received_crop": crop_type,
+            "crop_label": CROP_LABELS.get(crop_type, "未知作物"),
+            "category": category,
+            "additionalInfo": additional_info,
+            "isReliable": not pred.needs_review,
+            "engine": engine_name(),
+            "weights": str(resolve_weights_path()) if not use_mock() else None,
+        },
+    }
+
+
 @app.route("/api/analysis/image", methods=["POST"])
 def analyze_image():
     if "file" not in request.files:
@@ -173,72 +239,44 @@ def analyze_image():
         return jsonify({"error": "文件名为空"}), 400
 
     try:
-        validate_upload(file)
-
-        if use_mock():
-            pred = mock_predict(file, crop_type)
-        else:
-            img = Image.open(file.stream)
-            pred = get_classifier().predict_detailed(img, crop_type)
-
-        level = classify_level(pred.label, pred.confidence)
-        treatment, _found = get_treatment_item(pred.label)
-        meta = load_model_meta()
-
-        point_raw = request.form.get("pointId") or ""
-        try:
-            point_id = int(point_raw) if point_raw.strip() else None
-        except ValueError:
-            point_id = None
-
-        env = parse_env_from_request()
-        if env is None and point_id is not None:
-            env = fetch_point_weather(point_id)
-        env_out = apply_disease_env_rules(pred.label, level, env, treatment.get("timing"))
-        level = env_out["level"]
-
-        saved = append_record(
-            records_path(),
-            {
-                "pointId": point_id,
-                "label": pred.label,
-                "confidence": pred.confidence,
-                "cropType": crop_type,
-                "level": level,
-                "needs_review": pred.needs_review,
-                "imagePath": None,
-            },
+        body = _analyze_one(
+            file,
+            crop_type,
+            category,
+            additional_info,
+            parse_point_id(),
+            parse_env_from_request(),
         )
-
-        return jsonify(
-            {
-                "code": 200,
-                "message": "success",
-                "result": pred.label,
-                "confidence": pred.confidence,
-                "level": level,
-                "topk": pred.topk,
-                "needs_review": pred.needs_review,
-                "model_version": model_version_payload(meta),
-                "treatment": treatment,
-                "recordId": saved["id"],
-                "env_context": {**(env or {}), **env_out},
-                "details": {
-                    "received_crop": crop_type,
-                    "crop_label": CROP_LABELS.get(crop_type, "未知作物"),
-                    "category": category,
-                    "additionalInfo": additional_info,
-                    "isReliable": not pred.needs_review,
-                    "engine": engine_name(),
-                    "weights": str(resolve_weights_path()) if not use_mock() else None,
-                },
-            }
-        ), 200
+        return jsonify(body), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "服务器内部错误", "details": str(e)}), 500
+
+
+@app.route("/api/analysis/batch", methods=["POST"])
+def analysis_batch():
+    files = [item for item in request.files.getlist("files") if item and item.filename]
+    if not files:
+        return jsonify({"error": "未找到文件"}), 400
+    crop_type = request.form.get("cropType", "unknown")
+    category = request.form.get("category", "")
+    additional_info = request.form.get("additionalInfo", "")
+    point_id = parse_point_id()
+    env = parse_env_from_request()
+    results: list[dict] = []
+    for file in files:
+        try:
+            results.append(
+                _analyze_one(file, crop_type, category, additional_info, point_id, env)
+            )
+        except ValueError as e:
+            results.append({"error": str(e), "filename": file.filename or ""})
+        except Exception as e:
+            print(f"Error: {e}")
+            results.append({"error": "服务器内部错误", "filename": file.filename or ""})
+    return jsonify({"code": 200, "results": results}), 200
 
 
 @app.route("/health", methods=["GET"])

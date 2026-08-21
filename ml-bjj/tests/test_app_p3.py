@@ -36,3 +36,29 @@ def test_analyze_promotes_level_with_humidity(monkeypatch):
     body = res.get_json()
     assert body["level"] == "high"
     assert body["env_context"]["reasons"]
+
+
+def test_batch_returns_list(monkeypatch):
+    import app as serving_app
+
+    monkeypatch.setattr(serving_app, "use_mock", lambda: False)
+    monkeypatch.setattr(serving_app, "get_classifier", lambda: FakeBlast())
+    monkeypatch.setattr(
+        serving_app,
+        "load_model_meta",
+        lambda: {"classes": [], "trained_at": None, "best_val_acc": None},
+    )
+    res = serving_app.app.test_client().post(
+        "/api/analysis/batch",
+        data={
+            "cropType": "rice",
+            "files": [
+                (_jpeg(), "a.jpg", "image/jpeg"),
+                (_jpeg(), "b.jpg", "image/jpeg"),
+            ],
+        },
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200
+    assert len(res.get_json()["results"]) == 2
+    assert res.get_json()["results"][0]["result"] == "稻瘟病"

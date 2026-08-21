@@ -72,6 +72,18 @@
                 @click="handleConfirm">
                 确定
               </a-button>
+              <div class="batch-row">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  @change="onBatchFiles" />
+                <a-button
+                  :loading="analyzing"
+                  @click="handleBatch">
+                  批量识别
+                </a-button>
+              </div>
             </div>
 
             <div class="category-section">
@@ -171,7 +183,7 @@ import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import TreatmentGuidePanel from '@/components/TreatmentGuidePanel.vue'
-import { analyzeImage, submitAnalysisFeedback } from '@/api/analysis.ts'
+import { analyzeImage, analyzeBatch, submitAnalysisFeedback } from '@/api/analysis.ts'
 import { useTreatmentGuide } from '@/composables/useTreatmentGuide'
 import { useDataStore } from '@/stores/data'
 import { useRouter } from 'vue-router'
@@ -210,6 +222,7 @@ interface AnalysisResultView {
 }
 
 const fileList = ref<UploadFile[]>([])
+const batchFiles = ref<File[]>([])
 const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
 const uploadProgress = ref<number>(0)
@@ -375,6 +388,58 @@ const handleConfirm = async () => {
   }
 }
 
+const onBatchFiles = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  batchFiles.value = input.files ? Array.from(input.files) : []
+}
+
+const handleBatch = async () => {
+  if (!batchFiles.value.length) {
+    message.warning('请先选择多张图片')
+    return
+  }
+  analyzing.value = true
+  analysisResult.value = null
+  recordId.value = null
+  correctedLabel.value = ''
+  try {
+    const response = await analyzeBatch({
+      files: batchFiles.value,
+      cropType: formState.cropType,
+      category: selectedCategory.value,
+      additionalInfo: formState.additionalInfo,
+      pointId: store.filteredMonitorPoints[0]?.id ?? store.monitorPoints[0]?.id
+    })
+    const results = Array.isArray(response.data?.results) ? response.data.results : []
+    message.info(`完成 ${results.length} 张`)
+    const first = results.find((item: { result?: string }) => item?.result)
+    if (first) {
+      const aiResult = first.result as string
+      const aiConfidence = Number(first.confidence)
+      recordId.value = typeof first.recordId === 'number' ? first.recordId : null
+      analysisResult.value = {
+        result: aiResult,
+        confidence: aiConfidence,
+        isHealthy: aiResult.includes('健康'),
+        cropType: formState.cropType,
+        category: selectedCategory.value,
+        analyzedAt: Date.now()
+      }
+      const firstFile = batchFiles.value[0]
+      if (firstFile) {
+        getBase64(firstFile, (base64Url: string) => {
+          imageUrl.value = base64Url
+        })
+      }
+    }
+  } catch (error) {
+    message.error('批量识别失败，请重试。')
+    console.error('Batch error:', error)
+  } finally {
+    analyzing.value = false
+  }
+}
+
 const handleFeedback = async () => {
   const file = fileList.value[0]?.originFileObj
   const label = correctedLabel.value.trim()
@@ -467,6 +532,19 @@ const handleIdentify = () => handleConfirm()
 .form-inline-group {
   display: flex;
   gap: 12px;
+}
+
+.batch-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.batch-row input[type='file'] {
+  flex: 1;
+  min-width: 0;
+  color: var(--glass-text-secondary);
 }
 
 .analysis-form :deep(.ant-form-item-label > label) {
