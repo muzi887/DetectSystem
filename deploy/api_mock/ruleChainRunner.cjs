@@ -329,6 +329,18 @@ function runChain2OnDb(db, now) {
   return { created }
 }
 
+function filterReadings(rows, pointId, from, to) {
+  return [...(rows || [])]
+    .filter((row) => Number(row.pointId) === Number(pointId))
+    .filter((row) => {
+      const day = String(row.recordedAt || '').slice(0, 10)
+      if (from && day < from) return false
+      if (to && day > to) return false
+      return true
+    })
+    .sort((a, b) => String(a.recordedAt).localeCompare(String(b.recordedAt)))
+}
+
 function tickSoilVwc(current) {
   const stepped = Number((Number(current) + 0.4).toFixed(1))
   if (stepped > 14.5) return 11
@@ -336,12 +348,55 @@ function tickSoilVwc(current) {
   return stepped
 }
 
-function tickSensorSimulation(db) {
+function localDay(now) {
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return y + '-' + m + '-' + d
+}
+
+function nextRowId(rows) {
+  let max = 0
+  for (const row of rows || []) {
+    const id = Number(row.id) || 0
+    if (id > max) max = id
+  }
+  return max + 1
+}
+
+function tickSensorSimulation(db, now) {
+  const clock = now || new Date()
   if (!Array.isArray(db.weatherReadings)) return
   const latest = latestWeatherByPoint(db.weatherReadings)
   const row = latest.get(2)
   if (!row) return
   row.soilVwc = tickSoilVwc(row.soilVwc)
+
+  if (!Array.isArray(db.monitorPoints)) db.monitorPoints = []
+  const point = db.monitorPoints.find((item) => Number(item.id) === 2)
+  if (point) {
+    point.online = true
+    point.lastSeenAt = clock.toISOString()
+  }
+
+  if (!Array.isArray(db.sensorReadings)) db.sensorReadings = []
+  const today = localDay(clock)
+  const existing = db.sensorReadings.find(
+    (item) => Number(item.pointId) === 2 && String(item.recordedAt).slice(0, 10) === today
+  )
+  if (existing) {
+    existing.soilVwc = row.soilVwc
+    return
+  }
+  db.sensorReadings.push({
+    id: nextRowId(db.sensorReadings),
+    pointId: 2,
+    recordedAt: today + 'T08:00:00+08:00',
+    airTemp: Number(row.airTemp != null ? row.airTemp : 0),
+    airRh: Number(row.airRh != null ? row.airRh : 0),
+    soilVwc: row.soilVwc,
+    soilTemp10cm: Number(row.soilTemp10cm != null ? row.soilTemp10cm : 0)
+  })
 }
 
 function ndviMid(layer) {
@@ -489,6 +544,7 @@ module.exports = {
   runChain2OnDb,
   runChain3OnDb,
   runAllChains,
+  filterReadings,
   tickSoilVwc,
   tickSensorSimulation,
   profileForPoint,

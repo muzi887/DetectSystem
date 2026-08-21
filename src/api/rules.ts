@@ -7,6 +7,9 @@ export const evaluateExtremeEvents = () => http.post('/weather/extreme-events/ev
 export const fetchForecast = (pointId?: number) =>
   http.get('/weatherForecast', { params: pointId ? { pointId } : undefined })
 
+export const fetchSensorReadings = (pointId: number, from?: string, to?: string) =>
+  http.get(`/field-sensors/${pointId}/readings`, { params: { from, to } })
+
 export const fetchExtremeEvents = () => http.get('/extremeEvents')
 
 export const evaluatePestRisk = () => http.post('/pest-risk/evaluate')

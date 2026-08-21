@@ -15,9 +15,11 @@ interface MonitorPointLike {
   soilMoisture: string | number
   status: string
   dryDays?: number
+  online?: boolean
 }
 
 export function markerColorForPoint(point: MonitorPointLike, alerts: Alert[] = []): string {
+  if (point.online === false) return '#8c8c8c'
   const hasCritical = alerts.some(
     (alert) => alert.pointId === point.id && !alert.handled && alert.level === 'critical'
   )

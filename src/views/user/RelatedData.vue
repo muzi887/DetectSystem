@@ -16,6 +16,16 @@
               popup-class-name="weather-point-select-dropdown"
               :options="weatherPointOptions"
               placeholder="选择监测站" />
+            <a-select
+              v-if="currentTab === 'sensor'"
+              v-model:value="selectedSensorPointIds"
+              mode="multiple"
+              class="weather-point-select weather-point-select--multi"
+              popup-class-name="weather-point-select-dropdown"
+              :options="weatherPointOptions"
+              :max-tag-count="2"
+              placeholder="对比监测站（最多 3 个）"
+              @change="onSensorPointsChange" />
             <a-button
               type="primary"
               shape="round"
@@ -237,9 +247,10 @@ import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { fetchExtremeEvents, fetchForecast, fetchThresholds, saveThresholds } from '@/api/rules'
+import { fetchExtremeEvents, fetchForecast, fetchSensorReadings, fetchThresholds, saveThresholds } from '@/api/rules'
 import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
 import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
+import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
 
 const dataStore = useDataStore()
 const remoteStore = useRemoteSensingStore()
@@ -248,9 +259,18 @@ const loading = ref(false)
 
 const currentTab = ref('sensor')
 const selectedWeatherPointId = ref<number>(1)
+const selectedSensorPointIds = ref<number[]>([1, 2])
+const sensorByStation = ref<
+  Array<{ pointId: number; name: string; rows: SensorReading[] }>
+>([])
 const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
 const forecastDays = ref<ForecastRow[]>([])
 const thresholdForm = reactive({ ...DEFAULT_THRESHOLD_PROFILE, pointId: 1 })
+
+function mdLabel(iso: string) {
+  const day = String(iso).slice(0, 10)
+  return `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`
+}
 
 const weatherPointOptions = computed(() =>
   dataStore.filteredMonitorPoints.map((point) => ({
@@ -529,65 +549,127 @@ const aiConclusion = computed(() => {
 const sensorChartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 
-function buildTrendSeries() {
-  const now = Date.now()
-  const dayMs = 24 * 60 * 60 * 1000
-  const labels: string[] = []
-  const counts: number[] = []
-  const alerts = dataStore.filteredAlerts || []
+function shortPointName(pointId: number) {
+  return getWeatherPointName(pointId).replace(/^监测站\s*·\s*/, '')
+}
 
-  for (let i = 6; i >= 0; i--) {
-    const start = new Date(now - i * dayMs)
-    const label = `${start.getMonth() + 1}/${start.getDate()}`
-    labels.push(label)
+function defaultSensorPointIds(points = dataStore.filteredMonitorPoints) {
+  return points.slice(0, 2).map((point) => point.id)
+}
 
-    const dayStart = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()
-    const dayEnd = dayStart + dayMs
-    const c = alerts.filter((a: any) => a.time >= dayStart && a.time < dayEnd).length
-    counts.push(c)
+function onSensorPointsChange(ids: number[]) {
+  if (ids.length > 3) {
+    selectedSensorPointIds.value = ids.slice(0, 3)
+    message.info('最多同时对比 3 个监测站')
   }
-  return { labels, counts }
+}
+
+const SENSOR_LINE_PALETTE = [
+  { temp: '#ff7875', vwc: '#69c0ff' },
+  { temp: '#ffc53d', vwc: '#95de64' },
+  { temp: '#b37feb', vwc: '#5cdbd3' }
+]
+
+function buildTrendSeries(
+  stations: Array<{ pointId: number; name: string; rows: SensorReading[] }>
+) {
+  const dateSet = new Set<string>()
+  for (const station of stations) {
+    for (const row of station.rows) dateSet.add(String(row.recordedAt).slice(0, 10))
+  }
+  const dates = [...dateSet].sort()
+  const labels = dates.map((d) => mdLabel(d))
+  const series = stations.flatMap((station, index) => {
+    const colors = SENSOR_LINE_PALETTE[index % SENSOR_LINE_PALETTE.length]
+    const byDay = new Map(
+      station.rows.map((row) => [String(row.recordedAt).slice(0, 10), row])
+    )
+    return [
+      {
+        name: `${station.name}-气温`,
+        type: 'line' as const,
+        smooth: true,
+        yAxisIndex: 0,
+        data: dates.map((d) => byDay.get(d)?.airTemp ?? null),
+        lineStyle: { width: 3, color: colors.temp },
+        itemStyle: { color: colors.temp }
+      },
+      {
+        name: `${station.name}-墒情`,
+        type: 'line' as const,
+        smooth: true,
+        yAxisIndex: 1,
+        data: dates.map((d) => byDay.get(d)?.soilVwc ?? null),
+        lineStyle: { width: 3, color: colors.vwc },
+        itemStyle: { color: colors.vwc }
+      }
+    ]
+  })
+  return { labels, series, legend: series.map((item) => item.name) }
+}
+
+async function loadSensorReadings(pointIds: number[]) {
+  const ids = pointIds.slice(0, 3)
+  const { from, to } = last7DayRange()
+  try {
+    const results = await Promise.all(
+      ids.map(async (pointId) => {
+        const res = await fetchSensorReadings(pointId, from, to)
+        return {
+          pointId,
+          name: shortPointName(pointId),
+          rows: (res.data || []) as SensorReading[]
+        }
+      })
+    )
+    sensorByStation.value = results
+  } catch {
+    sensorByStation.value = []
+    message.warning('传感器历史加载失败，请检查 Mock 服务')
+  }
+  await nextTick()
+  renderSensorChart()
 }
 
 function renderSensorChart() {
   if (!sensorChartRef.value) return
   if (!chartInstance) chartInstance = echarts.init(sensorChartRef.value)
 
-  const { labels, counts } = buildTrendSeries()
+  const { labels, series, legend } = buildTrendSeries(sensorByStation.value)
 
   chartInstance.setOption({
     backgroundColor: 'transparent',
-    grid: { top: '12%', left: '3%', right: '4%', bottom: 40, containLabel: true },
-    tooltip: { trigger: 'axis', formatter: '{b} <br/> 报警数量: {c} 次' },
+    legend: {
+      data: legend,
+      textStyle: { color: '#fff' },
+      top: 0
+    },
+    grid: { top: '18%', left: '3%', right: '6%', bottom: 40, containLabel: true },
+    tooltip: { trigger: 'axis' },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: labels,
       axisLabel: { color: '#fff', margin: 10 }
     },
-    yAxis: {
-      type: 'value',
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-      axisLabel: { color: '#fff' },
-      minInterval: 1
-    },
-    series: [
+    yAxis: [
       {
-        name: '异常预警',
-        type: 'line',
-        smooth: true,
-        data: counts,
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(255, 80, 80, 0.5)' },
-            { offset: 1, color: 'rgba(84,112,198,0.05)' }
-          ])
-        },
-        lineStyle: { width: 3, color: '#ff7875' },
-        itemStyle: { color: '#ff4d4f' }
+        type: 'value',
+        name: '℃',
+        nameTextStyle: { color: '#fff' },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+        axisLabel: { color: '#fff' }
+      },
+      {
+        type: 'value',
+        name: '%',
+        nameTextStyle: { color: '#fff' },
+        splitLine: { show: false },
+        axisLabel: { color: '#fff' }
       }
-    ]
-  })
+    ],
+    series
+  }, true)
   chartInstance.resize()
 }
 
@@ -598,9 +680,7 @@ const switchTab = async (key: string) => {
   }
   currentTab.value = key
   if (key === 'sensor') {
-    await nextTick()
-    chartInstance?.resize()
-    renderSensorChart()
+    await loadSensorReadings(selectedSensorPointIds.value)
   } else if (key === 'drone' || key === 'gis') {
     await nextTick()
     remoteMapRef.value?.invalidate()
@@ -666,6 +746,7 @@ onMounted(async () => {
         })
     )
     tasks.push(loadForecast(selectedWeatherPointId.value))
+    tasks.push(loadSensorReadings(selectedSensorPointIds.value))
     await Promise.all(tasks)
     await nextTick()
     renderSensorChart()
@@ -682,10 +763,10 @@ onUnmounted(() => {
 })
 
 watch(
-  () => dataStore.filteredAlerts,
-  () => {
+  selectedSensorPointIds,
+  (pointIds) => {
     if (currentTab.value === 'sensor') {
-      renderSensorChart()
+      void loadSensorReadings(pointIds)
     }
   },
   { deep: true }
@@ -719,6 +800,13 @@ watch(
     if (points.length && !points.some((point) => point.id === selectedWeatherPointId.value)) {
       selectedWeatherPointId.value = points[0].id
     }
+    if (!points.length) return
+    const selectedStillInRegion = selectedSensorPointIds.value.every((id) =>
+      points.some((point) => point.id === id)
+    )
+    if (!selectedStillInRegion || selectedSensorPointIds.value.length === 0) {
+      selectedSensorPointIds.value = defaultSensorPointIds(points)
+    }
   },
   { immediate: true }
 )
@@ -729,9 +817,10 @@ watch(
     const points = dataStore.filteredMonitorPoints
     if (points.length) {
       selectedWeatherPointId.value = points[0].id
+      selectedSensorPointIds.value = defaultSensorPointIds(points)
     }
     if (currentTab.value === 'sensor') {
-      renderSensorChart()
+      void loadSensorReadings(selectedSensorPointIds.value)
     }
   }
 )
@@ -894,6 +983,10 @@ watch(
 
 .weather-point-select {
   min-width: 180px;
+}
+
+.weather-point-select--multi {
+  min-width: 260px;
 }
 
 .weather-empty {

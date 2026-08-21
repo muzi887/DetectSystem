@@ -35,6 +35,23 @@
         </a-space>
       </a-card>
     </div>
+
+    <a-drawer
+      v-model:open="drawerOpen"
+      :title="selectedPoint?.name || '监测站'"
+      :width="360">
+      <p>状态：{{ selectedPoint?.online === false ? '离线' : '在线' }}</p>
+      <p>最后上报：{{ formatLastSeen(selectedPoint?.lastSeenAt) }}</p>
+      <p>气温：{{ drawerTemp }} ℃</p>
+      <p>湿度：{{ drawerRh }}</p>
+      <p>墒情：{{ drawerVwc }} %</p>
+      <a-table
+        size="small"
+        :pagination="false"
+        :data-source="drawerRows"
+        :columns="drawerColumns"
+        row-key="id" />
+    </a-drawer>
   </AppLayout>
 </template>
 
@@ -48,13 +65,18 @@ import {
   invalidateLeafletSize,
   removeLeafletMap
 } from '@/composables/useLeafletBase'
-import { createMonitorPointLayer } from '@/composables/useMonitorPointLayer'
+import { createMonitorPointLayer, type MonitorPointRecord } from '@/composables/useMonitorPointLayer'
 import { getMonitorRegion } from '@/constants/monitorRegions'
+import { fetchSensorReadings } from '@/api/rules'
+import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const dataStore = useDataStore()
 const mapRef = ref<HTMLDivElement | null>(null)
+const drawerOpen = ref(false)
+const selectedPoint = ref<MonitorPointRecord | null>(null)
+const drawerReadings = ref<SensorReading[]>([])
 
 let map: L.Map | null = null
 let monitorLayer: ReturnType<typeof createMonitorPointLayer> | null = null
@@ -62,6 +84,50 @@ let monitorLayer: ReturnType<typeof createMonitorPointLayer> | null = null
 const currentRegionLabel = computed(
   () => getMonitorRegion(dataStore.selectedRegion).label
 )
+
+const liveReading = computed(() =>
+  selectedPoint.value ? dataStore.getWeatherReadingByPointId(selectedPoint.value.id) : undefined
+)
+
+const drawerTemp = computed(() => liveReading.value?.airTemp ?? selectedPoint.value?.temp ?? '—')
+const drawerRh = computed(() =>
+  liveReading.value ? `${liveReading.value.airRh} %RH` : '—'
+)
+const drawerVwc = computed(
+  () => liveReading.value?.soilVwc ?? selectedPoint.value?.soilMoisture ?? '—'
+)
+
+const drawerRows = computed(() =>
+  drawerReadings.value.map((row) => ({
+    ...row,
+    date: String(row.recordedAt).slice(0, 10)
+  }))
+)
+
+const drawerColumns = [
+  { title: '日期', dataIndex: 'date', key: 'date' },
+  { title: '气温 ℃', dataIndex: 'airTemp', key: 'airTemp' },
+  { title: '湿度', dataIndex: 'airRh', key: 'airRh' },
+  { title: '墒情 %', dataIndex: 'soilVwc', key: 'soilVwc' },
+  { title: '土温 ℃', dataIndex: 'soilTemp10cm', key: 'soilTemp10cm' }
+]
+
+function formatLastSeen(value?: string) {
+  if (!value) return '暂无'
+  return String(value).replace('T', ' ').replace(/\+.*/, '')
+}
+
+async function openPointDrawer(point: MonitorPointRecord) {
+  selectedPoint.value = point
+  drawerOpen.value = true
+  const { from, to } = last7DayRange()
+  try {
+    const res = await fetchSensorReadings(point.id, from, to)
+    drawerReadings.value = res.data || []
+  } catch {
+    drawerReadings.value = []
+  }
+}
 
 function renderMarkers() {
   if (!monitorLayer || !map) return
@@ -79,6 +145,9 @@ async function initMap() {
   })
 
   monitorLayer = createMonitorPointLayer(map, {
+    onSelectPoint: (point) => {
+      void openPointDrawer(point)
+    },
     onTriggerAlert: async (p) => {
       try {
         await dataStore.createAlert({
@@ -112,7 +181,13 @@ async function initMap() {
 
 async function refreshData() {
   message.loading({ content: '正在刷新数据...', key: 'refresh' })
-  await Promise.all([dataStore.fetchMonitorPoints(), dataStore.fetchAlerts()])
+  await Promise.all([
+    dataStore.fetchMonitorPoints(),
+    dataStore.fetchAlerts(),
+    dataStore.fetchWeatherReadings().catch(() => {
+      message.warning('气象读数加载失败，请检查 Mock 服务')
+    })
+  ])
   message.success({ content: '数据已更新！', key: 'refresh', duration: 2 })
 }
 

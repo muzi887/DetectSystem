@@ -16,12 +16,15 @@ export interface MonitorPointRecord {
   temp: string | number
   soilMoisture: string | number
   status: string
+  online?: boolean
+  lastSeenAt?: string
 }
 
 export interface MonitorPointLayerOptions {
   readonly?: boolean
   onTriggerAlert?: (point: MonitorPointRecord) => Promise<void>
   onResolveAlert?: (point: MonitorPointRecord) => Promise<boolean>
+  onSelectPoint?: (point: MonitorPointRecord) => void
 }
 
 export interface HighlightPointOptions {
@@ -111,6 +114,9 @@ export function createMonitorPointLayer(map: L.Map, options: MonitorPointLayerOp
       const marker = L.marker([p.lat, p.lng], { icon: createMonitorDivIcon(p, alerts) })
       marker.bindPopup(popupHtml(p, alerts))
       bindPopupActions(marker, p, alerts)
+      marker.on('click', () => {
+        options.onSelectPoint?.(p)
+      })
       markersById.set(p.id, marker)
       cluster.addLayer(marker)
     }

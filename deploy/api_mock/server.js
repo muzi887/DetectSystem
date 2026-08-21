@@ -8,7 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
-const { runChain1OnDb, runChain2OnDb, runChain3OnDb, runAllChains, tickSensorSimulation, profileForPoint, publishAlert, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
+const { runChain1OnDb, runChain2OnDb, runChain3OnDb, runAllChains, tickSensorSimulation, profileForPoint, publishAlert, DEFAULT_THRESHOLD_PROFILE, filterReadings } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -111,6 +111,16 @@ server.post('/alerts/:id/publish', (req, res) => {
   if (!row) return res.status(404).jsonp({ message: '预警不存在' })
   writeDb(db)
   return res.jsonp(row)
+})
+
+server.get('/field-sensors/:pointId/readings', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined
+  const to = typeof req.query.to === 'string' ? req.query.to : undefined
+  const rows = Array.isArray(db.sensorReadings) ? db.sensorReadings : []
+  return res.jsonp(filterReadings(rows, pointId, from, to))
 })
 
 server.get('/field-sensors/:pointId/thresholds', (req, res) => {

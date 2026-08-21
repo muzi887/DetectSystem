@@ -21,7 +21,9 @@ const syncKeys = [
   'ruleState',
   'weatherForecast',
   'extremeEvents',
-  'pestRiskPredictions'
+  'pestRiskPredictions',
+  'sensorReadings',
+  'monitorPoints'
 ]
 
 for (const key of syncKeys) {

@@ -5,6 +5,7 @@ import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
 import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
+import { filterReadings } from '../utils/sensorReadings.ts'
 import { profileForPoint, publishAlert, runAllChains, runChain1OnDb, runChain2OnDb, runChain3OnDb, tickSensorSimulation } from './persistRules.ts'
 
 interface AgriMockCore {
@@ -124,6 +125,16 @@ server.post('/alerts/:id/publish', (req: Request, res: Response) => {
   if (!row) return res.status(404).jsonp({ message: '预警不存在' })
   writeDb(db)
   return res.jsonp(row)
+})
+
+server.get('/field-sensors/:pointId/readings', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined
+  const to = typeof req.query.to === 'string' ? req.query.to : undefined
+  const rows = Array.isArray(db.sensorReadings) ? db.sensorReadings : []
+  return res.jsonp(filterReadings(rows, pointId, from, to))
 })
 
 server.get('/field-sensors/:pointId/thresholds', (req: Request, res: Response) => {
