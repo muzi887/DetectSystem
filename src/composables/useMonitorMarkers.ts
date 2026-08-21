@@ -4,6 +4,7 @@ import {
   getMonitorStatusLabel
 } from '@/utils/monitorStatus'
 import type { Alert } from '@/stores/data'
+import { droughtIndex } from '@/utils/droughtIndex'
 
 interface MonitorPointLike {
   id: number
@@ -13,10 +14,22 @@ interface MonitorPointLike {
   temp: string | number
   soilMoisture: string | number
   status: string
+  dryDays?: number
 }
 
-export function createMonitorDivIcon(point: MonitorPointLike) {
-  const color = getMonitorStatusColor(point.status)
+export function markerColorForPoint(point: MonitorPointLike, alerts: Alert[] = []): string {
+  const hasCritical = alerts.some(
+    (alert) => alert.pointId === point.id && !alert.handled && alert.level === 'critical'
+  )
+  if (hasCritical) return getMonitorStatusColor('critical')
+  const index = droughtIndex(Number(point.soilMoisture), point.dryDays ?? 0)
+  if (index >= 70) return '#cf1322'
+  if (index >= 40) return '#d46b08'
+  return getMonitorStatusColor(point.status)
+}
+
+export function createMonitorDivIcon(point: MonitorPointLike, alerts: Alert[] = []) {
+  const color = markerColorForPoint(point, alerts)
   return L.divIcon({
     html: `
       <div class="custom-marker">

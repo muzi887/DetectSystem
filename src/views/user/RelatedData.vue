@@ -146,6 +146,26 @@
               class="weather-empty">
               暂无该监测站气象读数
             </div>
+            <div class="threshold-settings">
+              <div class="threshold-title">阈值配置</div>
+              <a-form layout="inline">
+                <a-form-item label="墒情提示">
+                  <a-input-number v-model:value="thresholdForm.waterStressHint" :min="1" :max="50" />
+                </a-form-item>
+                <a-form-item label="墒情告警">
+                  <a-input-number v-model:value="thresholdForm.waterStressAlert" :min="1" :max="50" />
+                </a-form-item>
+                <a-form-item label="气温提示">
+                  <a-input-number v-model:value="thresholdForm.heatHint" :min="20" :max="50" />
+                </a-form-item>
+                <a-form-item label="气温告警">
+                  <a-input-number v-model:value="thresholdForm.heatAlert" :min="20" :max="50" />
+                </a-form-item>
+                <a-form-item>
+                  <a-button type="primary" @click="savePointThresholds">保存阈值</a-button>
+                </a-form-item>
+              </a-form>
+            </div>
           </div>
         </div>
 
@@ -190,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
 import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
@@ -201,7 +221,8 @@ import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { fetchExtremeEvents } from '@/api/rules'
+import { fetchExtremeEvents, fetchThresholds, saveThresholds } from '@/api/rules'
+import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
 
 const dataStore = useDataStore()
 const remoteStore = useRemoteSensingStore()
@@ -210,6 +231,7 @@ const loading = ref(false)
 const currentTab = ref('sensor')
 const selectedWeatherPointId = ref<number>(1)
 const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
+const thresholdForm = reactive({ ...DEFAULT_THRESHOLD_PROFILE, pointId: 1 })
 
 const weatherPointOptions = computed(() =>
   dataStore.filteredMonitorPoints.map((point) => ({
@@ -259,6 +281,27 @@ const activeExtremeTitles = computed(() => {
   }
   return titles
 })
+
+async function loadThresholds(pointId: number) {
+  try {
+    const res = await fetchThresholds(pointId)
+    Object.assign(thresholdForm, { ...DEFAULT_THRESHOLD_PROFILE, ...(res.data || {}), pointId })
+  } catch {
+    Object.assign(thresholdForm, { ...DEFAULT_THRESHOLD_PROFILE, pointId })
+  }
+}
+
+async function savePointThresholds() {
+  try {
+    await saveThresholds(selectedWeatherPointId.value, {
+      ...thresholdForm,
+      pointId: selectedWeatherPointId.value
+    })
+    message.success('阈值已保存')
+  } catch {
+    message.error('阈值保存失败')
+  }
+}
 
 function getWeatherPointName(pointId: number) {
   return (
@@ -623,6 +666,11 @@ watch(currentTab, (tab) => {
   if (field?.monitorPointId) {
     selectedWeatherPointId.value = field.monitorPointId
   }
+  void loadThresholds(selectedWeatherPointId.value)
+})
+
+watch(selectedWeatherPointId, (pointId) => {
+  void loadThresholds(pointId)
 })
 
 watch(
@@ -824,6 +872,17 @@ watch(
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.threshold-settings {
+  grid-column: 1 / -1;
+  padding: 12px 4px 0;
+}
+
+.threshold-title {
+  margin-bottom: 8px;
+  color: var(--glass-text, #fff);
+  font-weight: 600;
 }
 
 .chart-wrapper--weather {

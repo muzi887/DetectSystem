@@ -108,7 +108,7 @@ export function createMonitorPointLayer(map: L.Map, options: MonitorPointLayerOp
     markersById.clear()
 
     for (const p of points) {
-      const marker = L.marker([p.lat, p.lng], { icon: createMonitorDivIcon(p) })
+      const marker = L.marker([p.lat, p.lng], { icon: createMonitorDivIcon(p, alerts) })
       marker.bindPopup(popupHtml(p, alerts))
       bindPopupActions(marker, p, alerts)
       markersById.set(p.id, marker)
