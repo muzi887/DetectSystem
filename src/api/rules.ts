@@ -4,7 +4,8 @@ export const evaluateAllAlerts = () => http.post('/alerts/evaluate-all')
 
 export const evaluateExtremeEvents = () => http.post('/weather/extreme-events/evaluate')
 
-export const fetchForecast = () => http.get('/weatherForecast')
+export const fetchForecast = (pointId?: number) =>
+  http.get('/weatherForecast', { params: pointId ? { pointId } : undefined })
 
 export const fetchExtremeEvents = () => http.get('/extremeEvents')
 

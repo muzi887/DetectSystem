@@ -128,9 +128,24 @@
               <a-tag
                 v-for="title in activeExtremeTitles"
                 :key="title"
-                color="orange">
+                color="orange"
+                style="cursor: pointer"
+                @click="router.push('/warnings')">
                 {{ title }}
               </a-tag>
+            </div>
+            <a-table
+              v-if="forecastDays.length"
+              class="forecast-table"
+              size="small"
+              :pagination="false"
+              :data-source="forecastDays"
+              :columns="forecastColumns"
+              row-key="date" />
+            <div
+              v-else
+              class="forecast-empty">
+              暂无该站 7 日预报
             </div>
             <template v-if="weatherMetrics.length">
               <a-card
@@ -211,6 +226,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
 import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
@@ -221,16 +237,19 @@ import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { fetchExtremeEvents, fetchThresholds, saveThresholds } from '@/api/rules'
+import { fetchExtremeEvents, fetchForecast, fetchThresholds, saveThresholds } from '@/api/rules'
 import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
+import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
 
 const dataStore = useDataStore()
 const remoteStore = useRemoteSensingStore()
+const router = useRouter()
 const loading = ref(false)
 
 const currentTab = ref('sensor')
 const selectedWeatherPointId = ref<number>(1)
 const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
+const forecastDays = ref<ForecastRow[]>([])
 const thresholdForm = reactive({ ...DEFAULT_THRESHOLD_PROFILE, pointId: 1 })
 
 const weatherPointOptions = computed(() =>
@@ -290,6 +309,23 @@ async function loadThresholds(pointId: number) {
     Object.assign(thresholdForm, { ...DEFAULT_THRESHOLD_PROFILE, pointId })
   }
 }
+
+async function loadForecast(pointId: number) {
+  try {
+    const res = await fetchForecast(pointId)
+    forecastDays.value = daysForPoint(res.data || [], pointId, 7)
+  } catch {
+    forecastDays.value = []
+  }
+}
+
+const forecastColumns = [
+  { title: '日期', dataIndex: 'date', key: 'date' },
+  { title: '最高温 ℃', dataIndex: 'tempMax', key: 'tempMax' },
+  { title: '最低温 ℃', dataIndex: 'tempMin', key: 'tempMin' },
+  { title: '降水 mm', dataIndex: 'precipMm', key: 'precipMm' },
+  { title: '风速 m/s', dataIndex: 'windMax', key: 'windMax' }
+]
 
 async function savePointThresholds() {
   try {
@@ -359,7 +395,8 @@ const currentSubtitle = computed(() => {
   const base = tabs.find((t) => t.key === currentTab.value)?.subtitle ?? ''
   if (currentTab.value === 'weather') {
     const pointName = getWeatherPointName(selectedWeatherPointId.value)
-    return `${pointName} · 土壤墒情与局地小气候实时监测`
+    const forecastHint = forecastDays.value.length ? ' · 含 7 日预报' : ''
+    return `${pointName} · 土壤墒情与局地小气候实时监测${forecastHint}`
   }
   if (currentTab.value === 'drone' && remoteStore.selectedNdviDate) {
     const fieldName =
@@ -628,6 +665,7 @@ onMounted(async () => {
           extremeEvents.value = []
         })
     )
+    tasks.push(loadForecast(selectedWeatherPointId.value))
     await Promise.all(tasks)
     await nextTick()
     renderSensorChart()
@@ -667,10 +705,12 @@ watch(currentTab, (tab) => {
     selectedWeatherPointId.value = field.monitorPointId
   }
   void loadThresholds(selectedWeatherPointId.value)
+  void loadForecast(selectedWeatherPointId.value)
 })
 
 watch(selectedWeatherPointId, (pointId) => {
   void loadThresholds(pointId)
+  void loadForecast(pointId)
 })
 
 watch(
@@ -872,6 +912,17 @@ watch(
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.forecast-table,
+.forecast-empty {
+  grid-column: 1 / -1;
+}
+
+.forecast-empty {
+  color: var(--glass-text-muted);
+  font-size: 14px;
+  padding: 8px 0 4px;
 }
 
 .threshold-settings {
