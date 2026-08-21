@@ -9,7 +9,7 @@
     --plantvillage-source "ml-bjj/data/plantvillage dataset/color" ^
     --output ml-bjj/data/bjj_cls
 
-说明见 docs/互联网+/京津冀AI模型精简方案-v3.md
+说明见 docs/互联网+/模型/方案/京津冀AI模型精简方案-v3.md
 """
 
 from __future__ import annotations

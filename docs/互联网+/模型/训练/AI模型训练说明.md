@@ -1,9 +1,9 @@
 # 病虫害 AI 模型训练说明
 
-> 本文档是 [`2.0-功能扩展规划.md`](./2.0-功能扩展规划.md) §3.2 的专项展开。  
+> 本文档是 [`2.0-功能扩展规划.md`](../../规划/2.0-功能扩展规划.md) §3.2 的专项展开。  
 > **如果你完全没做过模型训练**：请直接阅读 **§零**，按步骤复制命令即可跑通第一次训练。  
 > 项目内已提供可运行脚本：`ml/scripts/`（数据整理、训练、测试）。  
-> **多作物 v2 已完成**（27 类、97.53%）：详见 [`数据集整理说明.md`](./数据集整理说明.md)、[`../下一阶段任务与流程.md`](../下一阶段任务与流程.md)。
+> **多作物 v2 已完成**（27 类、97.53%）：详见 [`数据集整理说明.md`](./数据集整理说明.md)、[`../下一阶段任务与流程.md`](../../规划/下一阶段任务与流程.md)。
 
 ---
 
@@ -145,7 +145,7 @@ python ml\scripts\predict.py --image D:\datasets\PlantVillage\Peach___healthy\xx
 
 ### 0.8 第 6 步：（可选）接入网站
 
-网站「智能分析」页调用 `POST /analysis/image`。训练完成后需启动 Python 推理服务，详见 **§五** 与 `[docs/小挑/页面设置/图片分析.md](../小挑/页面设置/图片分析.md)`。
+网站「智能分析」页调用 `POST /analysis/image`。训练完成后需启动 Python 推理服务，详见 **§五** 与 `[docs/小挑/页面设置/图片分析.md](../../../小挑/页面设置/图片分析.md)`。
 
 当前阶段可先 **不接网站**，只要 `predict.py` 能识别即可用于答辩说明「模型已真实训练」。
 
@@ -596,7 +596,7 @@ async def analyze_image(
 return http.post('/analysis/image', formData)
 ```
 
-需配置 Vite 代理或生产环境 Nginx，将 `/analysis/image` 转发至 Python 推理服务（参考 `[docs/小挑/页面设置/图片分析.md](../小挑/页面设置/图片分析.md)` 中的 Flask 方案，可升级为 FastAPI + ONNX Runtime）。
+需配置 Vite 代理或生产环境 Nginx，将 `/analysis/image` 转发至 Python 推理服务（参考 `[docs/小挑/页面设置/图片分析.md](../../../小挑/页面设置/图片分析.md)` 中的 Flask 方案，可升级为 FastAPI + ONNX Runtime）。
 
 **识别完成后的业务联动**（已实现）：
 
@@ -683,11 +683,11 @@ ml/knowledge/
 
 | 文档                                                                         | 说明                  |
 | -------------------------------------------------------------------------- | ------------------- |
-| `[2.0-功能扩展规划.md](./2.0-功能扩展规划.md)`                                         | 总体功能与阶段路线           |
+| `[2.0-功能扩展规划.md](../../规划/2.0-功能扩展规划.md)`                                         | 总体功能与阶段路线           |
 | `[2.0.md](./2.0.md)`                                                       | 原始功能提纲              |
-| `[docs/小挑/页面设置/图片分析.md](../小挑/页面设置/图片分析.md)`                               | Flask Mock 与前后端联调示例 |
-| `[src/api/analysis.ts](../../src/api/analysis.ts)`                         | 前端分析 API            |
-| `[src/views/user/DataAnalysis.vue](../../src/views/user/DataAnalysis.vue)` | 智能分析页面              |
+| `[docs/小挑/页面设置/图片分析.md](../../../小挑/页面设置/图片分析.md)`                               | Flask Mock 与前后端联调示例 |
+| `[src/api/analysis.ts](../../../../src/api/analysis.ts)`                         | 前端分析 API            |
+| `[src/views/user/DataAnalysis.vue](../../../../src/views/user/DataAnalysis.vue)` | 智能分析页面              |
 
 
 ---
