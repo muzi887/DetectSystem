@@ -8,6 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
+const { runChain1OnDb, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -35,6 +36,11 @@ function readDb(res) {
     res.status(500).jsonp({ message: 'db.json 解析错误' })
     return null
   }
+}
+
+function writeDb(db) {
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2) + '\n')
+  router.db.setState(db)
 }
 
 server.use((req, res, next) => {
@@ -72,6 +78,34 @@ server.post('/disasterRules/evaluate', (req, res) => {
   const db = readDb(res)
   if (!db) return
   return res.jsonp(evaluateDisasterRules(db, req.body))
+})
+
+server.post('/alerts/evaluate-all', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain1OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.get('/field-sensors/:pointId/thresholds', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  return res.jsonp(profileForPoint(db, pointId) || { ...DEFAULT_THRESHOLD_PROFILE, pointId })
+})
+
+server.put('/field-sensors/:pointId/thresholds', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  if (!Array.isArray(db.thresholdProfiles)) db.thresholdProfiles = []
+  const body = { ...DEFAULT_THRESHOLD_PROFILE, ...(req.body || {}), pointId }
+  const idx = db.thresholdProfiles.findIndex((row) => Number(row.pointId) === pointId)
+  if (idx >= 0) db.thresholdProfiles[idx] = body
+  else db.thresholdProfiles.push(body)
+  writeDb(db)
+  return res.jsonp(body)
 })
 
 server.get('/moisture/value', (req, res) => {

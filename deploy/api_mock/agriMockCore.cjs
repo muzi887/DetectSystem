@@ -176,9 +176,9 @@ function evaluateDisasterRules(db, body = {}) {
     rules.push({ rule: 'heat_attention', level: 'warning', reason: '温度进入持续关注区间' })
   }
 
-  if (soilMoisture <= 10) {
+  if (soilMoisture <= 15) {
     rules.push({ rule: 'drought_risk', level: 'critical', reason: '土壤湿度低于重旱阈值' })
-  } else if (soilMoisture <= 20) {
+  } else if (soilMoisture <= 25) {
     rules.push({ rule: 'water_stress', level: 'warning', reason: '土壤湿度低于警戒线' })
   }
 

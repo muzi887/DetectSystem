@@ -4,6 +4,8 @@ import fs from 'fs'
 import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
+import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
+import { profileForPoint, runChain1OnDb } from './persistRules.ts'
 
 interface AgriMockCore {
   handleFarmLogin: (db: any, body: any) => { status: number; body: any }
@@ -49,6 +51,11 @@ function readDb(res: Response) {
   }
 }
 
+function writeDb(db: any) {
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2) + '\n')
+  router.db.setState(db)
+}
+
 server.use((req: Request, _res: Response, next) => {
   if (req.method === 'GET') {
     try {
@@ -84,6 +91,34 @@ server.post('/disasterRules/evaluate', (req: Request, res: Response) => {
   const db = readDb(res)
   if (!db) return
   return res.jsonp(agriMockCore.evaluateDisasterRules(db, req.body))
+})
+
+server.post('/alerts/evaluate-all', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain1OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.get('/field-sensors/:pointId/thresholds', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  return res.jsonp(profileForPoint(db, pointId) || { ...DEFAULT_THRESHOLD_PROFILE, pointId })
+})
+
+server.put('/field-sensors/:pointId/thresholds', (req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const pointId = Number(req.params.pointId)
+  if (!Array.isArray(db.thresholdProfiles)) db.thresholdProfiles = []
+  const body = { ...DEFAULT_THRESHOLD_PROFILE, ...(req.body || {}), pointId }
+  const idx = db.thresholdProfiles.findIndex((row: { pointId: number }) => Number(row.pointId) === pointId)
+  if (idx >= 0) db.thresholdProfiles[idx] = body
+  else db.thresholdProfiles.push(body)
+  writeDb(db)
+  return res.jsonp(body)
 })
 
 server.get('/moisture/value', (req: Request, res: Response) => {

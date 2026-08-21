@@ -691,5 +691,19 @@
       ],
       "source": "Sentinel-2"
     }
-  ]
+  ],
+  "thresholdProfiles": [],
+  "ruleState": [
+    {
+      "pointId": 2,
+      "ruleId": "water_stress",
+      "level": "alert",
+      "startedAt": "2026-08-01T00:00:00+08:00",
+      "lastSeenAt": "2026-08-01T00:00:00+08:00",
+      "alertEmitted": false
+    }
+  ],
+  "weatherForecast": [],
+  "extremeEvents": [],
+  "pestRiskPredictions": []
 }
