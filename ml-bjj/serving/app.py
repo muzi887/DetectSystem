@@ -364,26 +364,31 @@ def treatments_one(label: str):
     return jsonify({"label": label, "found": found, "item": item}), 200
 
 
-def main() -> None:
+def prepare_runtime() -> int:
     port = int(os.environ.get("ML_BJJ_PORT", "5000"))
     weights = resolve_weights_path()
 
     if use_mock():
         print("[ml-bjj] ML_BJJ_USE_MOCK=1，使用 Mock 推理")
-    else:
-        if not weights.is_file():
-            raise SystemExit(f"找不到模型权重: {weights}")
-        print(f"[ml-bjj] 加载模型: {weights}")
-        clf = get_classifier()
-        print(f"[ml-bjj] 模型就绪，{len(clf.classes)} 类: {', '.join(clf.classes)}")
-        meta_classes = load_model_meta().get("classes") or []
-        if meta_classes and list(clf.classes) != list(meta_classes):
-            raise SystemExit(
-                f"权重 classes 与 pest-cls-meta.json 不一致: {len(clf.classes)} vs {len(meta_classes)}"
-            )
-        if len(clf.classes) != 23:
-            raise SystemExit(f"期望 23 类，实际 {len(clf.classes)}: {clf.classes}")
+        return port
 
+    if not weights.is_file():
+        raise SystemExit(f"找不到模型权重: {weights}")
+    print(f"[ml-bjj] 加载模型: {weights}")
+    clf = get_classifier()
+    print(f"[ml-bjj] 模型就绪，{len(clf.classes)} 类: {', '.join(clf.classes)}")
+    meta_classes = load_model_meta().get("classes") or []
+    if meta_classes and list(clf.classes) != list(meta_classes):
+        raise SystemExit(
+            f"权重 classes 与 pest-cls-meta.json 不一致: {len(clf.classes)} vs {len(meta_classes)}"
+        )
+    if len(clf.classes) != 23:
+        raise SystemExit(f"期望 23 类，实际 {len(clf.classes)}: {clf.classes}")
+    return port
+
+
+def main() -> None:
+    port = prepare_runtime()
     print(f"[ml-bjj] 推理服务: http://127.0.0.1:{port}/api/analysis/image")
     app.run(host="0.0.0.0", port=port, debug=False)
 
