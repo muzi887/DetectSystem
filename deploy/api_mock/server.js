@@ -8,7 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
-const { runChain1OnDb, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
+const { runChain1OnDb, runChain2OnDb, profileForPoint, DEFAULT_THRESHOLD_PROFILE } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -84,6 +84,14 @@ server.post('/alerts/evaluate-all', (req, res) => {
   const db = readDb(res)
   if (!db) return
   const result = runChain1OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.post('/weather/extreme-events/evaluate', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain2OnDb(db, new Date())
   writeDb(db)
   return res.jsonp({ ok: true, created: result.created.length })
 })

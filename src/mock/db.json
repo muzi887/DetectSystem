@@ -703,7 +703,38 @@
       "alertEmitted": false
     }
   ],
-  "weatherForecast": [],
+  "weatherForecast": [
+    {
+      "id": 1,
+      "pointId": 2,
+      "date": "2026-08-22",
+      "tempMax": 41,
+      "tempMin": 24,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 42
+    },
+    {
+      "id": 2,
+      "pointId": 2,
+      "date": "2026-08-23",
+      "tempMax": 36,
+      "tempMin": 23,
+      "precipMm": 0,
+      "windMax": 4,
+      "humidity": 45
+    },
+    {
+      "id": 3,
+      "pointId": 2,
+      "date": "2026-08-24",
+      "tempMax": 34,
+      "tempMin": 22,
+      "precipMm": 2,
+      "windMax": 5,
+      "humidity": 50
+    }
+  ],
   "extremeEvents": [],
   "pestRiskPredictions": []
 }

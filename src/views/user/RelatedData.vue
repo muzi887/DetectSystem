@@ -122,6 +122,16 @@
           <div
             v-if="currentTab === 'weather'"
             class="weather-grid">
+            <div
+              v-if="activeExtremeTitles.length"
+              class="weather-extreme-tags">
+              <a-tag
+                v-for="title in activeExtremeTitles"
+                :key="title"
+                color="orange">
+                {{ title }}
+              </a-tag>
+            </div>
             <template v-if="weatherMetrics.length">
               <a-card
                 v-for="item in weatherMetrics"
@@ -191,6 +201,7 @@ import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import { fetchExtremeEvents } from '@/api/rules'
 
 const dataStore = useDataStore()
 const remoteStore = useRemoteSensingStore()
@@ -198,6 +209,7 @@ const loading = ref(false)
 
 const currentTab = ref('sensor')
 const selectedWeatherPointId = ref<number>(1)
+const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
 
 const weatherPointOptions = computed(() =>
   dataStore.filteredMonitorPoints.map((point) => ({
@@ -235,6 +247,17 @@ const selectedWeatherReading = computed(() =>
 const weatherMetrics = computed(() => {
   const reading = selectedWeatherReading.value
   return reading ? formatWeatherMetrics(reading) : []
+})
+
+const activeExtremeTitles = computed(() => {
+  const today = new Date().toISOString().slice(0, 10)
+  const titles: string[] = []
+  for (const event of extremeEvents.value) {
+    if (event.pointId !== selectedWeatherPointId.value) continue
+    if (String(event.startAt) < today) continue
+    if (!titles.includes(event.title)) titles.push(event.title)
+  }
+  return titles
 })
 
 function getWeatherPointName(pointId: number) {
@@ -553,6 +576,15 @@ onMounted(async () => {
         })
       )
     }
+    tasks.push(
+      fetchExtremeEvents()
+        .then((res) => {
+          extremeEvents.value = res.data || []
+        })
+        .catch(() => {
+          extremeEvents.value = []
+        })
+    )
     await Promise.all(tasks)
     await nextTick()
     renderSensorChart()
@@ -784,6 +816,14 @@ watch(
   min-height: 200px;
   color: var(--glass-text-muted);
   font-size: 14px;
+}
+
+.weather-extreme-tags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .chart-wrapper--weather {

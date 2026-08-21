@@ -1,7 +1,7 @@
 export type RuleLevel = 'hint' | 'alert'
 export type RuleId = 'water_stress' | 'heat_stress' | 'waterlogging'
 export type AlertChain = 'env' | 'extreme' | 'pest'
-export type MappedAlertLevel = 'warning' | 'high'
+export type MappedAlertLevel = 'warning' | 'high' | 'critical'
 
 export interface SensorSnapshot {
   pointId: number
@@ -63,6 +63,16 @@ export interface NewAlert {
   ruleId: string
   chain: AlertChain
   draft: boolean
+}
+
+export interface ExtremeEvent {
+  pointId: number
+  type: string
+  title: string
+  description: string
+  level: MappedAlertLevel
+  startAt: string
+  ruleId: string
 }
 
 export interface EvaluateReadingResult {

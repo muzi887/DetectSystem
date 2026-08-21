@@ -5,7 +5,7 @@ import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
 import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
-import { profileForPoint, runChain1OnDb } from './persistRules.ts'
+import { profileForPoint, runChain1OnDb, runChain2OnDb } from './persistRules.ts'
 
 interface AgriMockCore {
   handleFarmLogin: (db: any, body: any) => { status: number; body: any }
@@ -97,6 +97,14 @@ server.post('/alerts/evaluate-all', (_req: Request, res: Response) => {
   const db = readDb(res)
   if (!db) return
   const result = runChain1OnDb(db, new Date())
+  writeDb(db)
+  return res.jsonp({ ok: true, created: result.created.length })
+})
+
+server.post('/weather/extreme-events/evaluate', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const result = runChain2OnDb(db, new Date())
   writeDb(db)
   return res.jsonp({ ok: true, created: result.created.length })
 })

@@ -1,5 +1,6 @@
-import type { NewAlert, RuleState, SensorSnapshot, ThresholdProfile } from '../types/rules.ts'
+import type { ExtremeEvent, NewAlert, RuleState, SensorSnapshot, ThresholdProfile } from '../types/rules.ts'
 import { DEFAULT_THRESHOLD_PROFILE, evaluateReading } from '../utils/alertRules.ts'
+import { evaluateForecast } from '../utils/extremeWeatherRules.ts'
 
 export type AlertRow = NewAlert & { id: number }
 
@@ -107,6 +108,66 @@ export function runChain1OnDb(
     ...nextStates
   ]
   const { alerts, created } = dedupeAlerts(db.alerts, incoming)
+  db.alerts = alerts
+  return { created }
+}
+
+function nextEventId(events: Array<{ id?: number }>): number {
+  let max = 0
+  for (const row of events) {
+    const id = Number(row.id) || 0
+    if (id > max) max = id
+  }
+  return max + 1
+}
+
+export function upsertExtremeEvents(
+  existing: Array<ExtremeEvent & { id?: number }>,
+  incoming: ExtremeEvent[]
+): { events: Array<ExtremeEvent & { id: number }>; added: Array<ExtremeEvent & { id: number }> } {
+  const events = [...existing] as Array<ExtremeEvent & { id: number }>
+  const added: Array<ExtremeEvent & { id: number }> = []
+  let nextId = nextEventId(events)
+  for (const item of incoming) {
+    const dup = events.find(
+      (row) => row.pointId === item.pointId && row.type === item.type && row.startAt === item.startAt
+    )
+    if (dup) continue
+    const row = { ...item, id: nextId }
+    nextId += 1
+    events.push(row)
+    added.push(row)
+  }
+  return { events, added }
+}
+
+export function runChain2OnDb(db: any, now: Date = new Date()): { created: AlertRow[] } {
+  if (!Array.isArray(db.weatherForecast)) db.weatherForecast = []
+  if (!Array.isArray(db.extremeEvents)) db.extremeEvents = []
+  if (!Array.isArray(db.alerts)) db.alerts = []
+
+  const byPoint = new Map<number, any[]>()
+  for (const row of db.weatherForecast) {
+    const pointId = Number(row.pointId)
+    if (!byPoint.has(pointId)) byPoint.set(pointId, [])
+    byPoint.get(pointId)!.push(row)
+  }
+
+  const incomingEvents: ExtremeEvent[] = []
+  const incomingAlerts: NewAlert[] = []
+  for (const [pointId, days] of byPoint) {
+    const name = defaultPointNameOf(db, pointId)
+    const fieldId = fieldIdOfPoint(db, pointId)
+    const out = evaluateForecast(pointId, name, days)
+    incomingEvents.push(...out.events)
+    for (const alert of out.alertsToCreate) {
+      incomingAlerts.push({ ...alert, fieldId, time: now.getTime() })
+    }
+  }
+
+  const upserted = upsertExtremeEvents(db.extremeEvents, incomingEvents)
+  db.extremeEvents = upserted.events
+  const { alerts, created } = dedupeAlerts(db.alerts, incomingAlerts)
   db.alerts = alerts
   return { created }
 }
