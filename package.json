@@ -10,7 +10,8 @@
     "lint": "eslint --fix src",
     "prettier": "prettier --write .",
     "lint:css": "stylelint --fix 'src/**/*.{css,scss,vue}'",
-    "mock": "tsx watch src/mock/server.ts",
+    "mock": "node -e \"console.error('请启动 Flask :5000，并设置 DATABASE_URL 指向云端 detect_system。勿再用 json-server 作主后端。紧急演示: pnpm mock:legacy'); process.exit(1)\"",
+    "mock:legacy": "tsx watch src/mock/server.ts",
     "sync:mock-db": "node scripts/sync-mock-db.mjs",
     "sync:knowledge": "node scripts/sync-knowledge.mjs",
     "optimize-assets": "node scripts/optimize-assets.mjs"

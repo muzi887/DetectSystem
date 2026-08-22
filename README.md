@@ -2,7 +2,7 @@
 
 > 河北地质大学 · 坤灵智巡创工队
 
-Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上部署（Vue 3 + TypeScript + Vite），集成地图监测、农情数据展示、图片分析、预警管理与决策建议等模块；业务数据当前以 json-server / Flask **演示接口**为主。
+Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上部署（Vue 3 + TypeScript + Vite），集成地图监测、农情数据展示、图片分析、预警管理与决策建议等模块；业务数据由 **Flask + 云端 MySQL `detect_system`** 提供，识病同进程。
 
 **线上地址**：http://82.157.234.123:88  
 **演示账号**：手机号 `13800000000`，验证码 `2026`（备用密码 `123456`）
@@ -33,7 +33,7 @@ Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上�
 - **样式**：CSS 变量（`glass-theme.css`）+ 公共卡片样式（`page-card.css`）
 - **地图**：Leaflet、Leaflet.markercluster
 - **图表**：ECharts
-- **后端**：JSON Server（Mock REST，端口 3000）、Flask（图片分析，端口 5000）
+- **后端**：Flask（端口 5000，登录/预警/规则链 + 识病）、云端宝塔 MySQL `detect_system`
 
 ---
 
@@ -43,24 +43,28 @@ Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上�
 
 - Node.js 18+
 - pnpm（推荐）/ npm / yarn
-- Python 3（仅智能分析需要）
+- Python 3 + `ml-bjj` 依赖（Flask）
+- 云端 MySQL `detect_system`（设置环境变量 `DATABASE_URL`，密码不要写入仓库）
 
 ### 安装与启动
 
 ```bash
 pnpm install
 
-# 终端 1：前端（5173）
+# 本机 PowerShell 示例（密码只放本机环境，勿提交 Git）
+# $env:DATABASE_URL="mysql+pymysql://detect_system:<密码>@82.157.234.123:3306/detect_system"
+
+# 终端 1：Flask 业务 + 识病（5000）
+ml-bjj\.venv\Scripts\Activate.ps1
+python ml-bjj\serving\app.py
+
+# 终端 2：前端（5173）
 pnpm dev
-
-# 终端 2：Mock API（3000）
-pnpm mock
-
-# 终端 3（可选）：Flask AI（5000）
-python server/app.py
 ```
 
 本地访问：http://localhost:5173
+
+`pnpm mock` 已停用（会提示改走 Flask）。紧急演示才用 `pnpm mock:legacy`。
 
 ### 构建与预览
 
@@ -107,8 +111,10 @@ DetectSystem/
 | 组件 | 端口 | 服务器路径 | 托管方式 |
 |------|------|------------|----------|
 | Vue 前端 | 88 | `/www/wwwroot/DetectSystem/frontend/dist/` | Nginx 静态站 |
-| Mock API | 3000 | `/www/wwwroot/DetectSystem/api_mock/` | 宝塔 Node 项目 |
-| Flask AI | 5000 | `/www/wwwroot/DetectSystem/api_flask/` | 宝塔 Python 项目 |
+| Flask 业务+识病 | 5000 | `ml-bjj/serving` | 宝塔 Python 项目 |
+| MySQL | 3306 | 宝塔库 `detect_system` | 仅本机/远程开发机，不对浏览器开放 |
+
+`deploy/api_mock/` 为归档，默认不再起 Node :3000。
 
 **仅更新前端 UI：**
 
