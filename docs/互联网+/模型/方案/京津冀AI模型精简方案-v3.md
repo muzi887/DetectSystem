@@ -1,11 +1,24 @@
 ﻿# 京津冀区域 AI 模型精简方案（v3）
 
-> 面向 **京津冀** 试点：作物聚焦 **小麦、玉米、蔬菜**，病害 **少而精**，与业务场景及网站 Mock 对齐。  
-> **v3 需要重新训练**一个新模型（不能从 v2 的 27 类权重里删类）。v2 见 `[AI模型能力与本土化测试说明.md](./AI模型能力与本土化测试说明.md)`，可备份保留。  
-> **脚本**：当前用 `prepare_from_class_folders.py`；历史 8 类（小麦 Kaggle + PlantVillage）用 `prepare_from_wheat_plantvillage.py`（原 `prepare_bjj.py`）。再接 `train_cls.py`。
-> **ml-bjj 目录**：见 **[零、ml-bjj 目录规范](#零ml-bjj-目录规范)**（本项目已按此准备）。  
-> **组员训练操作**：见 **[ml-bjj训练操作手册.md](../训练/ml-bjj训练操作手册.md)**（交付版）。  
-> **本人开发操作**：见 **[ml-bjj训练操作手册-开发版.md](../训练/ml-bjj训练操作手册-开发版.md)**（虚拟环境 + 完整流程）。
+> **文档性质（2026-08-22）**：本文是 **2026-07 京津冀 8 类首版** 的数据配方与复现说明，**不是**当前产品目标。  
+> **当前产品**：23 类（小麦/玉米/番茄/水稻）、作物掩码、防治库已接线；`app.py` 启动要求 23 类。磁盘 `pest-cls-best.pt` / `pest-cls-meta.json` **仍是本文训出的 8 类（98.99%）**。  
+> **当前整理脚本**：`prepare_from_class_folders.py`（源图 `ml-bjj/data/<中文类名>/`）。本文 §零 的小麦 Kaggle + PlantVillage 流程对应 `prepare_from_wheat_plantvillage.py`（原 `prepare_bjj.py`），仅用于复现 8 类。  
+> **下一步**：[`下一阶段任务与流程.md`](../../规划/下一阶段任务与流程.md) B23、[`玉米水稻补图-搜索词条.md`](../训练/玉米水稻补图-搜索词条.md)、[`作物掩码与推理接入.md`](./作物掩码与推理接入.md)、[`京津冀AI模型v3.1迭代说明.md`](./京津冀AI模型v3.1迭代说明.md)。
+
+面向 **京津冀** 试点：作物聚焦 **小麦、玉米、蔬菜**，病害 **少而精**，与当时业务场景及网站 Mock 对齐。  
+**v3 8 类需要重新训练**（不能从 v2 的 27 类权重里删类）。v2 见 `[AI模型能力与本土化测试说明.md](./AI模型能力与本土化测试说明.md)`。  
+**组员训练操作**：`[ml-bjj训练操作手册.md](../训练/ml-bjj训练操作手册.md)`。  
+**开发操作**：`[ml-bjj训练操作手册-开发版.md](../训练/ml-bjj训练操作手册-开发版.md)`。
+
+### 之后发生了什么（读旧章节前先看）
+
+| 时间 | 事件 |
+|------|------|
+| 2026-07-08 | 按本文训出 8 类，验证集 98.99% |
+| 2026-07-09 | 网站智能分析接入该权重 |
+| 2026-07 起 | `treatments.json` 接入分析/决策页（**不是**「knowledge 暂不需要」） |
+| 2026-08 | 标签与 Serving 扩到 **23 类**；作物掩码、topk、batch、病名×环境规则落地 |
+| 2026-08-22 | `bjj_cls/classes.txt` 与 train 子文件夹已是 23 类；**权重未重训**，与门禁冲突 |
 
 ---
 
@@ -22,13 +35,15 @@ DetectSystem/
     .gitignore
     requirements.txt
     scripts/
-      prepare_from_wheat_plantvillage.py
+      prepare_from_wheat_plantvillage.py  ← 本文 8 类配方
+      prepare_from_class_folders.py        ← 当前 23 类整理（后加）
       train_cls.py
       predict.py
+    knowledge/treatments.json             ← 防治库（在 ml-bjj/ 下，不在 data/）
     data/
-      wheatPlantDiseases/data/              ← 小麦原始素材（prepare 用，见 0.2）
-      plantvillage dataset/color/         ← 玉米/番茄原始素材（prepare 用，见 0.3）
-      bjj_cls/                            ← 8 类训练集（train_cls 用，见 0.4）
+      wheatPlantDiseases/data/              ← 小麦原始素材（8 类 prepare 用，见 0.2）
+      plantvillage dataset/color/         ← 玉米/番茄原始素材（8 类 prepare 用，见 0.3）
+      bjj_cls/                            ← train_cls 用；本文按 8 类写。2026-08 起 classes.txt 已是 23 类
     models/
 ```
 
@@ -76,7 +91,7 @@ DetectSystem/
 
 **作用**：整理后的 **8 类** train/val，由 `prepare_from_wheat_plantvillage.py` 从小麦 + PlantVillage **复制、合并、划分** 得到；**`train_cls.py` 只读这里。** 只交付训练任务时可只传本目录（不传 0.2、0.3 原始包）。
 
-### 0.5 当前 ml-bjj 自检（2026-07-09）
+### 0.5 8 类首版自检（2026-07-09，历史快照）
 
 | 项 | 要求 | 状态 |
 |----|------|------|
@@ -100,12 +115,12 @@ DetectSystem/
 | `.venv/` | 路径绑定旧目录，必须在 `ml-bjj` 下重建 |
 | `__pycache__/`、`*.pyc` | 缓存 |
 | `archive.zip`、`archive_*.zip` | 压缩包；源数据已解压则冗余 |
-| `data/riceLeafDiseases/` | v3 不用水稻 |
+| `data/riceLeafDiseases/` | **8 类 v3 不用**；23 类水稻源图不走这个 v2 目录名 |
 | `data/rice_cls/`、`data/wheat_cls/`、`data/plantvillage_cls/`、`data/all_crops_cls/` | v2 中间/合并结果 |
-| `data/plantvillage dataset/grayscale/`、`segmented/` | v3 不用（仅保留 color） |
-| `knowledge/` | v3 暂不需要 |
-| v2 的 `prepare_plantvillage.py` 等旧脚本 | 桃/苹果、水稻、27 类合并，v3 不用 |
-| 把 v2 权重当 v3 模型 | v3 必须重训 8 类 |
+| `data/plantvillage dataset/grayscale/`、`segmented/` | 8 类 v3 不用（仅保留 color） |
+| `knowledge/` | **需要**。8 类时期已接线；现为 23 类 `treatments.json`。不要删 |
+| v2 的 `prepare_plantvillage.py` 等旧脚本 | 桃/苹果、27 类合并，8 类 v3 不用 |
+| 把 v2 权重当 v3 模型 | 8 类必须重训；23 类同样必须重训，不能从 8 类权重删/加类凑数 |
 
 ### 0.7 已完成流程（2026-07-08 训练 · 2026-07-09 抽测）
 
@@ -436,11 +451,14 @@ python ml-bjj\scripts\predict.py --image "实地照片.jpg"
 
 | 阶段 | 任务 | 状态 |
 |------|------|------|
-| 0 | ml-bjj 目录、数据、`bjj_cls`、`.venv` | ✅ 已完成 |
-| 1 | `train_cls.py` 重训 v3（98.99%） | ✅ 已完成 |
-| 2 | `predict.py` 抽测（小麦锈病、玉米大斑病） | ✅ 已完成 |
-| 3 | 推理服务 / 网站接入 v3 权重 | ✅ 已完成（2026-07-09） |
-| 4 | 京津冀实地抽测 | 后续 |
+| 0 | ml-bjj 目录、8 类 `bjj_cls`、`.venv` | ✅ |
+| 1 | `train_cls.py` 训 8 类（98.99%） | ✅ |
+| 2 | `predict.py` 抽测（小麦锈病、玉米大斑病） | ✅ |
+| 3 | 推理服务 / 网站接入 8 类权重 | ✅ 2026-07-09 |
+| 4 | 防治库接入 | ✅（本文 0.6 旧文曾写「暂不需要」，已作废） |
+| 5 | Serving 扩到 23 类 + 作物掩码 | ✅ 代码；⬜ 权重仍 8 类 |
+| 6 | 23 类补图 / 重切分 / 重训 | 进行中，见补图文档 |
+| 7 | 京津冀实地抽测 | 后续，见 v3.1 |
 
 
 ---
@@ -465,10 +483,10 @@ python ml-bjj\scripts\predict.py --image "实地照片.jpg"
 A：**可以。** Kaggle 的 `valid/`、`test/` 常用 `yellow_rust_valid` 这类命名；`prepare_from_wheat_plantvillage.py` 会自动规范化，与 train 下的 `Yellow Rust` 等合并处理。
 
 **Q：bjj_cls 目录是空的正常吗？**  
-A：**正常。** 跑完 `prepare_from_wheat_plantvillage.py` 后才会生成 8 类 train/val。
+A：对 **8 类首次整理** 是的，跑完 `prepare_from_wheat_plantvillage.py` 才有 train/val。2026-08 后该目录已有 23 类文件夹，空目录不再是现状。
 
 **Q：精简版是不是要重新训练？**  
-A：**是。** 整理 `bjj_cls` 后必须再跑 `train_cls.py`，得到新的 8 类权重；不要用 `pest-cls-v2-27cls.pt` 作 v3 模型。
+A：**8 类当时必须重训**，不能用 `pest-cls-v2-27cls.pt`。现在要上 23 类，同样必须再训，不能从 8 类权重加类。
 
 **Q：PlantVillage 路径怎么写？**  
 A：**`ml-bjj/data/plantvillage dataset/color`**（含空格加引号）。
@@ -480,15 +498,18 @@ A：**`ml-bjj/data/plantvillage dataset/color`**（含空格加引号）。
 
 | 文档                                         | 关系             |
 | ------------------------------------------ | -------------- |
-| `[AI模型能力与本土化测试说明.md](./AI模型能力与本土化测试说明.md)` | v2 现状与拍图规范     |
-| `[数据集整理说明.md](../训练/数据集整理说明.md)`               | v2 整理流程（小麦/水稻） |
-| `[../下一阶段任务与流程.md](../../规划/下一阶段任务与流程.md)`           | 整体路线        |
-| `[../网站/项目启动说明.md](../../网站/项目启动说明.md)`           | 三终端启动       |
-| `[../2.0-功能扩展规划.md](../../规划/2.0-功能扩展规划.md)`         | 系统整体 2.0       |
+| `[AI模型能力与本土化测试说明.md](./AI模型能力与本土化测试说明.md)` | 当前能/不能（含 23 类门禁） |
+| `[作物掩码与推理接入.md](./作物掩码与推理接入.md)` | 23 类推理 |
+| `[京津冀AI模型v3.1迭代说明.md](./京津冀AI模型v3.1迭代说明.md)` | 难例 / 实地 |
+| `[玉米水稻补图-搜索词条.md](../训练/玉米水稻补图-搜索词条.md)` | 23 类补图 |
+| `[数据集整理说明.md](../训练/数据集整理说明.md)` | v2 整理流程（小麦/水稻） |
+| `[../../规划/下一阶段任务与流程.md](../../规划/下一阶段任务与流程.md)` | 整体路线 |
+| `[../../网站/项目启动说明.md](../../网站/项目启动说明.md)` | 三终端启动 |
+| `[../../规划/2.0-功能扩展规划.md](../../规划/2.0-功能扩展规划.md)` | 系统整体 2.0 |
 
 
 ---
 
-**文档版本**：V3.2（网站 v3 推理已接入）  
-**最后更新**：2026-07-09  
+**文档版本**：V3.3（标明 8 类历史；当前目标 23 类）  
+**最后更新**：2026-08-22  
 **维护**：互联网＋项目组 / 算法组
