@@ -14,7 +14,6 @@ import sys
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from urllib.request import urlopen
 
 import torch
 from flask import Flask, jsonify, request
@@ -26,6 +25,7 @@ if str(SERVE_DIR) not in sys.path:
     sys.path.insert(0, str(SERVE_DIR))
 
 from analysis_store import append_record, list_records, recent_records, stats_by_label, update_record  # noqa: E402
+from blueprints.biz import biz  # noqa: E402
 from crop_filter import (  # noqa: E402
     CANONICAL_CLASSES,
     CROP_LABELS,
@@ -40,6 +40,7 @@ from predict_utils import needs_review, rank_topk  # noqa: E402
 
 app = Flask(__name__)
 CORS(app)
+app.register_blueprint(biz)
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 META_PATH = Path(__file__).resolve().parents[1] / "models" / "pest-cls-meta.json"
@@ -139,22 +140,29 @@ def parse_env_from_request() -> dict | None:
 
 
 def fetch_point_weather(point_id: int) -> dict | None:
-    origin = os.environ.get("ML_BJJ_MOCK_ORIGIN", "http://127.0.0.1:3000")
     try:
-        with urlopen(f"{origin}/weatherReadings", timeout=2) as resp:
-            rows = json.loads(resp.read().decode("utf-8"))
+        from db import DatabaseNotConfigured, session_scope
+        from models import WeatherReading
+        from sqlalchemy import select
     except Exception:
         return None
-    if not isinstance(rows, list):
-        return None
-    for row in rows:
-        if int(row.get("pointId") or 0) == point_id:
+    try:
+        with session_scope() as session:
+            latest = None
+            for row in session.scalars(select(WeatherReading).where(WeatherReading.point_id == point_id)).all():
+                if latest is None or int(row.id) >= int(latest.id):
+                    latest = row
+            if latest is None:
+                return None
             return {
-                "airTemp": row.get("airTemp"),
-                "airRh": row.get("airRh"),
-                "soilVwc": row.get("soilVwc"),
+                "airTemp": latest.air_temp,
+                "airRh": latest.air_rh,
+                "soilVwc": latest.soil_vwc,
             }
-    return None
+    except DatabaseNotConfigured:
+        return None
+    except Exception:
+        return None
 
 
 def parse_point_id() -> int | None:
@@ -229,6 +237,8 @@ def _analyze_one(
 
 @app.route("/api/analysis/image", methods=["POST"])
 def analyze_image():
+    if not use_mock() and app.config.get("MODEL_READY") is False:
+        return jsonify({"error": "模型未就绪，无法识图", "message": "模型未就绪"}), 503
     if "file" not in request.files:
         return jsonify({"error": "未找到文件"}), 400
 
@@ -259,6 +269,8 @@ def analyze_image():
 
 @app.route("/api/analysis/batch", methods=["POST"])
 def analysis_batch():
+    if not use_mock() and app.config.get("MODEL_READY") is False:
+        return jsonify({"error": "模型未就绪，无法识图", "message": "模型未就绪"}), 503
     files = [item for item in request.files.getlist("files") if item and item.filename]
     if not files:
         return jsonify({"error": "未找到文件"}), 400
@@ -369,30 +381,42 @@ def treatments_one(label: str):
 
 def prepare_runtime() -> int:
     port = int(os.environ.get("ML_BJJ_PORT", "5000"))
+    app.config["MODEL_READY"] = False
     weights = resolve_weights_path()
 
     if use_mock():
         print("[ml-bjj] ML_BJJ_USE_MOCK=1，使用 Mock 推理")
+        app.config["MODEL_READY"] = True
         return port
 
     if not weights.is_file():
-        raise SystemExit(f"找不到模型权重: {weights}")
-    print(f"[ml-bjj] 加载模型: {weights}")
-    clf = get_classifier()
-    print(f"[ml-bjj] 模型就绪，{len(clf.classes)} 类: {', '.join(clf.classes)}")
-    meta_classes = load_model_meta().get("classes") or []
-    if meta_classes and list(clf.classes) != list(meta_classes):
-        raise SystemExit(
-            f"权重 classes 与 pest-cls-meta.json 不一致: {len(clf.classes)} vs {len(meta_classes)}"
-        )
-    if len(clf.classes) != 23:
-        raise SystemExit(f"期望 23 类，实际 {len(clf.classes)}: {clf.classes}")
+        print(f"[ml-bjj] 找不到模型权重: {weights}，业务接口仍可启动")
+        return port
+    try:
+        print(f"[ml-bjj] 加载模型: {weights}")
+        clf = get_classifier()
+        print(f"[ml-bjj] 模型就绪，{len(clf.classes)} 类: {', '.join(clf.classes)}")
+        meta_classes = load_model_meta().get("classes") or []
+        if meta_classes and list(clf.classes) != list(meta_classes):
+            print(
+                f"[ml-bjj] 权重 classes 与 pest-cls-meta.json 不一致: {len(clf.classes)} vs {len(meta_classes)}"
+            )
+            return port
+        if len(clf.classes) != 23:
+            print(f"[ml-bjj] 期望 23 类，实际 {len(clf.classes)}: {clf.classes}")
+            return port
+        app.config["MODEL_READY"] = True
+    except Exception as exc:
+        print(f"[ml-bjj] 模型加载失败，业务接口仍可启动: {exc}")
     return port
 
 
 def main() -> None:
     port = prepare_runtime()
-    print(f"[ml-bjj] 推理服务: http://127.0.0.1:{port}/api/analysis/image")
+    from scheduler import start_scheduler
+
+    start_scheduler()
+    print(f"[ml-bjj] 服务: http://127.0.0.1:{port}/  识病 /api/analysis/image")
     app.run(host="0.0.0.0", port=port, debug=False)
 
 

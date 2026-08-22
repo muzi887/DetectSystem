@@ -13,4 +13,7 @@ PyYAML>=6.0.0
 flask>=3.0.0
 flask-cors>=4.0.0
 waitress>=3.0.0
+SQLAlchemy>=2.0.0
+PyMySQL>=1.1.0
+Alembic>=1.13.0
 pytest>=8.0.0

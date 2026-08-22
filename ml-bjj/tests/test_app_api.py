@@ -40,6 +40,7 @@ def test_analyze_includes_topk_and_treatment(monkeypatch):
     from PIL import Image
 
     monkeypatch.setattr(serving_app, "use_mock", lambda: False)
+    serving_app.app.config["MODEL_READY"] = True
     monkeypatch.setattr(serving_app, "get_classifier", lambda: FakeClassifier())
     monkeypatch.setattr(serving_app, "load_model_meta", lambda: {
         "trained_at": "2026-08-20 00:00:00",
