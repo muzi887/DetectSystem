@@ -74,11 +74,21 @@
               </a-button>
               <div class="batch-row">
                 <input
+                  ref="batchInputRef"
+                  class="batch-file-input"
                   type="file"
                   multiple
                   accept="image/jpeg,image/png,image/webp"
                   @change="onBatchFiles" />
+                <button
+                  type="button"
+                  class="batch-file-picker"
+                  @click="openBatchPicker">
+                  <span class="batch-file-btn">选择文件</span>
+                  <span class="batch-file-label">{{ batchFileLabel }}</span>
+                </button>
                 <a-button
+                  class="batch-submit-btn"
                   :loading="analyzing"
                   @click="handleBatch">
                   批量识别
@@ -223,6 +233,14 @@ interface AnalysisResultView {
 
 const fileList = ref<UploadFile[]>([])
 const batchFiles = ref<File[]>([])
+const batchInputRef = ref<HTMLInputElement | null>(null)
+
+const batchFileLabel = computed(() => {
+  const count = batchFiles.value.length
+  if (count === 0) return '未选择任何文件'
+  if (count === 1) return batchFiles.value[0].name
+  return `已选择 ${count} 个文件`
+})
 const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
 const uploadProgress = ref<number>(0)
@@ -388,6 +406,10 @@ const handleConfirm = async () => {
   }
 }
 
+function openBatchPicker() {
+  batchInputRef.value?.click()
+}
+
 const onBatchFiles = (event: Event) => {
   const input = event.target as HTMLInputElement
   batchFiles.value = input.files ? Array.from(input.files) : []
@@ -535,16 +557,86 @@ const handleIdentify = () => handleConfirm()
 }
 
 .batch-row {
+  position: relative;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 12px;
+  align-items: stretch;
   margin-top: 12px;
+  width: 100%;
 }
 
-.batch-row input[type='file'] {
+.batch-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.batch-file-picker {
   flex: 1;
   min-width: 0;
-  color: var(--glass-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 3px 10px 3px 3px;
+  background-color: var(--glass-bg-input);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.batch-file-picker:hover {
+  background-color: var(--glass-bg-item-hover);
+}
+
+.batch-file-picker:focus-visible {
+  outline: 1px solid var(--glass-border-strong);
+  outline-offset: 2px;
+}
+
+.batch-file-btn {
+  flex-shrink: 0;
+  padding: 2px 12px;
+  background-color: var(--primary-green);
+  border: 1px solid var(--primary-green);
+  border-radius: 4px;
+  color: var(--glass-text-primary);
+  font-size: 13px;
+  line-height: 22px;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.batch-file-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--glass-text-muted);
+  font-size: 13px;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.batch-submit-btn.ant-btn {
+  height: 32px;
+  background-color: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+  color: var(--glass-text-primary) !important;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.batch-submit-btn.ant-btn:hover {
+  background-color: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
 }
 
 .analysis-form :deep(.ant-form-item-label > label) {
