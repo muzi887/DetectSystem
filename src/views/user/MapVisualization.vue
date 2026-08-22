@@ -120,16 +120,24 @@ const drawerRh = computed(() =>
 const drawerVwc = computed(
   () => liveReading.value?.soilVwc ?? selectedPoint.value?.soilMoisture ?? '—'
 )
+function soilTempOf(row?: { soilTemp10cm?: number; soilTemp10Cm?: number } | null) {
+  if (!row) return undefined
+  const value = row.soilTemp10cm ?? row.soilTemp10Cm
+  return value != null && Number.isFinite(Number(value)) ? Number(value) : undefined
+}
+
 const drawerSoilTemp = computed(() => {
-  if (liveReading.value?.soilTemp10cm != null) return liveReading.value.soilTemp10cm
-  const last = drawerReadings.value.at(-1)
-  return last?.soilTemp10cm ?? '—'
+  const live = soilTempOf(liveReading.value)
+  if (live != null) return live
+  const rows = drawerReadings.value
+  return soilTempOf(rows[rows.length - 1]) ?? '—'
 })
 
 const drawerRows = computed(() =>
   drawerReadings.value.map((row) => ({
     ...row,
-    date: String(row.recordedAt).slice(0, 10)
+    date: String(row.recordedAt).slice(0, 10),
+    soilTemp10cm: soilTempOf(row)
   }))
 )
 

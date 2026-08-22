@@ -438,24 +438,42 @@ const weatherPointOptionKey = computed(() =>
   weatherPointOptions.value.map((item) => item.value).join(',')
 )
 
+function asFiniteNumber(value: unknown): number | undefined {
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? n : undefined
+}
+
+function formatMetric(value: unknown, digits: number): string {
+  const n = asFiniteNumber(value)
+  return n == null ? '—' : n.toFixed(digits)
+}
+
+function soilTempOf(reading: WeatherReading): number | undefined {
+  const row = reading as WeatherReading & { soilTemp10Cm?: number }
+  return asFiniteNumber(row.soilTemp10cm) ?? asFiniteNumber(row.soilTemp10Cm)
+}
+
 function formatWeatherMetrics(reading: WeatherReading) {
+  const rain = asFiniteNumber(reading.hourlyRain) ?? 0
   const rainLabel =
-    reading.hourlyRain <= 0
-      ? '0.0 mm（无降水）'
-      : `${reading.hourlyRain.toFixed(1)} mm`
+    rain <= 0 ? '0.0 mm（无降水）' : `${rain.toFixed(1)} mm`
+  const windDir = asFiniteNumber(reading.windDirection)
 
   return [
-    { label: '土壤体积含水率', value: `${reading.soilVwc.toFixed(1)} %vol` },
-    { label: '10cm土壤温度', value: `${reading.soilTemp10cm.toFixed(1)} ℃` },
-    { label: '土壤EC电导率', value: `${reading.soilEc.toFixed(0)} μS/cm` },
-    { label: '空气温度', value: `${reading.airTemp.toFixed(1)} ℃` },
-    { label: '空气相对湿度', value: `${reading.airRh.toFixed(1)} %RH` },
-    { label: '瞬时风速', value: `${reading.windSpeed.toFixed(1)} m/s` },
+    { label: '土壤体积含水率', value: `${formatMetric(reading.soilVwc, 1)} %vol` },
+    { label: '10cm土壤温度', value: `${formatMetric(soilTempOf(reading), 1)} ℃` },
+    { label: '土壤EC电导率', value: `${formatMetric(reading.soilEc, 0)} μS/cm` },
+    { label: '空气温度', value: `${formatMetric(reading.airTemp, 1)} ℃` },
+    { label: '空气相对湿度', value: `${formatMetric(reading.airRh, 1)} %RH` },
+    { label: '瞬时风速', value: `${formatMetric(reading.windSpeed, 1)} m/s` },
     {
       label: '风向',
-      value: `${reading.windDirection}°（${reading.windDirectionText}）`
+      value:
+        windDir == null
+          ? '—'
+          : `${windDir}°（${reading.windDirectionText || '—'}）`
     },
-    { label: '大气气压', value: `${reading.pressure.toFixed(1)} hPa` },
+    { label: '大气气压', value: `${formatMetric(reading.pressure, 1)} hPa` },
     { label: '小时降雨量', value: rainLabel }
   ]
 }
@@ -552,24 +570,31 @@ function syncSelectedWeatherPoint(preferredId?: number) {
 }
 
 function buildWeatherAiConclusion(reading: WeatherReading, pointName: string) {
+  const rain = asFiniteNumber(reading.hourlyRain) ?? 0
+  const airRh = asFiniteNumber(reading.airRh)
+  const soilVwc = asFiniteNumber(reading.soilVwc)
   const rainPart =
-    reading.hourlyRain <= 0
-      ? '当前无降水'
-      : `近 1 小时降雨 ${reading.hourlyRain.toFixed(1)} mm`
+    rain <= 0 ? '当前无降水' : `近 1 小时降雨 ${rain.toFixed(1)} mm`
   const humidityPart =
-    reading.airRh < 40
-      ? '，空气偏干'
-      : reading.airRh > 60
-        ? '，空气湿度较高'
-        : ''
+    airRh == null
+      ? ''
+      : airRh < 40
+        ? '，空气偏干'
+        : airRh > 60
+          ? '，空气湿度较高'
+          : ''
   const soilPart =
-    reading.soilVwc < 20
-      ? '，土壤墒情偏低，建议适时补灌'
-      : reading.soilVwc > 35
-        ? '，土壤墒情充足'
-        : '，蒸腾作用较强，建议关注墒情'
+    soilVwc == null
+      ? ''
+      : soilVwc < 20
+        ? '，土壤墒情偏低，建议适时补灌'
+        : soilVwc > 35
+          ? '，土壤墒情充足'
+          : '，蒸腾作用较强，建议关注墒情'
+  const rhText = airRh == null ? '—' : airRh.toFixed(1)
+  const vwcText = soilVwc == null ? '—' : soilVwc.toFixed(1)
 
-  return `${pointName}：${rainPart}（相对湿度 ${reading.airRh.toFixed(1)}%RH），土壤体积含水率 ${reading.soilVwc.toFixed(1)}%vol${humidityPart}${soilPart}。`
+  return `${pointName}：${rainPart}（相对湿度 ${rhText}%RH），土壤体积含水率 ${vwcText}%vol${humidityPart}${soilPart}。`
 }
 
 const tabs = [
