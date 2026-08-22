@@ -52,7 +52,7 @@
       "soilMoisture": 12,
       "status": "warning",
       "online": true,
-      "lastSeenAt": "2026-08-22T01:19:35.150Z"
+      "lastSeenAt": "2026-08-22T06:57:47.798Z"
     },
     {
       "id": 3,
@@ -139,7 +139,7 @@
       "id": 2,
       "pointId": 2,
       "updatedAt": "2026-06-05T14:00:00+08:00",
-      "soilVwc": 11.8,
+      "soilVwc": 11.4,
       "soilTemp10cm": 31.5,
       "soilEc": 312,
       "airTemp": 35.6,
@@ -243,389 +243,153 @@
   ],
   "alerts": [
     {
-      "id": 101,
-      "pointId": 5,
-      "level": "high",
-      "message": "[东北示范] 海伦站监测到玉米叶部异常风险升高，建议田间复核。",
-      "time": 1754870400000,
-      "handled": false
-    },
-    {
-      "id": 102,
-      "pointId": 8,
-      "level": "medium",
-      "message": "[东北示范] 通辽站土壤墒情偏低，关注旱情发展。",
-      "time": 1754866800000,
-      "handled": false
-    },
-    {
-      "id": 103,
-      "pointId": 4,
-      "level": "low",
-      "message": "[东北示范] 建三江站水稻长势平稳，维持常规巡查。",
-      "time": 1754863200000,
-      "handled": true
-    },
-    {
       "id": 1,
-      "pointId": 2,
-      "level": "medium",
-      "message": "土壤湿度持续偏低",
-      "time": 1762823845668,
-      "handled": true
+      "pointId": 1,
+      "fieldId": "hejian",
+      "level": "high",
+      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 91.4%)",
+      "time": 1787364000000,
+      "handled": false,
+      "source": "manual",
+      "chain": "ai",
+      "draft": false
     },
     {
       "id": 2,
-      "pointId": 1,
+      "pointId": 2,
+      "fieldId": "xiongxian",
       "level": "high",
-      "message": "温度异常升高，超过阈值",
-      "time": 1697712000000,
-      "handled": true
+      "message": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，已持续 12 min",
+      "time": 1787362800000,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "water_stress",
+      "chain": "env",
+      "draft": false
     },
     {
       "id": 3,
       "pointId": 2,
-      "level": "low",
-      "message": "设备通信延迟",
-      "time": 1697798400000,
-      "handled": true
-    },
-    {
-      "id": 4,
-      "pointId": 2,
-      "level": "critical",
-      "message": "核心温度达到危险阈值！",
-      "time": 1762832156560,
-      "handled": true
-    },
-    {
-      "id": 5,
-      "pointId": 3,
-      "level": "low",
-      "message": "设备电量低于20%",
-      "time": 1760965172018,
-      "handled": true
-    },
-    {
-      "id": 6,
-      "pointId": 2,
-      "level": "warning",
-      "message": "土壤水分低于警戒线",
-      "time": 1762847700263,
-      "handled": true
-    },
-    {
-      "id": 7,
-      "pointId": 1,
-      "level": "low",
-      "message": "网络信号弱，数据上传延迟",
-      "time": 1762847704528,
-      "handled": true
-    },
-    {
-      "id": 8,
-      "pointId": 1,
-      "level": "medium",
-      "message": "传感器校准建议",
-      "time": 1762850173196,
-      "handled": true
-    },
-    {
-      "time": 1762949548866,
-      "handled": true,
-      "pointId": 1,
-      "level": "medium",
-      "message": "温度异常升高，超过阈值",
-      "id": 9
-    },
-    {
-      "time": 1763529972309,
-      "handled": true,
-      "pointId": 2,
-      "level": "medium",
-      "message": "手动触发：监测站 · 雄县 状态异常",
-      "id": 10
-    },
-    {
-      "time": 1763648904363,
-      "handled": true,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发：监测站 · 河间市 状态异常",
-      "id": 11
-    },
-    {
-      "time": 1763658723193,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 水稻 - 稻瘟病 (置信度: 88.0%)",
-      "id": 12
-    },
-    {
-      "time": 1763714262825,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 水稻 - 稻颈瘟 (置信度: 96.0%)",
-      "id": 13
-    },
-    {
-      "time": 1763887174843,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 玉米 - 玉米南方锈病 (置信度: 94.0%)",
-      "id": 14
-    },
-    {
-      "time": 1764430457108,
-      "handled": true,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发：监测站 · 河间市 状态异常",
-      "id": 15
-    },
-    {
-      "time": 1764430462344,
-      "handled": true,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发：监测站 · 河间市 状态异常",
-      "id": 16
-    },
-    {
-      "time": 1773381844397,
-      "handled": true,
-      "pointId": 2,
-      "level": "medium",
-      "message": "手动触发：监测站 · 雄县 状态异常",
-      "id": 17
-    },
-    {
-      "time": 1773395103099,
-      "handled": true,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 98.0%)",
-      "id": 18
-    },
-    {
-      "time": 1773395115948,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 玉米 - 玉米小斑病 (置信度: 88.0%)",
-      "id": 19
-    },
-    {
-      "time": 1775655763606,
-      "handled": true,
-      "pointId": 3,
-      "level": "medium",
-      "message": "手动触发：监测站 · 栾城区 状态异常",
-      "id": 20
-    },
-    {
-      "time": 1775655768023,
-      "handled": true,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发：监测站 · 河间市 状态异常",
-      "id": 21
-    },
-    {
-      "time": 1775655816039,
-      "handled": true,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 玉米 - 健康 (置信度: 88.0%)",
-      "id": 22
-    },
-    {
-      "time": 1775655925093,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 97.0%)",
-      "id": 23
-    },
-    {
-      "time": 1775655933407,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 水稻 - 水稻白叶枯病 (置信度: 98.0%)",
-      "id": 24
-    },
-    {
-      "time": 1775656061841,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 88.0%)",
-      "id": 25
-    },
-    {
-      "time": 1775656194645,
-      "handled": true,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦赤霉病 (置信度: 89.0%)",
-      "id": 26
-    },
-    {
-      "time": 1779537199487,
-      "handled": false,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 94.0%)",
-      "id": 27
-    },
-    {
-      "time": 1779969862535,
-      "handled": false,
-      "pointId": 3,
-      "level": "medium",
-      "message": "手动触发：监测站 · 栾城区 状态异常",
-      "id": 28
-    },
-    {
-      "time": 1779970037205,
-      "handled": false,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 95.0%)",
-      "id": 29
-    },
-    {
-      "time": 1779971826729,
-      "handled": false,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 玉米 - 玉米褐斑病 (置信度: 93.0%)",
-      "id": 30
-    },
-    {
-      "time": 1780668614665,
-      "handled": false,
-      "pointId": 1,
-      "level": "medium",
-      "message": "手动触发：监测站 · 河间市 状态异常",
-      "id": 31
-    },
-    {
-      "time": 1780669103790,
-      "handled": false,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 82.0%)",
-      "id": 32
-    },
-    {
-      "time": 1780669115773,
-      "handled": false,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 82.0%)",
-      "id": 33
-    },
-    {
-      "time": 1783562393215,
-      "handled": false,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 91.4%)",
-      "id": 34
-    },
-    {
-      "time": 1783821573045,
-      "handled": false,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 84.5%)",
-      "id": 35
-    },
-    {
-      "time": 1783822643716,
-      "handled": false,
-      "pointId": 1,
-      "level": "high",
-      "message": "[AI识别] 监测到 番茄 - 番茄早疫病 (置信度: 90.5%)",
-      "id": 36
-    },
-    {
-      "time": 1785115789213,
-      "handled": false,
-      "pointId": 1,
-      "level": "low",
-      "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 94.5%)",
-      "id": 37
-    },
-    {
-      "pointId": 2,
-      "fieldId": "xiongxian",
-      "level": "high",
-      "message": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，已持续 30730 min",
-      "time": 1787357434583,
-      "handled": false,
-      "source": "auto",
-      "ruleId": "water_stress",
-      "chain": "env",
-      "draft": false,
-      "id": 104
-    },
-    {
-      "pointId": 2,
       "fieldId": "xiongxian",
       "level": "critical",
       "message": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
-      "time": 1787357434583,
+      "time": 1787361000000,
       "handled": false,
       "source": "auto",
       "ruleId": "extreme_heat_40",
       "chain": "extreme",
-      "draft": false,
-      "id": 105
+      "draft": false
     },
     {
-      "pointId": 1,
-      "fieldId": "hejian",
-      "level": "warning",
-      "message": "[自动预警] 监测站 · 河间市 - 气温 33.2℃ 超过提示阈值 32℃，已持续 30 min",
-      "time": 1787359234805,
-      "handled": false,
-      "source": "auto",
-      "ruleId": "heat_stress",
-      "chain": "env",
-      "draft": false,
-      "id": 106
-    },
-    {
+      "id": 4,
       "pointId": 2,
       "fieldId": "xiongxian",
-      "level": "warning",
-      "message": "[自动预警] 监测站 · 雄县 - 气温 35.6℃ 超过提示阈值 32℃，已持续 30 min",
-      "time": 1787359234805,
+      "level": "high",
+      "message": "[虫情风险] 地块 2号地块（雄县） - 风险等级：high（连续 3 日湿度 > 80%；NDVI 低于田间均值 15%）",
+      "time": 1787361000000,
       "handled": false,
       "source": "auto",
-      "ruleId": "heat_stress",
-      "chain": "env",
-      "draft": false,
-      "id": 107
+      "ruleId": "pest_risk",
+      "chain": "pest",
+      "draft": true
     },
     {
+      "id": 5,
+      "pointId": 3,
+      "fieldId": "luancheng",
+      "level": "medium",
+      "message": "手动触发：监测站 · 栾城区 状态异常",
+      "time": 1787356800000,
+      "handled": false,
+      "source": "manual",
+      "draft": false
+    },
+    {
+      "id": 6,
+      "pointId": 3,
+      "fieldId": "luancheng",
+      "level": "high",
+      "message": "[AI识别] 监测到 番茄 - 番茄早疫病 (置信度: 90.5%)",
+      "time": 1787299200000,
+      "handled": true,
+      "source": "manual",
+      "chain": "ai",
+      "draft": false
+    },
+    {
+      "id": 7,
+      "pointId": 5,
+      "fieldId": null,
+      "level": "high",
+      "message": "[AI识别] 监测到 水稻 - 稻瘟病 (置信度: 88.0%)",
+      "time": 1787364000000,
+      "handled": false,
+      "source": "manual",
+      "chain": "ai",
+      "draft": false
+    },
+    {
+      "id": 8,
       "pointId": 8,
       "fieldId": null,
       "level": "warning",
       "message": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 25%，已持续 30 min",
-      "time": 1787359234805,
+      "time": 1787362800000,
       "handled": false,
       "source": "auto",
       "ruleId": "water_stress",
       "chain": "env",
-      "draft": false,
-      "id": 108
+      "draft": false
+    },
+    {
+      "id": 9,
+      "pointId": 5,
+      "fieldId": null,
+      "level": "warning",
+      "message": "[极端天气] 监测站 · 黑龙江海伦 - 暴雨：预报日降水 62 mm",
+      "time": 1787361000000,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "extreme_rain",
+      "chain": "extreme",
+      "draft": false
+    },
+    {
+      "id": 10,
+      "pointId": 5,
+      "fieldId": null,
+      "level": "high",
+      "message": "[虫情风险] 地块 海伦示范田 - 风险等级：high（连续降水；玉米叶部病斑扩展）",
+      "time": 1787361000000,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "pest_risk",
+      "chain": "pest",
+      "draft": true
+    },
+    {
+      "id": 11,
+      "pointId": 6,
+      "fieldId": null,
+      "level": "high",
+      "message": "[AI识别] 监测到 玉米 - 玉米褐斑病 (置信度: 93.0%)",
+      "time": 1787299200000,
+      "handled": true,
+      "source": "manual",
+      "chain": "ai",
+      "draft": false
+    },
+    {
+      "id": 12,
+      "pointId": 5,
+      "fieldId": null,
+      "level": "high",
+      "message": "[AI识别] 监测到 水稻 - 稻颈瘟 (置信度: 96.0%)",
+      "time": 1787295600000,
+      "handled": true,
+      "source": "manual",
+      "chain": "ai",
+      "draft": false
     }
   ],
   "fields": [
@@ -765,14 +529,47 @@
       "source": "Sentinel-2"
     }
   ],
-  "thresholdProfiles": [],
+  "thresholdProfiles": [
+    {
+      "id": 1,
+      "pointId": 1,
+      "crop": "小麦",
+      "growthStage": "拔节",
+      "waterStressHint": 25,
+      "waterStressAlert": 15,
+      "waterStressHintMinutes": 30,
+      "waterStressAlertMinutes": 10,
+      "heatHint": 32,
+      "heatAlert": 38,
+      "heatHintMinutes": 30,
+      "heatAlertMinutes": 10,
+      "waterloggingAlert": 80,
+      "waterloggingMinutes": 10
+    },
+    {
+      "id": 2,
+      "pointId": 2,
+      "crop": "小麦",
+      "growthStage": "拔节",
+      "waterStressHint": 25,
+      "waterStressAlert": 15,
+      "waterStressHintMinutes": 30,
+      "waterStressAlertMinutes": 10,
+      "heatHint": 32,
+      "heatAlert": 38,
+      "heatHintMinutes": 30,
+      "heatAlertMinutes": 10,
+      "waterloggingAlert": 80,
+      "waterloggingMinutes": 10
+    }
+  ],
   "ruleState": [
     {
       "pointId": 1,
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "lastSeenAt": "2026-08-22T06:57:47.799Z",
       "alertEmitted": true
     },
     {
@@ -780,7 +577,7 @@
       "ruleId": "water_stress",
       "level": "alert",
       "startedAt": "2026-08-01T00:00:00+08:00",
-      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "lastSeenAt": "2026-08-22T06:57:47.799Z",
       "alertEmitted": true
     },
     {
@@ -788,7 +585,7 @@
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "lastSeenAt": "2026-08-22T06:57:47.799Z",
       "alertEmitted": true
     },
     {
@@ -796,7 +593,7 @@
       "ruleId": "water_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "lastSeenAt": "2026-08-22T06:57:47.799Z",
       "alertEmitted": true
     }
   ],
@@ -1302,6 +1099,16 @@
       "level": "critical",
       "startAt": "2026-08-22",
       "id": 1
+    },
+    {
+      "pointId": 5,
+      "ruleId": "extreme_rain",
+      "type": "heavy_rain",
+      "title": "暴雨",
+      "description": "预报日降水 62 mm",
+      "level": "warning",
+      "startAt": "2026-08-22",
+      "id": 2
     }
   ],
   "pestRiskPredictions": [
@@ -1332,38 +1139,31 @@
   "notifications": [
     {
       "id": 1,
-      "title": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，",
+      "title": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 91.4%)",
       "read": false,
-      "alertId": 104,
-      "createdAt": "2026-08-22T00:10:34.583Z"
+      "alertId": 1,
+      "createdAt": "2026-08-22T10:00:00+08:00"
     },
     {
       "id": 2,
-      "title": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
+      "title": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%",
       "read": false,
-      "alertId": 105,
-      "createdAt": "2026-08-22T00:10:34.583Z"
+      "alertId": 2,
+      "createdAt": "2026-08-22T09:40:00+08:00"
     },
     {
       "id": 3,
-      "title": "[自动预警] 监测站 · 河间市 - 气温 33.2℃ 超过提示阈值 32℃，已",
+      "title": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
       "read": false,
-      "alertId": 106,
-      "createdAt": "2026-08-22T00:40:34.805Z"
+      "alertId": 3,
+      "createdAt": "2026-08-22T09:10:00+08:00"
     },
     {
       "id": 4,
-      "title": "[自动预警] 监测站 · 雄县 - 气温 35.6℃ 超过提示阈值 32℃，已持",
+      "title": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 25%",
       "read": false,
-      "alertId": 107,
-      "createdAt": "2026-08-22T00:40:34.805Z"
-    },
-    {
-      "id": 5,
-      "title": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 2",
-      "read": false,
-      "alertId": 108,
-      "createdAt": "2026-08-22T00:40:34.805Z"
+      "alertId": 8,
+      "createdAt": "2026-08-22T09:40:00+08:00"
     }
   ],
   "droneMissions": [
@@ -1583,7 +1383,7 @@
       "recordedAt": "2026-08-22T08:00:00+08:00",
       "airTemp": 35.6,
       "airRh": 28.4,
-      "soilVwc": 11.8,
+      "soilVwc": 11.4,
       "soilTemp10cm": 31.5
     },
     {

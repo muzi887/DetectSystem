@@ -12,6 +12,8 @@ export interface SensorSnapshot {
 
 export interface ThresholdProfile {
   pointId: number
+  crop: string
+  growthStage: string
   waterStressHint: number
   waterStressAlert: number
   waterStressHintMinutes: number

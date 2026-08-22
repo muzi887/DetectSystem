@@ -1,5 +1,7 @@
 const DEFAULT_THRESHOLD_PROFILE = {
   pointId: 0,
+  crop: '小麦',
+  growthStage: '拔节',
   waterStressHint: 25,
   waterStressAlert: 15,
   waterStressHintMinutes: 30,
@@ -178,7 +180,7 @@ function latestWeatherByPoint(rows) {
 function profileForPoint(db, pointId) {
   const rows = Array.isArray(db.thresholdProfiles) ? db.thresholdProfiles : []
   const found = rows.find((row) => Number(row.pointId) === pointId)
-  if (found) return found
+  if (found) return { ...DEFAULT_THRESHOLD_PROFILE, ...found, pointId }
   return { ...DEFAULT_THRESHOLD_PROFILE, pointId }
 }
 

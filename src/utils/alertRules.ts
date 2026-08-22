@@ -10,6 +10,8 @@ import { mapRuleLevel } from './ruleLevelMap.ts'
 
 export const DEFAULT_THRESHOLD_PROFILE: ThresholdProfile = {
   pointId: 0,
+  crop: '小麦',
+  growthStage: '拔节',
   waterStressHint: 25,
   waterStressAlert: 15,
   waterStressHintMinutes: 30,

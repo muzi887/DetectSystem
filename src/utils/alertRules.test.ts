@@ -6,6 +6,8 @@ import type { RuleState, SensorSnapshot, ThresholdProfile } from '../types/rules
 
 const profile: ThresholdProfile = {
   pointId: 2,
+  crop: '小麦',
+  growthStage: '拔节',
   waterStressHint: 25,
   waterStressAlert: 15,
   waterStressHintMinutes: 30,

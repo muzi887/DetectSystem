@@ -1,6 +1,17 @@
 <template>
   <AppLayout>
     <div class="data-page-content">
+      <div class="nav-buttons">
+        <a-button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="nav-btn"
+          :class="{ 'active-btn': currentTab === tab.key }"
+          @click="switchTab(tab.key)">
+          {{ tab.label }}
+        </a-button>
+      </div>
+
       <div class="chart-panel glass-panel glass-panel--chart">
         <div class="panel-header">
           <div class="header-left">
@@ -35,17 +46,17 @@
               @change="onSensorPointsChange" />
             <a-button
               type="primary"
-              shape="round"
+              class="report-btn"
               @click="handleGenerateReport">
               <template #icon><FilePdfOutlined /></template>
               生成{{ currentTabName }}简报
             </a-button>
-            <a-button
-              size="small"
-              ghost
-              style="margin-left: 10px">
+            <button
+              type="button"
+              class="detail-btn"
+              @click.stop="handleViewDetail">
               查看详情
-            </a-button>
+            </button>
           </div>
         </div>
 
@@ -200,6 +211,22 @@
                     layout="vertical"
                     class="threshold-form">
                     <div class="threshold-grid">
+                      <a-form-item label="作物">
+                        <a-select
+                          v-model:value="thresholdForm.crop"
+                          class="threshold-select"
+                          popup-class-name="weather-point-select-dropdown"
+                          :options="cropSelectOptions"
+                          @change="onCropOrStageChange" />
+                      </a-form-item>
+                      <a-form-item label="生育期">
+                        <a-select
+                          v-model:value="thresholdForm.growthStage"
+                          class="threshold-select"
+                          popup-class-name="weather-point-select-dropdown"
+                          :options="stageSelectOptions"
+                          @change="onCropOrStageChange" />
+                      </a-form-item>
                       <a-form-item label="墒情提示">
                         <a-input-number
                           v-model:value="thresholdForm.waterStressHint"
@@ -245,20 +272,95 @@
           </span>
         </div>
       </div>
+    </div>
 
-      <div class="nav-buttons">
+    <a-drawer
+      v-model:open="detailOpen"
+      :title="`${currentTitle} · 详情`"
+      root-class-name="data-detail-drawer"
+      :width="currentTab === 'weather' ? 640 : 520"
+      @after-open-change="onDetailDrawerOpen">
+      <div
+        v-if="currentTab === 'sensor'"
+        class="detail-section">
+        <h4 class="detail-section-title">近 7 日读数</h4>
+        <a-table
+          class="glass-ant-table"
+          size="small"
+          :pagination="false"
+          :data-source="sensorDetailRows"
+          :columns="sensorDetailColumns"
+          :locale="{ emptyText: '暂无该监测站近 7 日读数' }"
+          row-key="id" />
+      </div>
+      <div
+        v-else-if="currentTab === 'weather'"
+        class="detail-section">
+        <p class="detail-kicker">{{ getWeatherPointName(selectedWeatherPointId) }}</p>
+        <h4 class="detail-section-title">实时读数</h4>
+        <div
+          v-if="weatherMetrics.length"
+          class="detail-metric-grid">
+          <div
+            v-for="item in weatherMetrics"
+            :key="item.label"
+            class="detail-metric">
+            <span class="detail-metric-label">{{ item.label }}</span>
+            <span class="detail-metric-value">{{ item.value }}</span>
+          </div>
+        </div>
+        <p
+          v-else
+          class="detail-empty">
+          暂无该监测站气象读数
+        </p>
+        <template v-if="forecastDays.length">
+          <h4 class="detail-section-title">7 日预报</h4>
+          <a-table
+            class="glass-ant-table"
+            size="small"
+            :pagination="false"
+            :data-source="forecastDays"
+            :columns="forecastColumns"
+            row-key="date" />
+        </template>
+      </div>
+      <div
+        v-else
+        class="detail-section">
+        <div class="detail-metric-grid detail-metric-grid--two">
+          <div class="detail-metric">
+            <span class="detail-metric-label">数据来源</span>
+            <span class="detail-metric-value">{{ mapDataSource }}</span>
+          </div>
+          <div
+            v-if="detailImageDate"
+            class="detail-metric">
+            <span class="detail-metric-label">影像日期</span>
+            <span class="detail-metric-value">{{ detailImageDate }}</span>
+          </div>
+          <div
+            v-if="currentTab === 'drone'"
+            class="detail-metric">
+            <span class="detail-metric-label">当前地块</span>
+            <span class="detail-metric-value">{{ selectedFieldName }}</span>
+          </div>
+        </div>
+        <p class="detail-hint">
+          {{
+            currentTab === 'drone'
+              ? '在灾害实时监测地图上对照田间监测点与当前 NDVI 图层。'
+              : '在灾害实时监测地图上查看墒情分布、站点位置与预警状态。'
+          }}
+        </p>
         <a-button
-          v-for="tab in tabs"
-          :key="tab.key"
-          size="large"
-          block
-          class="nav-btn"
-          :class="{ 'active-btn': currentTab === tab.key }"
-          @click="switchTab(tab.key)">
-          {{ tab.label }}
+          type="primary"
+          class="detail-map-btn"
+          @click="openMapPage">
+          打开灾害实时监测
         </a-button>
       </div>
-    </div>
+    </a-drawer>
 
     <a-modal
       v-model:visible="reportModalVisible"
@@ -289,9 +391,16 @@ import { useRemoteSensingStore } from '@/stores/remoteSensing'
 import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { fetchDailyReport, fetchExtremeEvents, fetchForecast, fetchSensorReadings, fetchThresholds, saveThresholds } from '@/api/rules'
 import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
+import {
+  CROP_OPTIONS,
+  STAGE_OPTIONS,
+  bandsOf,
+  presetFor,
+  sameBands
+} from '@/utils/thresholdPresets'
 import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
 import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
 
@@ -309,6 +418,9 @@ const sensorByStation = ref<
 const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
 const forecastDays = ref<ForecastRow[]>([])
 const thresholdForm = reactive({ ...DEFAULT_THRESHOLD_PROFILE, pointId: 1 })
+
+const cropSelectOptions = CROP_OPTIONS.map((value) => ({ value, label: value }))
+const stageSelectOptions = STAGE_OPTIONS.map((value) => ({ value, label: value }))
 
 function mdLabel(iso: string) {
   const day = String(iso).slice(0, 10)
@@ -404,6 +516,22 @@ async function savePointThresholds() {
   } catch {
     message.error('阈值保存失败')
   }
+}
+
+function applyPresetBands() {
+  Object.assign(thresholdForm, presetFor(thresholdForm.crop, thresholdForm.growthStage))
+}
+
+function onCropOrStageChange() {
+  const next = presetFor(thresholdForm.crop, thresholdForm.growthStage)
+  if (sameBands(bandsOf(thresholdForm), next)) return
+  Modal.confirm({
+    title: '是否套用该作物生育期的推荐阈值？',
+    content: '将改写墒情/气温四档数字；选「取消」只保留作物与生育期标签。',
+    okText: '套用',
+    cancelText: '取消',
+    onOk: () => applyPresetBands()
+  })
 }
 
 function getWeatherPointName(pointId: number) {
@@ -530,6 +658,14 @@ const ndviCompareImageUrl = computed(() => {
 })
 
 const mapDataSource = computed(() => remoteRasterLayer.value.source)
+
+const detailImageDate = computed(() => {
+  if (currentTab.value === 'drone') return remoteStore.selectedNdviDate || remoteRasterLayer.value.date
+  if (currentTab.value === 'gis') {
+    return remoteStore.selectedMoistureDate || remoteRasterLayer.value.date
+  }
+  return ''
+})
 
 const ndviLegend = [
   { label: '低 (裸地/胁迫)', color: '#8b4513' },
@@ -773,9 +909,45 @@ const switchTab = async (key: string) => {
 const reportModalVisible = ref(false)
 const reportLoading = ref(false)
 const reportMarkdown = ref('')
+const detailOpen = ref(false)
 const reportPreview = computed(() =>
   reportMarkdown.value.split('\n').slice(0, 20).join('\n')
 )
+
+const sensorDetailColumns = [
+  { title: '监测站', dataIndex: 'station', key: 'station' },
+  { title: '日期', dataIndex: 'date', key: 'date' },
+  { title: '气温 ℃', dataIndex: 'airTemp', key: 'airTemp' },
+  { title: '湿度 %RH', dataIndex: 'airRh', key: 'airRh' },
+  { title: '墒情 %', dataIndex: 'soilVwc', key: 'soilVwc' },
+  { title: '土温 ℃', dataIndex: 'soilTemp10cm', key: 'soilTemp10cm' }
+]
+
+const sensorDetailRows = computed(() =>
+  sensorByStation.value.flatMap((station) =>
+    station.rows.map((row) => ({
+      ...row,
+      station: station.name,
+      date: String(row.recordedAt).slice(0, 10)
+    }))
+  )
+)
+
+function handleViewDetail() {
+  detailOpen.value = true
+}
+
+function onDetailDrawerOpen(open: boolean) {
+  if (!open) return
+  document.querySelectorAll('.data-detail-drawer .ant-drawer-close').forEach((el) => {
+    el.removeAttribute('title')
+  })
+}
+
+function openMapPage() {
+  detailOpen.value = false
+  router.push('/map')
+}
 
 const handleGenerateReport = async () => {
   reportModalVisible.value = true
@@ -939,24 +1111,32 @@ watch(
 <style scoped>
 .data-page-content {
   display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   height: 100%;
   width: 100%;
   max-width: var(--page-max-width);
   margin-inline: auto;
-  padding: 30px;
-  gap: 30px;
+  padding: 0;
+  gap: 16px;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .chart-panel {
+  flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid var(--glass-border);
@@ -965,6 +1145,9 @@ watch(
 .header-left {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  padding-right: 16px;
 }
 
 .title {
@@ -974,14 +1157,32 @@ watch(
 }
 
 .sub-title {
+  margin-top: 5px;
   font-size: 14px;
   color: var(--glass-text-muted);
-  margin-top: 5px;
+}
+
+.detail-btn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 14px;
+  line-height: 30px;
+  color: var(--glass-text-primary);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.detail-btn:hover {
+  background: var(--glass-bg-item-hover);
 }
 
 .chart-wrapper {
   flex: 1;
   position: relative;
+  z-index: 0;
   width: 100%;
   min-height: 0;
   background: rgb(0 0 0 / 10%);
@@ -1096,8 +1297,17 @@ watch(
 .header-actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.header-actions :deep(.ant-btn) {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: none;
 }
 
 .header-actions :deep(.ant-btn-primary) {
@@ -1113,20 +1323,31 @@ watch(
 }
 
 .weather-point-select {
-  min-width: 240px;
-  max-width: 360px;
+  min-width: 180px;
+  max-width: 280px;
+  width: 240px;
+  flex-shrink: 1;
 }
 
 .weather-point-select--multi {
-  min-width: 260px;
+  min-width: 220px;
+  width: 260px;
 }
 
 .weather-point-select :deep(.ant-select-selector) {
+  height: 32px !important;
+  display: flex !important;
+  align-items: center;
   background-color: var(--glass-bg-input) !important;
   border: 1px solid var(--glass-border-strong) !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   color: var(--glass-text-primary) !important;
   box-shadow: none !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selector) {
+  height: auto !important;
+  min-height: 32px;
 }
 
 .weather-point-select.ant-select-focused :deep(.ant-select-selector),
@@ -1360,6 +1581,16 @@ watch(
   border-inline-start-color: var(--glass-border) !important;
 }
 
+.threshold-form :deep(.threshold-select .ant-select-selector) {
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.threshold-form :deep(.threshold-select .ant-select-selection-item) {
+  color: var(--glass-text-primary) !important;
+}
+
 .threshold-save-btn.ant-btn-primary {
   width: 100%;
   margin-top: 4px;
@@ -1494,36 +1725,59 @@ watch(
   line-height: 1.6;
 }
 
+.detail-weather p,
+.detail-map p {
+  margin: 0 0 8px;
+  color: var(--glass-text-secondary);
+}
+
+.detail-map .ant-btn {
+  margin-top: 8px;
+}
+
 .nav-buttons {
-  width: 220px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: row;
+  flex-shrink: 0;
+  width: 100%;
+  gap: 8px;
 }
 
 .nav-btn {
-  height: 60px !important;
+  flex: 1;
+  min-width: 0;
+  height: 40px !important;
+  padding: 0 12px !important;
   background: var(--glass-bg-subtle) !important;
   border: 1px solid var(--glass-border) !important;
   color: var(--glass-text-secondary) !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
+  line-height: 38px !important;
+  border-radius: 8px !important;
   text-shadow: var(--glass-text-shadow);
+  box-shadow: none !important;
 }
 
-.active-btn {
+.nav-btn:hover {
+  background: var(--glass-bg-item-hover) !important;
+  color: var(--glass-text-primary) !important;
+  border-color: var(--glass-border-strong) !important;
+}
+
+.active-btn,
+.active-btn:hover {
   background: linear-gradient(90deg, #4a5c43 0%, #2c3a26 100%) !important;
   color: #fff !important;
   border-color: #73d13d !important;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 20%) !important;
 }
 
 @media (width <= 992px) {
   .data-page-content {
-    flex-direction: column;
     height: auto;
     min-height: 0;
-    padding: 16px;
-    gap: 16px;
+    padding: 0;
+    gap: 12px;
     overflow: visible;
   }
 
@@ -1532,22 +1786,17 @@ watch(
   }
 
   .nav-buttons {
-    width: 100%;
-    flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
-    order: 1;
   }
 
   .chart-panel {
-    order: 0;
     min-height: 480px;
   }
 
   .nav-btn {
     flex: 1 1 calc(50% - 4px);
-    height: 48px !important;
-    font-size: 14px !important;
+    height: 40px !important;
+    font-size: 13px !important;
   }
 
   .panel-header {
@@ -1558,9 +1807,15 @@ watch(
 
   .header-actions {
     width: 100%;
-    display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .weather-point-select {
+    width: auto;
+    min-width: 160px;
+    flex: 1 1 180px;
+    max-width: none;
   }
 
   .weather-layout {
@@ -1605,8 +1860,8 @@ watch(
   }
 
   .nav-btn {
-    flex: 1 1 100%;
-    height: 44px !important;
+    flex: 1 1 calc(50% - 4px);
+    height: 40px !important;
     font-size: 13px !important;
   }
 
@@ -1750,5 +2005,142 @@ watch(
 .glass-report-modal-root .ant-btn-primary {
   background: var(--dark-green) !important;
   border-color: var(--dark-green) !important;
+}
+
+.data-detail-drawer .ant-drawer-content {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border-left: 1px solid var(--glass-border-strong);
+}
+
+.data-detail-drawer .ant-drawer-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 16px 24px;
+}
+
+.data-detail-drawer .ant-drawer-header-title {
+  align-items: center;
+  gap: 4px;
+}
+
+.data-detail-drawer .ant-drawer-title {
+  color: var(--light-green) !important;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.data-detail-drawer .ant-drawer-close {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-inline-end: 8px;
+  border-radius: 8px;
+  color: var(--glass-text-muted) !important;
+}
+
+.data-detail-drawer .ant-drawer-close:hover {
+  background: var(--glass-bg-item-hover);
+  color: var(--glass-text-primary) !important;
+}
+
+.data-detail-drawer .ant-drawer-body {
+  padding: 20px 24px 28px;
+  color: var(--glass-text-primary);
+}
+
+.data-detail-drawer .ant-empty-description {
+  color: var(--glass-text-muted);
+}
+
+.data-detail-drawer .detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.data-detail-drawer .detail-kicker {
+  margin: 0;
+  font-size: 13px;
+  color: var(--glass-text-muted);
+  text-shadow: var(--glass-text-shadow);
+}
+
+.data-detail-drawer .detail-section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--light-green);
+  text-shadow: var(--glass-title-shadow);
+}
+
+.data-detail-drawer .detail-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-detail-drawer .detail-metric-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.data-detail-drawer .detail-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg-subtle);
+}
+
+.data-detail-drawer .detail-metric-label {
+  font-size: 12px;
+  color: var(--glass-text-muted);
+}
+
+.data-detail-drawer .detail-metric-value {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--glass-text-primary);
+  text-shadow: var(--glass-text-shadow);
+  word-break: break-word;
+}
+
+.data-detail-drawer .detail-empty,
+.data-detail-drawer .detail-hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--glass-text-muted);
+  text-shadow: var(--glass-text-shadow);
+}
+
+.data-detail-drawer .detail-map-btn.ant-btn-primary,
+.data-detail-drawer .ant-btn-primary {
+  height: 36px;
+  align-self: flex-start;
+  padding: 0 18px;
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+  color: var(--glass-text-primary) !important;
+  box-shadow: none;
+}
+
+.data-detail-drawer .ant-btn-primary:hover {
+  background: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
+}
+
+@media (width <= 576px) {
+  .data-detail-drawer .detail-metric-grid,
+  .data-detail-drawer .detail-metric-grid--two {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

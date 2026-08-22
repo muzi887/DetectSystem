@@ -52,7 +52,7 @@
       "soilMoisture": 12,
       "status": "warning",
       "online": true,
-      "lastSeenAt": "2026-08-22T01:16:35.126Z"
+      "lastSeenAt": "2026-08-22T03:21:55.315Z"
     },
     {
       "id": 3,
@@ -260,7 +260,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 水稻 - 稻瘟病 (置信度: 88.0%)",
       "id": 12
     },
     {
@@ -268,7 +268,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃缩叶病 (置信度: 96.0%)",
+      "message": "[AI识别] 监测到 水稻 - 稻颈瘟 (置信度: 96.0%)",
       "id": 13
     },
     {
@@ -276,7 +276,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 apple - 苹果轮纹病 (置信度: 94.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米南方锈病 (置信度: 94.0%)",
       "id": 14
     },
     {
@@ -308,7 +308,7 @@
       "handled": true,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 apple - 健康 (置信度: 98.0%)",
+      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 98.0%)",
       "id": 18
     },
     {
@@ -316,7 +316,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 apple - 苹果腐烂病 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米小斑病 (置信度: 88.0%)",
       "id": 19
     },
     {
@@ -340,7 +340,7 @@
       "handled": true,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 apple - 健康 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 玉米 - 健康 (置信度: 88.0%)",
       "id": 22
     },
     {
@@ -348,7 +348,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 97.0%)",
+      "message": "[AI识别] 监测到 小麦 - 小麦锈病 (置信度: 97.0%)",
       "id": 23
     },
     {
@@ -356,7 +356,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 peach - 桃疮痂病 (置信度: 98.0%)",
+      "message": "[AI识别] 监测到 水稻 - 水稻白叶枯病 (置信度: 98.0%)",
       "id": 24
     },
     {
@@ -364,7 +364,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 88.0%)",
+      "message": "[AI识别] 监测到 小麦 - 小麦锈病 (置信度: 88.0%)",
       "id": 25
     },
     {
@@ -372,7 +372,7 @@
       "handled": true,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦赤霉病 (置信度: 89.0%)",
+      "message": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 89.0%)",
       "id": 26
     },
     {
@@ -380,7 +380,7 @@
       "handled": false,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 wheat - 小麦锈病 (置信度: 94.0%)",
+      "message": "[AI识别] 监测到 小麦 - 小麦锈病 (置信度: 94.0%)",
       "id": 27
     },
     {
@@ -396,7 +396,7 @@
       "handled": false,
       "pointId": 1,
       "level": "low",
-      "message": "[AI识别] 监测到 桃 - 健康 (置信度: 95.0%)",
+      "message": "[AI识别] 监测到 水稻 - 健康 (置信度: 95.0%)",
       "id": 29
     },
     {
@@ -404,7 +404,7 @@
       "handled": false,
       "pointId": 1,
       "level": "high",
-      "message": "[AI识别] 监测到 桃 - 桃疮痂病 (置信度: 93.0%)",
+      "message": "[AI识别] 监测到 玉米 - 玉米褐斑病 (置信度: 93.0%)",
       "id": 30
     }
   ],
@@ -545,14 +545,47 @@
       "source": "Sentinel-2"
     }
   ],
-  "thresholdProfiles": [],
+  "thresholdProfiles": [
+    {
+      "id": 1,
+      "pointId": 1,
+      "crop": "小麦",
+      "growthStage": "拔节",
+      "waterStressHint": 25,
+      "waterStressAlert": 15,
+      "waterStressHintMinutes": 30,
+      "waterStressAlertMinutes": 10,
+      "heatHint": 32,
+      "heatAlert": 38,
+      "heatHintMinutes": 30,
+      "heatAlertMinutes": 10,
+      "waterloggingAlert": 80,
+      "waterloggingMinutes": 10
+    },
+    {
+      "id": 2,
+      "pointId": 2,
+      "crop": "小麦",
+      "growthStage": "拔节",
+      "waterStressHint": 25,
+      "waterStressAlert": 15,
+      "waterStressHintMinutes": 30,
+      "waterStressAlertMinutes": 10,
+      "heatHint": 32,
+      "heatAlert": 38,
+      "heatHintMinutes": 30,
+      "heatAlertMinutes": 10,
+      "waterloggingAlert": 80,
+      "waterloggingMinutes": 10
+    }
+  ],
   "ruleState": [
     {
       "pointId": 1,
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:16:35.126Z",
+      "lastSeenAt": "2026-08-22T03:21:55.315Z",
       "alertEmitted": true
     },
     {
@@ -560,7 +593,7 @@
       "ruleId": "water_stress",
       "level": "alert",
       "startedAt": "2026-08-01T00:00:00+08:00",
-      "lastSeenAt": "2026-08-22T01:16:35.126Z",
+      "lastSeenAt": "2026-08-22T03:21:55.315Z",
       "alertEmitted": true
     },
     {
@@ -568,7 +601,7 @@
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:16:35.126Z",
+      "lastSeenAt": "2026-08-22T03:21:55.315Z",
       "alertEmitted": true
     },
     {
@@ -576,7 +609,7 @@
       "ruleId": "water_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T01:16:35.126Z",
+      "lastSeenAt": "2026-08-22T03:21:55.315Z",
       "alertEmitted": true
     }
   ],
@@ -1082,6 +1115,16 @@
       "level": "critical",
       "startAt": "2026-08-22",
       "id": 1
+    },
+    {
+      "pointId": 5,
+      "ruleId": "extreme_rain",
+      "type": "heavy_rain",
+      "title": "暴雨",
+      "description": "预报日降水 62 mm",
+      "level": "warning",
+      "startAt": "2026-08-22",
+      "id": 2
     }
   ],
   "pestRiskPredictions": [
@@ -1305,7 +1348,7 @@
       "recordedAt": "2026-08-22T08:00:00+08:00",
       "airTemp": 35.6,
       "airRh": 28.4,
-      "soilVwc": 14.2,
+      "soilVwc": 11.8,
       "soilTemp10cm": 31.5
     },
     {
@@ -1627,38 +1670,31 @@
   "notifications": [
     {
       "id": 1,
-      "title": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，",
+      "title": "[AI识别] 监测到 小麦 - 小麦赤霉病 (置信度: 91.4%)",
       "read": false,
-      "alertId": 104,
-      "createdAt": "2026-08-22T00:10:34.583Z"
+      "alertId": 1,
+      "createdAt": "2026-08-22T10:00:00+08:00"
     },
     {
       "id": 2,
-      "title": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
+      "title": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%",
       "read": false,
-      "alertId": 105,
-      "createdAt": "2026-08-22T00:10:34.583Z"
+      "alertId": 2,
+      "createdAt": "2026-08-22T09:40:00+08:00"
     },
     {
       "id": 3,
-      "title": "[自动预警] 监测站 · 河间市 - 气温 33.2℃ 超过提示阈值 32℃，已",
+      "title": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
       "read": false,
-      "alertId": 106,
-      "createdAt": "2026-08-22T00:40:34.805Z"
+      "alertId": 3,
+      "createdAt": "2026-08-22T09:10:00+08:00"
     },
     {
       "id": 4,
-      "title": "[自动预警] 监测站 · 雄县 - 气温 35.6℃ 超过提示阈值 32℃，已持",
+      "title": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 25%",
       "read": false,
-      "alertId": 107,
-      "createdAt": "2026-08-22T00:40:34.805Z"
-    },
-    {
-      "id": 5,
-      "title": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 2",
-      "read": false,
-      "alertId": 108,
-      "createdAt": "2026-08-22T00:40:34.805Z"
+      "alertId": 8,
+      "createdAt": "2026-08-22T09:40:00+08:00"
     }
   ],
   "droneMissions": [

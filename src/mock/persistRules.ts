@@ -62,7 +62,7 @@ function latestWeatherByPoint(rows: Array<Record<string, unknown>>): Map<number,
 export function profileForPoint(db: any, pointId: number): ThresholdProfile {
   const rows = Array.isArray(db.thresholdProfiles) ? db.thresholdProfiles : []
   const found = rows.find((row: ThresholdProfile) => Number(row.pointId) === pointId)
-  if (found) return found
+  if (found) return { ...DEFAULT_THRESHOLD_PROFILE, ...found, pointId }
   return { ...DEFAULT_THRESHOLD_PROFILE, pointId }
 }
 
@@ -282,10 +282,7 @@ export function runChain3OnDb(db: any, now: Date): { created: AlertRow[] } {
     const fieldId = String(field.id)
     const pointId = Number(field.monitorPointId || 0)
     const forecast = (db.weatherForecast || []).filter((row: any) => Number(row.pointId) === pointId)
-    const profile = profileForPoint(db, pointId) as ThresholdProfile & {
-      crop?: string
-      growthStage?: string
-    }
+    const profile = profileForPoint(db, pointId)
     const out = evaluatePestRisk({
       fieldId,
       fieldName: field.name || fieldId,
