@@ -45,43 +45,6 @@
         </div>
       </div>
 
-      <div class="glass-panel recent-alerts">
-        <h3>最新预警动态</h3>
-        <a-list
-          class="home-list"
-          item-layout="horizontal"
-          :data-source="pagedAlerts"
-          :pagination="false"
-          :loading="dataStore.loadingAlerts">
-          <template #renderItem="{ item }">
-            <a-list-item>
-              <a-list-item-meta :description="formatTime(item.time)">
-                <template #title>
-                  <router-link
-                    to="/warnings"
-                    :class="getLevelClass(item.level)">
-                    监测点 #{{ item.pointId }}: {{ item.message }}
-                  </router-link>
-                </template>
-              </a-list-item-meta>
-            </a-list-item>
-          </template>
-          <template #empty>
-            <GlassEmpty
-              description="暂无预警信息"
-              style="padding-top: 20px" />
-          </template>
-        </a-list>
-        <a-pagination
-          v-if="showAlertPagination"
-          v-model:current="alertPage"
-          class="home-list-pagination"
-          :total="sortedAlerts.length"
-          :page-size="HOME_ALERT_PAGE_SIZE"
-          size="small"
-          :show-size-changer="false" />
-      </div>
-
       <div class="glass-panel recent-analyses">
         <div class="recent-analyses-head">
           <h3>近期识别</h3>
@@ -126,6 +89,43 @@
           size="small"
           :show-size-changer="false" />
       </div>
+
+      <div class="glass-panel recent-alerts">
+        <h3>最新预警动态</h3>
+        <a-list
+          class="home-list"
+          item-layout="horizontal"
+          :data-source="pagedAlerts"
+          :pagination="false"
+          :loading="dataStore.loadingAlerts">
+          <template #renderItem="{ item }">
+            <a-list-item>
+              <a-list-item-meta :description="formatTime(item.time)">
+                <template #title>
+                  <router-link
+                    to="/warnings"
+                    :class="getLevelClass(item.level)">
+                    监测点 #{{ item.pointId }}: {{ item.message }}
+                  </router-link>
+                </template>
+              </a-list-item-meta>
+            </a-list-item>
+          </template>
+          <template #empty>
+            <GlassEmpty
+              description="暂无预警信息"
+              style="padding-top: 20px" />
+          </template>
+        </a-list>
+        <a-pagination
+          v-if="showAlertPagination"
+          v-model:current="alertPage"
+          class="home-list-pagination"
+          :total="sortedAlerts.length"
+          :page-size="HOME_ALERT_PAGE_SIZE"
+          size="small"
+          :show-size-changer="false" />
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -138,6 +138,7 @@ import GlassEmpty from '@/components/GlassEmpty.vue'
 import { getAlertLevelClass } from '@/utils/alertLevel'
 import { formatTime } from '@/utils/formatTime'
 import { fetchAnalysisRecent } from '@/api/analysis.ts'
+import { BJJ_CROP_LABELS } from '@/constants/crops.ts'
 
 interface RecentAnalysisItem {
   id?: number
@@ -145,13 +146,6 @@ interface RecentAnalysisItem {
   confidence: number
   cropType?: string
   createdAt?: string
-}
-
-const CROP_LABELS: Record<string, string> = {
-  wheat: '小麦',
-  corn: '玉米',
-  tomato: '番茄',
-  rice: '水稻'
 }
 
 const HOME_ALERT_PAGE_SIZE = 3
@@ -217,7 +211,7 @@ const getLevelClass = getAlertLevelClass
 
 function cropLabel(cropType?: string) {
   if (!cropType) return '作物未标注'
-  return CROP_LABELS[cropType] ?? '作物未标注'
+  return (BJJ_CROP_LABELS as Record<string, string>)[cropType] ?? '作物未标注'
 }
 
 function formatConfidence(value: number) {
@@ -251,14 +245,15 @@ onMounted(() => {
   max-width: var(--page-max-width);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 24px;
   min-height: 100%;
 }
 
 .welcome {
   grid-column: 1 / 3;
+  grid-row: 1;
   padding: 40px;
   text-align: center;
   background-color: var(--glass-bg-welcome);
@@ -305,7 +300,10 @@ onMounted(() => {
 }
 
 .stats {
-  grid-column: 1 / 2;
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
 }
 
 .stats h3,
@@ -350,8 +348,8 @@ onMounted(() => {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
   flex-grow: 1;
   align-content: center;
 }
@@ -410,18 +408,24 @@ onMounted(() => {
 }
 
 .recent-alerts {
-  grid-column: 2 / 3;
+  grid-column: 2;
+  grid-row: 2 / 4;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
 .recent-analyses {
-  grid-column: 1 / 3;
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .analysis-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -460,6 +464,12 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
   padding: 8px 0 4px;
+  min-width: 0;
+}
+
+.analysis-empty :deep(.ant-empty-description) {
+  white-space: normal;
+  word-break: break-word;
 }
 
 .home-list {
@@ -530,6 +540,8 @@ onMounted(() => {
   transition: color 0.3s;
   font-size: 14px;
   text-shadow: var(--glass-text-shadow);
+  white-space: normal;
+  word-break: break-word;
 }
 
 .recent-alerts :deep(.ant-list-item-meta-title a:hover) {
@@ -577,6 +589,7 @@ onMounted(() => {
   .recent-alerts,
   .recent-analyses {
     grid-column: 1;
+    grid-row: auto;
   }
 
   .welcome {

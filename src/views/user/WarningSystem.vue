@@ -7,25 +7,23 @@
             <div class="glass-card-title">预警管理</div>
           </template>
           <template #extra>
-            <a-button
-              type="primary"
-              size="small"
-              @click="showCreateModal">
-              新建预警
-            </a-button>
-            <a-button
-              class="refresh-btn"
-              size="small"
-              style="margin-left: 8px"
-              @click="fetchAlerts">
-              刷新
-            </a-button>
-            <a-switch
-              v-model:checked="showDrafts"
-              class="draft-switch"
-              checked-children="含草稿"
-              un-checked-children="待办"
-              style="margin-left: 8px" />
+            <div class="warning-toolbar">
+              <a-button
+                type="primary"
+                @click="showCreateModal">
+                新建预警
+              </a-button>
+              <a-button
+                class="refresh-btn"
+                @click="fetchAlerts">
+                刷新
+              </a-button>
+              <a-switch
+                v-model:checked="showDrafts"
+                class="draft-switch"
+                checked-children="含草稿"
+                un-checked-children="待办" />
+            </div>
           </template>
 
           <a-list
@@ -96,7 +94,9 @@
     <a-modal
       v-model:open="createModalVisible"
       title="新建预警"
-      wrapClassName="warning-modal"
+      ok-text="确定"
+      cancel-text="取消"
+      wrap-class-name="warning-modal"
       @ok="handleCreateModalOk"
       @cancel="createModalVisible = false">
       <a-form
@@ -258,6 +258,39 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.warning-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.warning-toolbar :deep(.ant-btn) {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 14px;
+  line-height: 30px;
+  letter-spacing: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.warning-toolbar :deep(.ant-btn-two-chinese-chars) {
+  letter-spacing: 0 !important;
+}
+
+.warning-toolbar :deep(.ant-btn-two-chinese-chars > span) {
+  letter-spacing: 0 !important;
+  margin-inline-end: 0 !important;
+}
+
+.warning-toolbar :deep(.ant-btn:hover),
+.warning-toolbar :deep(.ant-btn:focus),
+.warning-toolbar :deep(.ant-btn:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
 .refresh-btn {
   background-color: var(--glass-bg-subtle) !important;
   border-color: var(--glass-border-strong) !important;
@@ -265,13 +298,68 @@ onMounted(() => {
 }
 
 .draft-switch.ant-switch {
-  background: var(--glass-bg-input) !important;
+  min-width: 88px;
+  height: 32px;
+  line-height: 30px;
+  border-radius: 6px;
+  background: var(--glass-bg-subtle) !important;
   border: 1px solid var(--glass-border-strong);
+  box-sizing: border-box;
 }
 
 .draft-switch.ant-switch-checked {
   background: var(--dark-green) !important;
   border-color: var(--dark-green);
+}
+
+.draft-switch.ant-switch:hover,
+.draft-switch.ant-switch:focus,
+.draft-switch.ant-switch:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.draft-switch :deep(.ant-switch-inner) {
+  overflow: hidden;
+  height: 100%;
+  font-size: 14px;
+  line-height: 30px;
+  padding-inline-start: 28px;
+  padding-inline-end: 8px;
+}
+
+.draft-switch.ant-switch-checked :deep(.ant-switch-inner) {
+  padding-inline-start: 8px;
+  padding-inline-end: 28px;
+}
+
+.draft-switch :deep(.ant-switch-inner-checked),
+.draft-switch :deep(.ant-switch-inner-unchecked) {
+  display: block;
+  height: 30px;
+  font-size: 14px;
+  line-height: 30px;
+  color: var(--glass-text-primary);
+}
+
+.draft-switch :deep(.ant-switch-inner-unchecked) {
+  margin-top: -30px !important;
+}
+
+.draft-switch :deep(.ant-switch-handle) {
+  width: 24px;
+  height: 24px;
+  top: 3px;
+  inset-inline-start: 3px;
+  border-radius: 4px;
+}
+
+.draft-switch :deep(.ant-switch-handle::before) {
+  border-radius: 4px;
+}
+
+.draft-switch.ant-switch-checked :deep(.ant-switch-handle) {
+  inset-inline-start: calc(100% - 27px);
 }
 
 .source-tag,

@@ -1,225 +1,330 @@
 <template>
   <AppLayout>
-    <main class="main-content page-main-shell page-main-shell--scroll">
-      <div class="content-wrapper glass-page">
+    <main class="main-content page-main-shell page-main-shell--fill analysis-page-root">
+      <div class="content-wrapper glass-page page-card-fill page-card-body-stack-md analysis-page-fill">
         <a-card :bordered="false">
           <template #title>
             <div class="glass-card-title">智能分析</div>
           </template>
 
-          <div class="analysis-body-container">
-            <div class="form-section">
-              <div class="upload-wrapper">
-                <a-upload
-                  v-model:file-list="fileList"
-                  name="file"
-                  list-type="picture-card"
-                  class="avatar-uploader"
-                  :show-upload-list="false"
-                  :before-upload="beforeUpload"
-                  :customRequest="customUpload"
-                  @change="handleChange">
-                  <img
-                    v-if="imageUrl"
-                    :src="imageUrl"
-                    alt="uploaded-image"
-                    class="uploaded-image" />
-                  <div v-else>
-                    <loading-outlined v-if="loading"></loading-outlined>
-                    <plus-outlined v-else></plus-outlined>
-                    <div class="ant-upload-text">上传图片</div>
+          <div class="analysis-dashboard page-grid-stack-md">
+            <div class="col-input">
+              <a-card
+                size="small"
+                class="widget-card glass-widget-card input-panel"
+                title="分析参数">
+                <div class="input-main">
+                  <div class="preview-box">
+                    <a-upload
+                      v-if="!imageUrl"
+                      v-model:file-list="fileList"
+                      name="file"
+                      class="preview-upload"
+                      accept="image/jpeg,image/png"
+                      :show-upload-list="false"
+                      :before-upload="beforeUpload"
+                      :customRequest="customUpload"
+                      @change="handleChange">
+                      <div class="preview-empty">
+                        <loading-outlined v-if="loading" />
+                        <plus-outlined v-else />
+                        <p>上传叶片</p>
+                        <span>JPG / PNG，不超过 2MB</span>
+                      </div>
+                    </a-upload>
+                    <button
+                      v-else
+                      type="button"
+                      class="preview-open-btn"
+                      aria-label="查看图像预览"
+                      @click="previewOpen = true">
+                      <img
+                        :src="imageUrl"
+                        alt=""
+                        class="preview-image" />
+                      <div
+                        v-if="uploading || analyzing"
+                        class="preview-overlay">
+                        <a-progress
+                          v-if="uploading"
+                          type="circle"
+                          :percent="uploadProgress"
+                          :width="72" />
+                        <a-spin
+                          v-else
+                          size="large" />
+                      </div>
+                    </button>
                   </div>
-                </a-upload>
-                <div
-                  v-if="uploading"
-                  class="upload-progress-overlay">
-                  <a-progress
-                    type="circle"
-                    :percent="uploadProgress"
-                    :width="80">
-                    <template #format="percent">{{ percent }}%</template>
-                  </a-progress>
-                </div>
-              </div>
 
-              <a-form
-                class="analysis-form"
-                layout="vertical">
-                <a-form-item>
-                  <div class="form-inline-group">
+                  <div class="input-fields">
+                    <div
+                      class="category-row"
+                      role="tablist"
+                      aria-label="识别类别">
+                      <button
+                        v-for="category in categories"
+                        :key="category.key"
+                        type="button"
+                        role="tab"
+                        class="category-btn"
+                        :class="{ active: selectedCategory === category.key }"
+                        :aria-selected="selectedCategory === category.key"
+                        @click="selectedCategory = category.key">
+                        {{ category.short }}
+                      </button>
+                    </div>
+                    <p
+                      v-if="selectedCategory !== 'pest'"
+                      class="category-hint">
+                      当前模型为病虫害分类，其他类别仅供参考
+                    </p>
+
                     <a-select
                       v-model:value="formState.cropType"
+                      class="crop-select"
                       popup-class-name="glass-select-dropdown"
-                      style="flex-grow: 1">
-                      <a-select-option value="wheat">小麦</a-select-option>
-                      <a-select-option value="corn">玉米</a-select-option>
-                      <a-select-option value="tomato">番茄</a-select-option>
-                      <a-select-option value="rice">水稻</a-select-option>
+                      placeholder="作物">
+                      <a-select-option
+                        v-for="crop in bjjCropOptions"
+                        :key="crop.value"
+                        :value="crop.value">
+                        {{ crop.label }}
+                      </a-select-option>
                     </a-select>
-                    <a-button @click="handleIdentify">识别</a-button>
+
+                    <a-textarea
+                      v-model:value="formState.additionalInfo"
+                      class="note-input"
+                      placeholder="补充信息（选填）"
+                      :rows="2" />
+
+                    <a-button
+                      type="primary"
+                      block
+                      class="start-btn"
+                      :loading="analyzing"
+                      @click="handleConfirm">
+                      开始分析
+                    </a-button>
                   </div>
-                </a-form-item>
-                <a-form-item label="其他补充信息：">
-                  <a-textarea
-                    v-model:value="formState.additionalInfo"
-                    placeholder="请输入..."
-                    :rows="2" />
-                </a-form-item>
-              </a-form>
-              <a-button
-                type="primary"
-                block
-                size="large"
-                @click="handleConfirm">
-                确定
-              </a-button>
-              <div class="batch-row">
-                <input
-                  ref="batchInputRef"
-                  class="batch-file-input"
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  @change="onBatchFiles" />
-                <button
-                  type="button"
-                  class="batch-file-picker"
-                  @click="openBatchPicker">
-                  <span class="batch-file-btn">选择文件</span>
-                  <span class="batch-file-label">{{ batchFileLabel }}</span>
-                </button>
-                <a-button
-                  class="batch-submit-btn"
-                  :loading="analyzing"
-                  @click="handleBatch">
-                  批量识别
-                </a-button>
-              </div>
-            </div>
-
-            <div class="category-section">
-              <a-button
-                v-for="category in categories"
-                :key="category.key"
-                :class="{ active: selectedCategory === category.key }"
-                class="category-btn"
-                @click="selectedCategory = category.key">
-                {{ category.name }}
-              </a-button>
-            </div>
-          </div>
-
-          <div class="result-section">
-            <div
-              v-if="analyzing"
-              class="result-panel result-loading">
-              <a-spin size="large" />
-              <p>正在智能分析中，请稍候…</p>
-            </div>
-            <div
-              v-else-if="analysisResult"
-              class="result-panel">
-              <div class="result-header">
-                <h3 class="result-title">分析结果</h3>
-                <a-tag :color="analysisResult.isHealthy ? 'success' : 'error'">
-                  {{ analysisResult.isHealthy ? '健康' : '需关注' }}
-                </a-tag>
-              </div>
-              <div class="result-meta">
-                <span>作物：{{ cropLabel }}</span>
-                <span>识别类型：{{ categoryLabel }}</span>
-                <span>分析时间：{{ formatAnalyzedAt(analysisResult.analyzedAt) }}</span>
-              </div>
-              <p class="result-text">{{ analysisResult.result }}</p>
-              <div class="confidence-block">
-                <div class="confidence-label">
-                  <span>模型置信度</span>
-                  <strong>{{ confidencePercent }}%</strong>
                 </div>
-                <a-progress
-                  :percent="confidencePercent"
-                  :stroke-color="confidenceStrokeColor"
-                  :show-info="false" />
-              </div>
-              <p
-                v-if="needsManualReview"
-                class="result-review-hint">
-                置信度偏低，建议人工复核后再生成高等级预警。
-              </p>
-              <div
-                v-if="needsManualReview && analysisResult && fileList[0]?.originFileObj"
-                class="feedback-box">
-                <a-input
-                  v-model:value="correctedLabel"
-                  placeholder="实际病名（须与 23 类一致）" />
-                <a-button
-                  type="primary"
-                  :loading="feedbackSubmitting"
-                  @click="handleFeedback">
-                  提交纠错
-                </a-button>
-              </div>
-              <TreatmentGuidePanel
-                v-if="treatmentItem"
-                :item="treatmentItem"
-                :disclaimer="treatmentDisclaimer"
-                :manual-review="needsManualReview" />
-              <template v-if="!analysisResult.isHealthy">
-                <p class="result-hint">结果已同步写入预警列表，可在灾害预警页查看与处理。</p>
-                <a-button
-                  type="link"
-                  class="goto-warnings-btn"
-                  @click="router.push('/warnings')">
-                  前往预警列表 →
-                </a-button>
-              </template>
+
+                <div class="batch-row">
+                  <input
+                    ref="batchInputRef"
+                    class="batch-file-input"
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    @change="onBatchFiles" />
+                  <button
+                    type="button"
+                    class="batch-file-picker"
+                    @click="openBatchPicker">
+                    <span class="batch-file-btn">批量</span>
+                    <span class="batch-file-label">{{ batchFileLabel }}</span>
+                  </button>
+                  <a-button
+                    class="batch-submit-btn"
+                    :loading="analyzing"
+                    @click="handleBatch">
+                    识别
+                  </a-button>
+                </div>
+              </a-card>
             </div>
-            <div
-              v-else
-              class="result-panel result-empty">
-              <ExperimentOutlined class="result-empty-icon" />
-              <p>上传图片并点击「确定」或「识别」后，分析结果将显示在这里</p>
+
+            <div class="col-output">
+              <a-card
+                size="small"
+                class="widget-card glass-widget-card output-panel"
+                title="分析结果">
+                <div
+                  v-if="analyzing"
+                  class="output-state">
+                  <a-spin />
+                  <p>推理中，请稍候</p>
+                </div>
+                <div
+                  v-else-if="analysisResult"
+                  class="output-result">
+                  <div class="result-header">
+                    <h3 class="result-title">{{ analysisResult.result }}</h3>
+                    <a-tag :color="analysisResult.isHealthy ? 'success' : 'error'">
+                      {{ analysisResult.isHealthy ? '健康' : '需关注' }}
+                    </a-tag>
+                  </div>
+                  <p class="result-meta">
+                    {{ cropLabel }} · {{ categoryLabel }} · {{ formatAnalyzedAt(analysisResult.analyzedAt) }}
+                  </p>
+                  <div class="confidence-block">
+                    <div class="confidence-label">
+                      <span>置信度</span>
+                      <strong>{{ confidencePercent }}%</strong>
+                    </div>
+                    <a-progress
+                      :percent="confidencePercent"
+                      :stroke-color="confidenceStrokeColor"
+                      :show-info="false"
+                      size="small" />
+                  </div>
+                  <p
+                    v-if="needsManualReview"
+                    class="result-review-hint">
+                    置信度偏低，建议人工复核后再生成高等级预警。
+                  </p>
+                  <div
+                    v-if="needsManualReview && fileList[0]?.originFileObj"
+                    class="feedback-box">
+                    <a-input
+                      v-model:value="correctedLabel"
+                      placeholder="实际病名（23 类）"
+                      size="small" />
+                    <a-button
+                      type="primary"
+                      size="small"
+                      :loading="feedbackSubmitting"
+                      @click="handleFeedback">
+                      纠错
+                    </a-button>
+                  </div>
+                  <a-collapse
+                    v-if="treatmentPanels.length"
+                    v-model:activeKey="activeCollapseKeys"
+                    class="suggestion-collapse"
+                    :bordered="false">
+                    <a-collapse-panel
+                      v-for="panel in treatmentPanels"
+                      :key="panel.key"
+                      :header="panel.title">
+                      <ul class="suggestion-panel-list">
+                        <li
+                          v-for="(line, idx) in panel.lines"
+                          :key="idx">
+                          {{ line }}
+                        </li>
+                      </ul>
+                    </a-collapse-panel>
+                  </a-collapse>
+                  <p
+                    v-if="treatmentDisclaimer && treatmentPanels.length"
+                    class="treatment-disclaimer">
+                    {{ treatmentDisclaimer }}
+                  </p>
+                  <div
+                    v-if="!analysisResult.isHealthy"
+                    class="result-links">
+                    <a-button
+                      type="link"
+                      class="goto-link"
+                      @click="router.push('/warnings')">
+                      预警中心
+                    </a-button>
+                    <a-button
+                      type="link"
+                      class="goto-link"
+                      @click="router.push('/decision')">
+                      智慧决策
+                    </a-button>
+                  </div>
+                </div>
+                <div
+                  v-else
+                  class="output-state">
+                  <ExperimentOutlined class="output-empty-icon" />
+                  <p>开始分析后，病名、置信度与防治建议会显示在这里</p>
+                </div>
+              </a-card>
             </div>
           </div>
         </a-card>
       </div>
     </main>
+
+    <a-modal
+      v-model:open="previewOpen"
+      title="图像预览"
+      wrap-class-name="glass-preview-modal-wrap"
+      :width="720"
+      centered
+      :footer="null"
+      @cancel="previewOpen = false">
+      <div class="preview-modal-stage">
+        <img
+          v-if="imageUrl"
+          :src="imageUrl"
+          alt="预览"
+          class="preview-modal-image" />
+        <div
+          v-if="uploading || analyzing"
+          class="preview-modal-overlay">
+          <a-progress
+            v-if="uploading"
+            type="circle"
+            :percent="uploadProgress"
+            :width="88" />
+          <a-spin
+            v-else
+            size="large" />
+          <p>{{ uploading ? '正在上传…' : '正在智能分析…' }}</p>
+        </div>
+      </div>
+      <div class="preview-modal-footer">
+        <a-upload
+          v-model:file-list="fileList"
+          name="file"
+          accept="image/jpeg,image/png"
+          :show-upload-list="false"
+          :before-upload="beforeUpload"
+          :customRequest="customUpload"
+          @change="handleChange">
+          <a-button>更换图片</a-button>
+        </a-upload>
+        <a-button
+          type="primary"
+          @click="previewOpen = false">
+          关闭
+        </a-button>
+      </div>
+    </a-modal>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { PlusOutlined, LoadingOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
-import TreatmentGuidePanel from '@/components/TreatmentGuidePanel.vue'
 import { analyzeImage, analyzeBatch, submitAnalysisFeedback } from '@/api/analysis.ts'
-import { useTreatmentGuide } from '@/composables/useTreatmentGuide'
+import {
+  useTreatmentGuide,
+  buildTreatmentPanels,
+  type TreatmentPanel
+} from '@/composables/useTreatmentGuide'
 import { useDataStore } from '@/stores/data'
 import { useRouter } from 'vue-router'
+import { BJJ_CROP_LABELS, BJJ_CROP_OPTIONS } from '@/constants/crops.ts'
+import { canonicalizeDiseaseLabel } from '@/utils/diseaseLabels.ts'
 
 const store = useDataStore()
 const router = useRouter()
 const { getTreatment, disclaimer: treatmentDisclaimer } = useTreatmentGuide()
+const bjjCropOptions = BJJ_CROP_OPTIONS
 
 const formState = reactive({
-  cropType: 'wheat',
+  cropType: 'wheat' as keyof typeof BJJ_CROP_LABELS,
   additionalInfo: ''
 })
 
-const cropLabels: Record<string, string> = {
-  wheat: '小麦',
-  corn: '玉米',
-  tomato: '番茄',
-  rice: '水稻'
-}
+const cropLabels = BJJ_CROP_LABELS
 
 const categories = [
-  { key: 'disaster', name: '灾害识别' },
-  { key: 'pest', name: '病虫害识别' },
-  { key: 'climate', name: '气候灾害识别' },
-  { key: 'other', name: '其他' }
+  { key: 'disaster', name: '灾害识别', short: '灾害' },
+  { key: 'pest', name: '病虫害识别', short: '病虫害' },
+  { key: 'climate', name: '气候灾害识别', short: '气候' },
+  { key: 'other', name: '其他', short: '其他' }
 ]
 const selectedCategory = ref('pest')
 
@@ -246,6 +351,7 @@ const loading = ref<boolean>(false)
 const uploading = ref<boolean>(false)
 const uploadProgress = ref<number>(0)
 const imageUrl = ref<string>('')
+const previewOpen = ref(false)
 const analyzing = ref(false)
 const analysisResult = ref<AnalysisResultView | null>(null)
 const recordId = ref<number | null>(null)
@@ -284,6 +390,27 @@ const treatmentItem = computed(() => {
   if (!analysisResult.value) return null
   return getTreatment(analysisResult.value.result)
 })
+
+const treatmentPanels = computed((): TreatmentPanel[] => {
+  if (!treatmentItem.value) return []
+  return buildTreatmentPanels(treatmentItem.value)
+})
+
+const activeCollapseKeys = ref<string[]>([])
+
+function resolveDefaultCollapseKeys(panels: TreatmentPanel[]): string[] {
+  if (panels.some((p) => p.key === 'chemical')) return ['chemical']
+  if (panels.some((p) => p.key === 'summary')) return ['summary']
+  return panels.slice(0, 1).map((p) => p.key)
+}
+
+watch(
+  treatmentPanels,
+  (panels) => {
+    activeCollapseKeys.value = resolveDefaultCollapseKeys(panels)
+  },
+  { immediate: true }
+)
 
 function formatAnalyzedAt(ts: number) {
   const d = new Date(ts)
@@ -367,7 +494,11 @@ const handleConfirm = async () => {
       pointId: store.filteredMonitorPoints[0]?.id ?? store.monitorPoints[0]?.id
     })
 
-    const aiResult = response.data.result as string
+    const aiResult = canonicalizeDiseaseLabel(String(response.data.result ?? ''))
+    if (!aiResult) {
+      message.warning('京津冀版不展示桃/苹果病害，请改选小麦、玉米、番茄或水稻。')
+      return
+    }
     const aiConfidence = response.data.confidence as number
     const rawLevel = response.data.level as string
     const level =
@@ -398,7 +529,7 @@ const handleConfirm = async () => {
       })
     }
 
-    message.success('分析完成！请查看下方结果卡片。')
+    message.success('分析完成！请查看右侧结果。')
   } catch (error) {
     message.error('分析或保存失败，请重试。')
     console.error('Error:', error)
@@ -437,7 +568,11 @@ const handleBatch = async () => {
     message.info(`完成 ${results.length} 张`)
     const first = results.find((item: { result?: string }) => item?.result)
     if (first) {
-      const aiResult = first.result as string
+      const aiResult = canonicalizeDiseaseLabel(String(first.result ?? ''))
+      if (!aiResult) {
+        message.warning('京津冀版不展示桃/苹果病害，请改选小麦、玉米、番茄或水稻。')
+        return
+      }
       const aiConfidence = Number(first.confidence)
       recordId.value = typeof first.recordId === 'number' ? first.recordId : null
       analysisResult.value = {
@@ -486,83 +621,236 @@ const handleFeedback = async () => {
   }
 }
 
-const handleIdentify = () => handleConfirm()
 </script>
 
 <style scoped>
-.glass-page :deep(.ant-card-body) {
-  padding: 24px 32px;
+.analysis-page-root {
+  width: 100%;
 }
 
-.analysis-body-container {
+.analysis-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.col-input,
+.col-output {
   display: flex;
-  gap: 40px;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.form-section {
-  flex: 2;
+.widget-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.input-panel,
+.output-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.input-panel :deep(.ant-card-body),
+.output-panel :deep(.ant-card-body) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.input-panel :deep(.ant-card-body) {
+  gap: 10px;
+}
+
+.input-main {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.preview-box {
+  position: relative;
+  min-height: 220px;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview-upload {
+  width: 100%;
+  height: 100%;
+}
+
+.preview-upload :deep(.ant-upload) {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+
+.preview-upload :deep(.ant-upload-select) {
+  width: 100%;
+  height: 100%;
+}
+
+.preview-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.upload-wrapper {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.avatar-uploader :deep(.ant-upload.ant-upload-select-picture-card) {
-  width: 250px;
-  height: 250px;
-  background-color: var(--glass-bg-subtle) !important;
-  border: 1px dashed var(--glass-border-strong) !important;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  padding: 16px;
+  background-color: var(--glass-bg-subtle);
+  border: 1px dashed var(--glass-border-strong);
   border-radius: 8px;
+  color: var(--glass-text-muted);
+  text-align: center;
+  cursor: pointer;
 }
 
-.avatar-uploader :deep(.ant-upload-text),
-.avatar-uploader :deep(.anticon) {
+.preview-empty :deep(.anticon),
+.preview-empty .anticon {
+  font-size: 36px;
+}
+
+.preview-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--glass-text-secondary);
+}
+
+.preview-empty span {
+  font-size: 12px;
+}
+
+.preview-open-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  padding: 8px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: rgb(0 0 0 / 22%);
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 50%);
+}
+
+.input-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.category-btn {
+  height: 28px;
+  padding: 0 12px;
+  width: auto;
+  flex: 0 0 auto;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 14px;
+  background-color: var(--glass-bg-subtle);
+  color: var(--glass-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.category-btn:hover {
+  background-color: var(--glass-bg-item-hover);
+}
+
+.category-btn.active {
+  background-color: var(--dark-green);
+  border-color: var(--dark-green);
+  color: white;
+  font-weight: 600;
+}
+
+.category-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--glass-text-muted);
 }
 
-.uploaded-image {
+.crop-select {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
-.upload-progress-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgb(0 0 0 / 50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 8px;
+.crop-select :deep(.ant-select-selector),
+.note-input.ant-input,
+.feedback-box :deep(.ant-input) {
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
 }
 
-.upload-progress-overlay :deep(.ant-progress-text) {
-  color: white !important;
+.crop-select :deep(.ant-select-selection-item),
+.crop-select :deep(.ant-select-arrow) {
+  color: var(--glass-text-primary);
 }
 
-.analysis-form {
-  width: 100%;
-  margin-bottom: 16px;
+.note-input {
+  resize: none;
 }
 
-.form-inline-group {
-  display: flex;
-  gap: 12px;
+.start-btn {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .batch-row {
   position: relative;
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: stretch;
-  margin-top: 12px;
   width: 100%;
 }
 
@@ -583,9 +871,9 @@ const handleIdentify = () => handleConfirm()
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: 32px;
-  padding: 3px 10px 3px 3px;
+  padding: 3px 8px 3px 3px;
   background-color: var(--glass-bg-input);
   border: 1px solid var(--glass-border-strong);
   border-radius: 6px;
@@ -606,7 +894,7 @@ const handleIdentify = () => handleConfirm()
 
 .batch-file-btn {
   flex-shrink: 0;
-  padding: 2px 12px;
+  padding: 2px 10px;
   background-color: var(--primary-green);
   border: 1px solid var(--primary-green);
   border-radius: 4px;
@@ -623,7 +911,7 @@ const handleIdentify = () => handleConfirm()
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--glass-text-muted);
-  font-size: 13px;
+  font-size: 12px;
   text-shadow: var(--glass-text-shadow);
 }
 
@@ -640,102 +928,44 @@ const handleIdentify = () => handleConfirm()
   border-color: var(--primary-green) !important;
 }
 
-.analysis-form :deep(.ant-form-item-label > label) {
-  color: var(--light-green);
-}
-
-.analysis-form :deep(.ant-input),
-.analysis-form :deep(.ant-select-selector),
-.analysis-form :deep(.ant-input-affix-wrapper) {
-  background-color: var(--glass-bg-input) !important;
-  border: 1px solid var(--glass-border-strong) !important;
-  color: var(--glass-text-primary) !important;
-}
-
-.analysis-form :deep(.ant-select-selection-item) {
-  color: var(--glass-text-primary) !important;
-}
-
-.analysis-form :deep(.ant-select-arrow) {
-  color: var(--glass-text-muted);
-}
-
-.form-inline-group .ant-btn {
-  background-color: var(--primary-green);
-  border-color: var(--primary-green);
-  color: white;
-}
-
-.form-section > .ant-btn-primary {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-}
-
-.category-section {
+.output-state {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.category-btn {
-  width: 100%;
-  height: 48px;
-  font-size: 16px;
-  background-color: var(--glass-bg-subtle);
-  border-color: var(--glass-border-strong);
-  color: var(--glass-text-primary);
-  transition: all 0.3s;
-  text-shadow: var(--glass-text-shadow);
-}
-
-.category-btn:hover {
-  background-color: var(--glass-bg-item-hover);
-  border-color: var(--glass-border-strong);
-}
-
-.category-btn.active {
-  background-color: var(--dark-green) !important;
-  border-color: var(--dark-green) !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-.result-section {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--glass-border);
-}
-
-.result-panel {
-  background-color: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.result-loading,
-.result-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 120px;
+  min-height: 0;
   color: var(--glass-text-muted);
   text-align: center;
+  padding: 16px;
 }
 
-.result-empty-icon {
+.output-state p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.output-empty-icon {
   font-size: 36px;
-  color: var(--glass-text-muted);
+}
+
+.output-result {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .result-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .result-title {
@@ -747,24 +977,15 @@ const handleIdentify = () => handleConfirm()
 }
 
 .result-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px 24px;
-  margin-bottom: 16px;
-  font-size: 13px;
+  margin: 0 0 12px;
+  font-size: 12px;
   color: var(--glass-text-muted);
-}
-
-.result-text {
-  margin: 0 0 20px;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--glass-text-primary);
-  text-shadow: var(--glass-text-shadow);
+  flex-shrink: 0;
 }
 
 .confidence-block {
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .confidence-label {
@@ -784,48 +1005,227 @@ const handleIdentify = () => handleConfirm()
   margin: 0 0 12px;
   font-size: 13px;
   color: #faad14;
+  flex-shrink: 0;
 }
 
 .feedback-box {
   display: flex;
   gap: 8px;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
+  flex-shrink: 0;
 }
 
 .feedback-box :deep(.ant-input) {
   flex: 1;
 }
 
-.result-hint {
-  margin: 16px 0 4px;
-  font-size: 13px;
-  color: var(--glass-text-muted);
+.result-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
 }
 
-.goto-warnings-btn {
+.goto-link {
   padding-left: 0 !important;
   color: #95de64 !important;
 }
 
-.goto-warnings-btn:hover {
+.goto-link:hover {
   color: #b7eb8f !important;
 }
 
+.suggestion-collapse {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.suggestion-collapse :deep(.ant-collapse-item) {
+  border-color: var(--glass-border) !important;
+  margin-bottom: 6px;
+}
+
+.suggestion-collapse :deep(.ant-collapse-header) {
+  color: var(--light-green, #eef1ea) !important;
+  font-weight: 600;
+  padding: 6px 10px !important;
+  background: rgb(0 0 0 / 15%);
+  border-radius: 4px;
+}
+
+.suggestion-collapse :deep(.ant-collapse-content) {
+  background: transparent;
+  border-top: 1px solid var(--glass-border);
+}
+
+.suggestion-collapse :deep(.ant-collapse-content-box) {
+  padding: 8px 10px !important;
+}
+
+.suggestion-panel-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--glass-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.suggestion-panel-list li {
+  margin-bottom: 4px;
+}
+
+.treatment-disclaimer {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--glass-text-muted);
+  flex-shrink: 0;
+}
+
 @media (width <= 992px) {
-  .analysis-body-container {
-    flex-direction: column;
-    gap: 24px;
+  .analysis-page-root.page-main-shell--fill {
+    overflow-y: auto;
+    flex: none;
+    height: auto;
   }
 
-  .glass-page :deep(.ant-card-body) {
-    padding: 16px;
+  .analysis-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .col-input,
+  .col-output {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .output-panel :deep(.ant-card-body),
+  .input-panel :deep(.ant-card-body) {
+    overflow: visible;
+  }
+
+  .input-main {
+    grid-template-columns: 1fr;
+    flex: none;
+  }
+
+  .preview-box,
+  .preview-empty,
+  .preview-open-btn {
+    min-height: 200px;
   }
 }
 
 @media (width <= 576px) {
-  .avatar-uploader :deep(.ant-upload.ant-upload-select-picture-card) {
-    width: 200px;
-    height: 200px;
+  .preview-box,
+  .preview-empty,
+  .preview-open-btn {
+    min-height: 180px;
+  }
+}
+</style>
+
+<style>
+.glass-preview-modal-wrap .ant-modal {
+  max-width: min(900px, 70vw);
+}
+
+.glass-preview-modal-wrap .ant-modal-content {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-preview-modal-wrap .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.glass-preview-modal-wrap .ant-modal-title {
+  color: var(--light-green) !important;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.glass-preview-modal-wrap .ant-modal-close {
+  color: var(--glass-text-muted) !important;
+}
+
+.glass-preview-modal-wrap .ant-modal-close:hover {
+  color: var(--glass-text-primary) !important;
+}
+
+.glass-preview-modal-wrap .ant-modal-body {
+  padding: 16px 24px 20px;
+}
+
+.preview-modal-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background: rgb(0 0 0 / 28%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-modal-image {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.preview-modal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgb(0 0 0 / 50%);
+  color: var(--glass-text-primary);
+}
+
+.preview-modal-overlay p {
+  margin: 0;
+}
+
+.preview-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.glass-preview-modal-wrap .ant-btn-default {
+  background: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.glass-preview-modal-wrap .ant-btn-primary {
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+}
+
+@media (width <= 576px) {
+  .glass-preview-modal-wrap .ant-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+    margin: 12px auto;
+  }
+
+  .preview-modal-image {
+    max-height: 60vh;
   }
 }
 </style>

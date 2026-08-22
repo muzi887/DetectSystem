@@ -129,6 +129,93 @@ body {
   color: var(--glass-text-primary);
 }
 
+/* 弹窗：与抽屉同一套玻璃（挂 body） */
+.ant-modal-content {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+}
+
+.ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.ant-modal-title {
+  color: var(--light-green) !important;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.ant-modal-close {
+  color: var(--glass-text-muted) !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-body {
+  color: var(--glass-text-primary);
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--glass-border) !important;
+}
+
+.ant-modal-footer .ant-btn-default {
+  background: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-footer .ant-btn-primary {
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-footer .ant-btn-primary:hover {
+  background: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
+}
+
+.ant-modal .ant-form-item-label > label {
+  color: var(--light-green) !important;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.ant-modal .ant-input,
+.ant-modal textarea.ant-input,
+.ant-modal .ant-input-outlined,
+.ant-modal .ant-select .ant-select-selector {
+  background-color: var(--glass-bg-input) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal .ant-input::placeholder,
+.ant-modal textarea.ant-input::placeholder {
+  color: var(--glass-text-muted) !important;
+}
+
+.ant-modal .ant-select-selection-item,
+.ant-modal .ant-select-arrow {
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal .ant-select-selection-placeholder {
+  color: var(--glass-text-muted) !important;
+}
+
+.ant-modal-confirm-title,
+.ant-modal-confirm-content {
+  color: var(--glass-text-primary) !important;
+}
+
 .ant-dropdown .ant-dropdown-menu {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(var(--glass-blur));
@@ -201,4 +288,19 @@ body {
 
 .glass-ant-table .ant-table-cell {
   border-color: var(--glass-border) !important;
+}
+
+.ant-tooltip .ant-tooltip-inner {
+  min-height: 28px;
+  padding: 4px 10px;
+  background: var(--glass-bg) !important;
+  color: var(--glass-text-primary) !important;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+.ant-tooltip .ant-tooltip-arrow::before {
+  background: var(--glass-bg) !important;
 }
