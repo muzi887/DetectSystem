@@ -39,7 +39,7 @@ Flask 对 Python，更接近 **ASP.NET（写网站那一层）对 C#**。
 | **Flask**（轻、自己拼积木） | ASP.NET Core Minimal API；也像 Node 里的 Express |
 | **Django**（登录、后台、ORM 较全套） | 功能更全的 ASP.NET MVC / 带一堆内置模块的那种 |
 
-本项目选 Flask，是因为推理服务只需要：收图片、调 PyTorch、回 JSON。不需要 .NET 那样一整套平台，也不需要 Django 那样的全家桶。
+本项目选 Flask，是因为推理服务只需要：收图片、调 PyTorch、回 JSON。不需要 .NET 那样一整套平台，也不需要 Django 那样的全家桶。Django 是什么见 [`什么是Django.md`](./什么是Django.md)。
 
 ---
 

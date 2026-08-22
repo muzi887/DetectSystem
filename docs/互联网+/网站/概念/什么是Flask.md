@@ -96,8 +96,13 @@ PyTorch 推理、作物掩码、防治库、识别记录 JSON
 | 文档 | 内容 |
 |------|------|
 | [`项目启动说明.md`](../项目启动说明.md) | 如何启动 Flask 与网站 |
-| [`什么是Mock.md`](./什么是Mock.md) | 业务数据走 3000，不是 Flask |
+| [`什么是Mock.md`](./什么是Mock.md) | 旧的 json-server 业务后端（已切流） |
+| [`什么是api_mock.md`](./什么是api_mock.md) | 宝塔上的 Mock 部署包；现已归档 |
 | [`Flask对Python是否等于NET对CSharp.md`](./Flask对Python是否等于NET对CSharp.md) | Flask 不能当成 Python 的整个 .NET |
+| [`什么是Django.md`](./什么是Django.md) | Python 网站全家桶；本仓库不用 |
+| [`什么是SQLAlchemy.md`](./什么是SQLAlchemy.md) | Flask 用它读写 MySQL |
+| [`什么是Alembic.md`](./什么是Alembic.md) | 按模型给空库建表 |
+| [`后端py文件/README.md`](./后端py文件/README.md) | **每个** Flask 后端 `.py` 在干什么 |
 | [`Python线程锁.md`](./Python线程锁.md) | Flask 并发写识别记录时为何加锁 |
 | [`什么是batch.md`](./什么是batch.md) | 一次请求识别多张图 |
 | [`什么是ONNX.md`](./什么是ONNX.md) | 可选的另一种模型推理格式 |

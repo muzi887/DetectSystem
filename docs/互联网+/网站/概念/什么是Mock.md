@@ -33,7 +33,7 @@
 
 它解决「尽快把站跑通」。多人同时写、按表备份、密码安全，要靠以后的真库，见 [`假数据库迁真库方案.md`](../方案/假数据库迁真库方案.md)。
 
-同仓库 `deploy/api_mock/` 是宝塔上的 CJS 副本，规则表要与 `src/mock` 对齐。改了开发用的 `db.json` 后需 `pnpm run sync:mock-db`。
+同仓库 [`deploy/api_mock/`](../../../deploy/api_mock/) 曾是宝塔上的 CJS 部署包，见 [`什么是api_mock.md`](./什么是api_mock.md)。改了开发用的 `db.json` 后需 `pnpm run sync:mock-db`。**切流后日常不再起 3000**，业务走 Flask + MySQL。
 
 ---
 
@@ -113,7 +113,8 @@
 | [`什么是规则链.md`](./什么是规则链.md) | Mock 三条链 vs P3 |
 | [`链1-alertRules三文件说明.md`](./链1-alertRules三文件说明.md) | 链 1 还不写库 |
 | [`假数据库迁真库方案.md`](../方案/假数据库迁真库方案.md) | 换成 MySQL 怎么走 |
-| [`项目启动说明.md`](../项目启动说明.md) | `pnpm mock` |
+| [`项目启动说明.md`](../项目启动说明.md) | `pnpm mock`（已改为提示走 Flask） |
+| [`什么是api_mock.md`](./什么是api_mock.md) | 宝塔上的 Mock 部署包；现已归档 |
 
 ---
 

@@ -63,6 +63,7 @@ Flask 经典写法是同步 WSGI。若要 WebSocket，需要另接扩展，或�
 | [`什么是WSGI服务器.md`](./什么是WSGI服务器.md) | 本项目实际使用的约定；含 C# 对照 |
 | [`什么是waitress.md`](./什么是waitress.md) | 选用的 WSGI 服务器 |
 | [`什么是Flask.md`](./什么是Flask.md) | 本项目的 WSGI 应用 |
+| [`什么是Django.md`](./什么是Django.md) | 也可走 ASGI；本仓库不用 Django |
 
 ---
 
