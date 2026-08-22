@@ -8,12 +8,12 @@
 把 Task 1 接到单张分析接口：
 
 1. 表单可选 `airTemp` / `airRh` / `soilVwc`
-2. 三个都空且带了 `pointId` 时，GET `{ML_BJJ_MOCK_ORIGIN}/weatherReadings`（默认 Mock :3000）按监测点取一条
+2. 三个都空且带了 `pointId` 时，按监测点取一条气象（当时 GET `{ML_BJJ_MOCK_ORIGIN}/weatherReadings`；**其后** [Flask-MySQL-Task5](./Flask-MySQL-Task5-切流下线Mock.md) 改为查同库 `weather_readings`）
 3. 用规则后的 `level` **覆盖** `classify_level`（健康+干旱仍为 `low`）
 4. 成功 JSON 增加 `env_context`：环境读数 + `level` / `reasons` / `advice`
 5. 落库的 `level` 也用规则后的值，前端 `createAlert` 会带上升级后的 high
 
-读 Mock 失败则当作没有环境，不升降级。
+读气象失败则当作没有环境，不升降级。函数含义见 [`app.py.md`](../概念/后端py文件/app.py.md) 的 `fetch_point_weather`。
 
 ## 改动文件
 
