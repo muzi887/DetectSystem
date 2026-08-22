@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from crop_filter import mask_and_renorm
+from crop_filter import canonicalize_label, mask_and_renorm
 from predict_utils import needs_review, rank_topk
 
 ML_BJJ_ROOT = Path(__file__).resolve().parents[1]
@@ -101,13 +101,21 @@ class PestClassifier:
             probs = torch.softmax(logits, dim=1)[0].tolist()
         filtered = mask_and_renorm(probs, self.classes, crop_type)
         topk = rank_topk(filtered, self.classes, k=3)
-        label = str(topk[0]["label"])
-        confidence = float(topk[0]["confidence"])
+        mapped = []
+        for item in topk:
+            canon = canonicalize_label(str(item["label"]))
+            if canon is None:
+                continue
+            mapped.append({**item, "label": canon})
+        if not mapped:
+            mapped = topk
+        label = str(mapped[0]["label"])
+        confidence = float(mapped[0]["confidence"])
         return PredictResult(
             label=label,
             confidence=confidence,
-            topk=topk,
-            needs_review=needs_review(topk, confidence),
+            topk=mapped,
+            needs_review=needs_review(mapped, confidence),
         )
 
     def predict(self, image: Image.Image, crop_type: str = "unknown") -> tuple[str, float]:

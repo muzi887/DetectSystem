@@ -26,7 +26,13 @@ if str(SERVE_DIR) not in sys.path:
     sys.path.insert(0, str(SERVE_DIR))
 
 from analysis_store import append_record, list_records, recent_records, stats_by_label, update_record  # noqa: E402
-from crop_filter import CANONICAL_CLASSES, classes_for_crop  # noqa: E402
+from crop_filter import (  # noqa: E402
+    CANONICAL_CLASSES,
+    CROP_LABELS,
+    assert_bjj_crop_type,
+    canonicalize_label,
+    classes_for_crop,
+)
 from disease_env_rules import apply_disease_env_rules  # noqa: E402
 from inference import PredictResult, get_classifier, resolve_weights_path  # noqa: E402
 from knowledge import get_treatment_item, load_catalog  # noqa: E402
@@ -36,14 +42,6 @@ app = Flask(__name__)
 CORS(app)
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-CROP_LABELS = {
-    "wheat": "小麦",
-    "corn": "玉米",
-    "tomato": "番茄",
-    "peach": "桃",
-    "apple": "苹果",
-    "rice": "水稻",
-}
 META_PATH = Path(__file__).resolve().parents[1] / "models" / "pest-cls-meta.json"
 RECORDS_DEFAULT = Path(__file__).resolve().parent / "data" / "analysis_records.json"
 
@@ -176,11 +174,15 @@ def _analyze_one(
     env: dict | None,
 ) -> dict:
     validate_upload(file)
+    assert_bjj_crop_type(crop_type)
     if use_mock():
         pred = mock_predict(file, crop_type)
     else:
         img = Image.open(file.stream)
         pred = get_classifier().predict_detailed(img, crop_type)
+    canon = canonicalize_label(pred.label)
+    if canon:
+        pred.label = canon
 
     level = classify_level(pred.label, pred.confidence)
     treatment, _found = get_treatment_item(pred.label)
@@ -361,7 +363,8 @@ def treatments_all():
 @app.route("/api/treatments/<label>", methods=["GET"])
 def treatments_one(label: str):
     item, found = get_treatment_item(label)
-    return jsonify({"label": label, "found": found, "item": item}), 200
+    canon = canonicalize_label(label)
+    return jsonify({"label": canon if canon is not None else label, "found": found, "item": item}), 200
 
 
 def prepare_runtime() -> int:

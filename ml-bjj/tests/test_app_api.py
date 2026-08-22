@@ -65,6 +65,67 @@ def test_analyze_includes_topk_and_treatment(monkeypatch):
     assert body["details"]["isReliable"] is True
 
 
+def test_analyze_rejects_peach_and_apple(monkeypatch):
+    import app as serving_app
+    from io import BytesIO
+    from PIL import Image
+
+    monkeypatch.setattr(serving_app, "use_mock", lambda: True)
+    buf = BytesIO()
+    Image.new("RGB", (8, 8), color=(10, 80, 10)).save(buf, format="JPEG")
+    buf.seek(0)
+    res = serving_app.app.test_client().post(
+        "/api/analysis/image",
+        data={"cropType": "peach", "category": "pest", "file": (buf, "leaf.jpg", "image/jpeg")},
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 400
+    assert "桃" in (res.get_json() or {}).get("error", "")
+
+
+def test_mock_rice_stays_in_rice_classes(monkeypatch):
+    import app as serving_app
+    from crop_filter import CROP_CLASS_GROUPS
+    from io import BytesIO
+    from PIL import Image
+
+    monkeypatch.setattr(serving_app, "use_mock", lambda: True)
+    buf = BytesIO()
+    Image.new("RGB", (8, 8), color=(10, 80, 10)).save(buf, format="JPEG")
+    buf.seek(0)
+    res = serving_app.app.test_client().post(
+        "/api/analysis/image",
+        data={"cropType": "rice", "category": "pest", "file": (buf, "leaf.jpg", "image/jpeg")},
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["result"] in CROP_CLASS_GROUPS["rice"]
+    assert body["treatment"]["crop"] in {"水稻", "通用"}
+
+
+def test_treatments_rice_blast_and_neck_blast():
+    import app as serving_app
+
+    for label in ("稻瘟病", "稻颈瘟"):
+        res = serving_app.app.test_client().get(f"/api/treatments/{label}")
+        assert res.status_code == 200
+        body = res.get_json()
+        assert body["found"] is True
+        assert body["item"]["crop"] == "水稻"
+
+
+def test_treatments_unifies_wheat_rust_alias():
+    import app as serving_app
+
+    res = serving_app.app.test_client().get("/api/treatments/小麦条锈病")
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["found"] is True
+    assert body["label"] == "小麦锈病"
+    assert body["item"]["crop"] == "小麦"
+
+
 def test_treatments_label_route():
     import app as serving_app
 

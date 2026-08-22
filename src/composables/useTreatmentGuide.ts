@@ -1,18 +1,13 @@
 import catalogData from '@/assets/knowledge/treatments.json'
 import type { TreatmentCatalog, TreatmentItem } from '@/types/treatment'
+import { canonicalizeDiseaseLabel } from '@/utils/diseaseLabels.ts'
 
 const catalog = catalogData as TreatmentCatalog
 
 function resolveByLabel(label: string): TreatmentItem | null {
-  const trimmed = label.trim()
-  if (catalog.items[trimmed]) return catalog.items[trimmed]
-
-  for (const item of Object.values(catalog.items)) {
-    if (item.aliases?.some((alias) => trimmed === alias || trimmed.includes(alias))) {
-      return item
-    }
-  }
-  return null
+  const canon = canonicalizeDiseaseLabel(label)
+  if (!canon) return null
+  return catalog.items[canon] ?? null
 }
 
 const MISSING_TREATMENT: TreatmentItem = {
@@ -40,7 +35,7 @@ export function getTreatment(label: string): TreatmentItem {
 
 export function parseDiseaseFromAlert(message: string): string | null {
   const aiMatch = message.match(/\[AI识别\].*?-\s*(.+?)\s*\(置信度/)
-  if (aiMatch) return aiMatch[1].trim()
+  if (aiMatch) return canonicalizeDiseaseLabel(aiMatch[1].trim())
 
   for (const key of Object.keys(catalog.items)) {
     if (key !== '健康' && message.includes(key)) return key

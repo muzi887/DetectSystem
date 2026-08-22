@@ -23,3 +23,18 @@ def test_missing_label_does_not_fallback_to_healthy():
     assert "暂无" in item["summary"]
     assert "不存在的病名XYZ" in item["summary"]
     assert item is not load_catalog()["items"]["健康"]
+
+
+def test_wheat_rust_alias_uses_unified_item():
+    item, found = get_treatment_item("小麦条锈病")
+    canonical, canonical_found = get_treatment_item("小麦锈病")
+    assert found is True
+    assert canonical_found is True
+    assert item["summary"] == canonical["summary"]
+    assert item["crop"] == "小麦"
+
+
+def test_peach_disease_has_no_treatment():
+    item, found = get_treatment_item("桃缩叶病")
+    assert found is False
+    assert "暂无" in item["summary"]

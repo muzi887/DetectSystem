@@ -23,6 +23,63 @@ CROP_CLASS_GROUPS = {
     },
 }
 
+SUPPORTED_CROP_TYPES = frozenset(CROP_CLASS_GROUPS)
+HIDDEN_CROP_TYPES = frozenset({"peach", "apple"})
+HIDDEN_CROP_LABELS = frozenset({"桃", "苹果"})
+CROP_LABELS = {
+    "wheat": "小麦",
+    "corn": "玉米",
+    "tomato": "番茄",
+    "rice": "水稻",
+}
+
+
+HIDDEN_DISEASE_LABELS = frozenset({
+    "桃缩叶病",
+    "桃疮痂病",
+    "桃褐腐病",
+    "桃细菌性穿孔病",
+    "苹果轮纹病",
+    "苹果腐烂病",
+    "苹果疮痂病",
+})
+LABEL_ALIASES = {
+    "小麦条锈病": "小麦锈病",
+    "小麦叶锈病": "小麦锈病",
+    "小麦秆锈病": "小麦锈病",
+    "条锈病": "小麦锈病",
+    "叶锈病": "小麦锈病",
+    "秆锈病": "小麦锈病",
+}
+
+
+def is_hidden_crop(crop_type: str) -> bool:
+    raw = (crop_type or "").strip()
+    if raw in HIDDEN_CROP_LABELS:
+        return True
+    return raw.lower() in HIDDEN_CROP_TYPES
+
+
+def assert_bjj_crop_type(crop_type: str) -> None:
+    if is_hidden_crop(crop_type):
+        raise ValueError("京津冀版不支持桃/苹果识别，请选择小麦、玉米、番茄或水稻")
+
+
+def is_hidden_disease(label: str) -> bool:
+    return (label or "").strip() in HIDDEN_DISEASE_LABELS
+
+
+def canonicalize_label(label: str) -> str | None:
+    raw = (label or "").strip()
+    if not raw or is_hidden_disease(raw):
+        return None
+    if raw in CANONICAL_CLASSES:
+        return raw
+    mapped = LABEL_ALIASES.get(raw)
+    if mapped:
+        return mapped
+    return raw
+
 
 def classes_for_crop(crop_type: str) -> set[str] | None:
     return CROP_CLASS_GROUPS.get(crop_type)
