@@ -52,7 +52,7 @@
       "soilMoisture": 12,
       "status": "warning",
       "online": true,
-      "lastSeenAt": "2026-08-21T14:00:00+08:00"
+      "lastSeenAt": "2026-08-22T01:19:35.150Z"
     },
     {
       "id": 3,
@@ -139,7 +139,7 @@
       "id": 2,
       "pointId": 2,
       "updatedAt": "2026-06-05T14:00:00+08:00",
-      "soilVwc": 12.8,
+      "soilVwc": 11.8,
       "soilTemp10cm": 31.5,
       "soilEc": 312,
       "airTemp": 35.6,
@@ -561,6 +561,71 @@
       "level": "low",
       "message": "[AI识别] 监测到 小麦 - 健康 (置信度: 94.5%)",
       "id": 37
+    },
+    {
+      "pointId": 2,
+      "fieldId": "xiongxian",
+      "level": "high",
+      "message": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，已持续 30730 min",
+      "time": 1787357434583,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "water_stress",
+      "chain": "env",
+      "draft": false,
+      "id": 104
+    },
+    {
+      "pointId": 2,
+      "fieldId": "xiongxian",
+      "level": "critical",
+      "message": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
+      "time": 1787357434583,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "extreme_heat_40",
+      "chain": "extreme",
+      "draft": false,
+      "id": 105
+    },
+    {
+      "pointId": 1,
+      "fieldId": "hejian",
+      "level": "warning",
+      "message": "[自动预警] 监测站 · 河间市 - 气温 33.2℃ 超过提示阈值 32℃，已持续 30 min",
+      "time": 1787359234805,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "heat_stress",
+      "chain": "env",
+      "draft": false,
+      "id": 106
+    },
+    {
+      "pointId": 2,
+      "fieldId": "xiongxian",
+      "level": "warning",
+      "message": "[自动预警] 监测站 · 雄县 - 气温 35.6℃ 超过提示阈值 32℃，已持续 30 min",
+      "time": 1787359234805,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "heat_stress",
+      "chain": "env",
+      "draft": false,
+      "id": 107
+    },
+    {
+      "pointId": 8,
+      "fieldId": null,
+      "level": "warning",
+      "message": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 25%，已持续 30 min",
+      "time": 1787359234805,
+      "handled": false,
+      "source": "auto",
+      "ruleId": "water_stress",
+      "chain": "env",
+      "draft": false,
+      "id": 108
     }
   ],
   "fields": [
@@ -703,12 +768,36 @@
   "thresholdProfiles": [],
   "ruleState": [
     {
+      "pointId": 1,
+      "ruleId": "heat_stress",
+      "level": "hint",
+      "startedAt": "2026-08-22T00:10:34.583Z",
+      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "alertEmitted": true
+    },
+    {
       "pointId": 2,
       "ruleId": "water_stress",
       "level": "alert",
       "startedAt": "2026-08-01T00:00:00+08:00",
-      "lastSeenAt": "2026-08-01T00:00:00+08:00",
-      "alertEmitted": false
+      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "alertEmitted": true
+    },
+    {
+      "pointId": 2,
+      "ruleId": "heat_stress",
+      "level": "hint",
+      "startedAt": "2026-08-22T00:10:34.583Z",
+      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "alertEmitted": true
+    },
+    {
+      "pointId": 8,
+      "ruleId": "water_stress",
+      "level": "hint",
+      "startedAt": "2026-08-22T00:10:34.583Z",
+      "lastSeenAt": "2026-08-22T01:19:35.150Z",
+      "alertEmitted": true
     }
   ],
   "weatherForecast": [
@@ -851,10 +940,453 @@
       "precipMm": 0,
       "windMax": 3,
       "humidity": 39
+    },
+    {
+      "id": 15,
+      "pointId": 4,
+      "date": "2026-08-22",
+      "tempMax": 24,
+      "tempMin": 12,
+      "precipMm": 2,
+      "windMax": 4,
+      "humidity": 62
+    },
+    {
+      "id": 16,
+      "pointId": 4,
+      "date": "2026-08-23",
+      "tempMax": 23,
+      "tempMin": 11,
+      "precipMm": 4,
+      "windMax": 5,
+      "humidity": 68
+    },
+    {
+      "id": 17,
+      "pointId": 4,
+      "date": "2026-08-24",
+      "tempMax": 22,
+      "tempMin": 10,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 60
+    },
+    {
+      "id": 18,
+      "pointId": 4,
+      "date": "2026-08-25",
+      "tempMax": 21,
+      "tempMin": 9,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 55
+    },
+    {
+      "id": 19,
+      "pointId": 4,
+      "date": "2026-08-26",
+      "tempMax": 20,
+      "tempMin": 8,
+      "precipMm": 0,
+      "windMax": 2,
+      "humidity": 52
+    },
+    {
+      "id": 20,
+      "pointId": 4,
+      "date": "2026-08-27",
+      "tempMax": 22,
+      "tempMin": 10,
+      "precipMm": 3,
+      "windMax": 4,
+      "humidity": 64
+    },
+    {
+      "id": 21,
+      "pointId": 4,
+      "date": "2026-08-28",
+      "tempMax": 23,
+      "tempMin": 11,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 58
+    },
+    {
+      "id": 22,
+      "pointId": 5,
+      "date": "2026-08-22",
+      "tempMax": 26,
+      "tempMin": 13,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 55
+    },
+    {
+      "id": 23,
+      "pointId": 5,
+      "date": "2026-08-23",
+      "tempMax": 25,
+      "tempMin": 12,
+      "precipMm": 2,
+      "windMax": 4,
+      "humidity": 58
+    },
+    {
+      "id": 24,
+      "pointId": 5,
+      "date": "2026-08-24",
+      "tempMax": 24,
+      "tempMin": 11,
+      "precipMm": 0,
+      "windMax": 4,
+      "humidity": 50
+    },
+    {
+      "id": 25,
+      "pointId": 5,
+      "date": "2026-08-25",
+      "tempMax": 23,
+      "tempMin": 10,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 48
+    },
+    {
+      "id": 26,
+      "pointId": 5,
+      "date": "2026-08-26",
+      "tempMax": 22,
+      "tempMin": 9,
+      "precipMm": 1,
+      "windMax": 2,
+      "humidity": 52
+    },
+    {
+      "id": 27,
+      "pointId": 5,
+      "date": "2026-08-27",
+      "tempMax": 24,
+      "tempMin": 11,
+      "precipMm": 2,
+      "windMax": 3,
+      "humidity": 56
+    },
+    {
+      "id": 28,
+      "pointId": 5,
+      "date": "2026-08-28",
+      "tempMax": 25,
+      "tempMin": 12,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 51
+    },
+    {
+      "id": 29,
+      "pointId": 6,
+      "date": "2026-08-22",
+      "tempMax": 28,
+      "tempMin": 15,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 50
+    },
+    {
+      "id": 30,
+      "pointId": 6,
+      "date": "2026-08-23",
+      "tempMax": 27,
+      "tempMin": 14,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 52
+    },
+    {
+      "id": 31,
+      "pointId": 6,
+      "date": "2026-08-24",
+      "tempMax": 26,
+      "tempMin": 13,
+      "precipMm": 3,
+      "windMax": 4,
+      "humidity": 58
+    },
+    {
+      "id": 32,
+      "pointId": 6,
+      "date": "2026-08-25",
+      "tempMax": 25,
+      "tempMin": 12,
+      "precipMm": 2,
+      "windMax": 5,
+      "humidity": 55
+    },
+    {
+      "id": 33,
+      "pointId": 6,
+      "date": "2026-08-26",
+      "tempMax": 24,
+      "tempMin": 11,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 48
+    },
+    {
+      "id": 34,
+      "pointId": 6,
+      "date": "2026-08-27",
+      "tempMax": 26,
+      "tempMin": 13,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 51
+    },
+    {
+      "id": 35,
+      "pointId": 6,
+      "date": "2026-08-28",
+      "tempMax": 27,
+      "tempMin": 14,
+      "precipMm": 0,
+      "windMax": 2,
+      "humidity": 49
+    },
+    {
+      "id": 36,
+      "pointId": 7,
+      "date": "2026-08-22",
+      "tempMax": 29,
+      "tempMin": 16,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 48
+    },
+    {
+      "id": 37,
+      "pointId": 7,
+      "date": "2026-08-23",
+      "tempMax": 28,
+      "tempMin": 15,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 50
+    },
+    {
+      "id": 38,
+      "pointId": 7,
+      "date": "2026-08-24",
+      "tempMax": 27,
+      "tempMin": 14,
+      "precipMm": 2,
+      "windMax": 4,
+      "humidity": 54
+    },
+    {
+      "id": 39,
+      "pointId": 7,
+      "date": "2026-08-25",
+      "tempMax": 26,
+      "tempMin": 13,
+      "precipMm": 4,
+      "windMax": 4,
+      "humidity": 57
+    },
+    {
+      "id": 40,
+      "pointId": 7,
+      "date": "2026-08-26",
+      "tempMax": 25,
+      "tempMin": 12,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 49
+    },
+    {
+      "id": 41,
+      "pointId": 7,
+      "date": "2026-08-27",
+      "tempMax": 27,
+      "tempMin": 14,
+      "precipMm": 0,
+      "windMax": 2,
+      "humidity": 47
+    },
+    {
+      "id": 42,
+      "pointId": 7,
+      "date": "2026-08-28",
+      "tempMax": 28,
+      "tempMin": 15,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 46
+    },
+    {
+      "id": 43,
+      "pointId": 8,
+      "date": "2026-08-22",
+      "tempMax": 31,
+      "tempMin": 18,
+      "precipMm": 0,
+      "windMax": 4,
+      "humidity": 40
+    },
+    {
+      "id": 44,
+      "pointId": 8,
+      "date": "2026-08-23",
+      "tempMax": 32,
+      "tempMin": 19,
+      "precipMm": 0,
+      "windMax": 5,
+      "humidity": 38
+    },
+    {
+      "id": 45,
+      "pointId": 8,
+      "date": "2026-08-24",
+      "tempMax": 30,
+      "tempMin": 17,
+      "precipMm": 0,
+      "windMax": 4,
+      "humidity": 42
+    },
+    {
+      "id": 46,
+      "pointId": 8,
+      "date": "2026-08-25",
+      "tempMax": 29,
+      "tempMin": 16,
+      "precipMm": 1,
+      "windMax": 3,
+      "humidity": 45
+    },
+    {
+      "id": 47,
+      "pointId": 8,
+      "date": "2026-08-26",
+      "tempMax": 28,
+      "tempMin": 15,
+      "precipMm": 3,
+      "windMax": 4,
+      "humidity": 50
+    },
+    {
+      "id": 48,
+      "pointId": 8,
+      "date": "2026-08-27",
+      "tempMax": 30,
+      "tempMin": 17,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 41
+    },
+    {
+      "id": 49,
+      "pointId": 8,
+      "date": "2026-08-28",
+      "tempMax": 31,
+      "tempMin": 18,
+      "precipMm": 0,
+      "windMax": 3,
+      "humidity": 39
     }
   ],
-  "extremeEvents": [],
-  "pestRiskPredictions": [],
+  "extremeEvents": [
+    {
+      "pointId": 2,
+      "ruleId": "extreme_heat_40",
+      "type": "high_temperature",
+      "title": "极端高温",
+      "description": "预报最高气温达到 41℃",
+      "level": "critical",
+      "startAt": "2026-08-22",
+      "id": 1
+    }
+  ],
+  "pestRiskPredictions": [
+    {
+      "id": 1,
+      "fieldId": "hejian",
+      "riskLevel": "low",
+      "factors": [
+        "气温处于病害流行适温区间"
+      ],
+      "window": "2026-08-22~2026-08-28"
+    },
+    {
+      "id": 2,
+      "fieldId": "xiongxian",
+      "riskLevel": "low",
+      "factors": [],
+      "window": "2026-08-22~2026-08-28"
+    },
+    {
+      "id": 3,
+      "fieldId": "luancheng",
+      "riskLevel": "low",
+      "factors": [],
+      "window": ""
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "title": "[自动预警] 监测站 · 雄县 - 土壤湿度 13.2% 低于告警阈值 15%，",
+      "read": false,
+      "alertId": 104,
+      "createdAt": "2026-08-22T00:10:34.583Z"
+    },
+    {
+      "id": 2,
+      "title": "[极端天气] 监测站 · 雄县 - 极端高温：预报最高气温达到 41℃",
+      "read": false,
+      "alertId": 105,
+      "createdAt": "2026-08-22T00:10:34.583Z"
+    },
+    {
+      "id": 3,
+      "title": "[自动预警] 监测站 · 河间市 - 气温 33.2℃ 超过提示阈值 32℃，已",
+      "read": false,
+      "alertId": 106,
+      "createdAt": "2026-08-22T00:40:34.805Z"
+    },
+    {
+      "id": 4,
+      "title": "[自动预警] 监测站 · 雄县 - 气温 35.6℃ 超过提示阈值 32℃，已持",
+      "read": false,
+      "alertId": 107,
+      "createdAt": "2026-08-22T00:40:34.805Z"
+    },
+    {
+      "id": 5,
+      "title": "[自动预警] 监测站 · 内蒙古通辽 - 土壤湿度 17.6% 低于提示阈值 2",
+      "read": false,
+      "alertId": 108,
+      "createdAt": "2026-08-22T00:40:34.805Z"
+    }
+  ],
+  "droneMissions": [
+    {
+      "id": 1,
+      "fieldId": "xiongxian",
+      "name": "雄县示范航线",
+      "path": [
+        [
+          38.95,
+          116.04
+        ],
+        [
+          38.97,
+          116.08
+        ],
+        [
+          38.98,
+          116.12
+        ]
+      ]
+    }
+  ],
   "sensorReadings": [
     {
       "id": 1,
@@ -1044,6 +1576,330 @@
       "airRh": 66,
       "soilVwc": 38.6,
       "soilTemp10cm": 22.4
+    },
+    {
+      "id": 22,
+      "pointId": 2,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 35.6,
+      "airRh": 28.4,
+      "soilVwc": 11.8,
+      "soilTemp10cm": 31.5
+    },
+    {
+      "id": 23,
+      "pointId": 4,
+      "recordedAt": "2026-08-16T08:00:00+08:00",
+      "airTemp": 20.4,
+      "airRh": 68,
+      "soilVwc": 40.2,
+      "soilTemp10cm": 18.5
+    },
+    {
+      "id": 24,
+      "pointId": 4,
+      "recordedAt": "2026-08-17T08:00:00+08:00",
+      "airTemp": 20.8,
+      "airRh": 66,
+      "soilVwc": 40.8,
+      "soilTemp10cm": 18.8
+    },
+    {
+      "id": 25,
+      "pointId": 4,
+      "recordedAt": "2026-08-18T08:00:00+08:00",
+      "airTemp": 21.2,
+      "airRh": 64,
+      "soilVwc": 41.4,
+      "soilTemp10cm": 19.1
+    },
+    {
+      "id": 26,
+      "pointId": 4,
+      "recordedAt": "2026-08-19T08:00:00+08:00",
+      "airTemp": 21.6,
+      "airRh": 63,
+      "soilVwc": 41.9,
+      "soilTemp10cm": 19.4
+    },
+    {
+      "id": 27,
+      "pointId": 4,
+      "recordedAt": "2026-08-20T08:00:00+08:00",
+      "airTemp": 21.1,
+      "airRh": 65,
+      "soilVwc": 41.2,
+      "soilTemp10cm": 19
+    },
+    {
+      "id": 28,
+      "pointId": 4,
+      "recordedAt": "2026-08-21T08:00:00+08:00",
+      "airTemp": 21.8,
+      "airRh": 62,
+      "soilVwc": 41.6,
+      "soilTemp10cm": 19.6
+    },
+    {
+      "id": 29,
+      "pointId": 4,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 22,
+      "airRh": 60,
+      "soilVwc": 42,
+      "soilTemp10cm": 19.8
+    },
+    {
+      "id": 30,
+      "pointId": 5,
+      "recordedAt": "2026-08-16T08:00:00+08:00",
+      "airTemp": 22.1,
+      "airRh": 58,
+      "soilVwc": 26.2,
+      "soilTemp10cm": 20.1
+    },
+    {
+      "id": 31,
+      "pointId": 5,
+      "recordedAt": "2026-08-17T08:00:00+08:00",
+      "airTemp": 22.6,
+      "airRh": 56,
+      "soilVwc": 26.6,
+      "soilTemp10cm": 20.5
+    },
+    {
+      "id": 32,
+      "pointId": 5,
+      "recordedAt": "2026-08-18T08:00:00+08:00",
+      "airTemp": 23,
+      "airRh": 55,
+      "soilVwc": 27.1,
+      "soilTemp10cm": 20.8
+    },
+    {
+      "id": 33,
+      "pointId": 5,
+      "recordedAt": "2026-08-19T08:00:00+08:00",
+      "airTemp": 23.4,
+      "airRh": 54,
+      "soilVwc": 27.5,
+      "soilTemp10cm": 21.2
+    },
+    {
+      "id": 34,
+      "pointId": 5,
+      "recordedAt": "2026-08-20T08:00:00+08:00",
+      "airTemp": 22.8,
+      "airRh": 57,
+      "soilVwc": 27,
+      "soilTemp10cm": 20.9
+    },
+    {
+      "id": 35,
+      "pointId": 5,
+      "recordedAt": "2026-08-21T08:00:00+08:00",
+      "airTemp": 23.7,
+      "airRh": 53,
+      "soilVwc": 27.6,
+      "soilTemp10cm": 21.4
+    },
+    {
+      "id": 36,
+      "pointId": 5,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 24,
+      "airRh": 52,
+      "soilVwc": 28,
+      "soilTemp10cm": 21.6
+    },
+    {
+      "id": 37,
+      "pointId": 6,
+      "recordedAt": "2026-08-16T08:00:00+08:00",
+      "airTemp": 24,
+      "airRh": 55,
+      "soilVwc": 33.2,
+      "soilTemp10cm": 22
+    },
+    {
+      "id": 38,
+      "pointId": 6,
+      "recordedAt": "2026-08-17T08:00:00+08:00",
+      "airTemp": 24.5,
+      "airRh": 54,
+      "soilVwc": 33.8,
+      "soilTemp10cm": 22.3
+    },
+    {
+      "id": 39,
+      "pointId": 6,
+      "recordedAt": "2026-08-18T08:00:00+08:00",
+      "airTemp": 25,
+      "airRh": 52,
+      "soilVwc": 34.2,
+      "soilTemp10cm": 22.7
+    },
+    {
+      "id": 40,
+      "pointId": 6,
+      "recordedAt": "2026-08-19T08:00:00+08:00",
+      "airTemp": 25.4,
+      "airRh": 51,
+      "soilVwc": 34.6,
+      "soilTemp10cm": 23
+    },
+    {
+      "id": 41,
+      "pointId": 6,
+      "recordedAt": "2026-08-20T08:00:00+08:00",
+      "airTemp": 24.8,
+      "airRh": 53,
+      "soilVwc": 34.1,
+      "soilTemp10cm": 22.6
+    },
+    {
+      "id": 42,
+      "pointId": 6,
+      "recordedAt": "2026-08-21T08:00:00+08:00",
+      "airTemp": 25.7,
+      "airRh": 50,
+      "soilVwc": 34.7,
+      "soilTemp10cm": 23.2
+    },
+    {
+      "id": 43,
+      "pointId": 6,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 26,
+      "airRh": 49,
+      "soilVwc": 35,
+      "soilTemp10cm": 23.4
+    },
+    {
+      "id": 44,
+      "pointId": 7,
+      "recordedAt": "2026-08-16T08:00:00+08:00",
+      "airTemp": 25.1,
+      "airRh": 53,
+      "soilVwc": 29.2,
+      "soilTemp10cm": 23.1
+    },
+    {
+      "id": 45,
+      "pointId": 7,
+      "recordedAt": "2026-08-17T08:00:00+08:00",
+      "airTemp": 25.6,
+      "airRh": 52,
+      "soilVwc": 29.6,
+      "soilTemp10cm": 23.4
+    },
+    {
+      "id": 46,
+      "pointId": 7,
+      "recordedAt": "2026-08-18T08:00:00+08:00",
+      "airTemp": 26,
+      "airRh": 50,
+      "soilVwc": 30.1,
+      "soilTemp10cm": 23.8
+    },
+    {
+      "id": 47,
+      "pointId": 7,
+      "recordedAt": "2026-08-19T08:00:00+08:00",
+      "airTemp": 26.4,
+      "airRh": 49,
+      "soilVwc": 30.5,
+      "soilTemp10cm": 24.1
+    },
+    {
+      "id": 48,
+      "pointId": 7,
+      "recordedAt": "2026-08-20T08:00:00+08:00",
+      "airTemp": 25.8,
+      "airRh": 51,
+      "soilVwc": 30,
+      "soilTemp10cm": 23.7
+    },
+    {
+      "id": 49,
+      "pointId": 7,
+      "recordedAt": "2026-08-21T08:00:00+08:00",
+      "airTemp": 26.7,
+      "airRh": 48,
+      "soilVwc": 30.7,
+      "soilTemp10cm": 24.3
+    },
+    {
+      "id": 50,
+      "pointId": 7,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 27,
+      "airRh": 47,
+      "soilVwc": 31,
+      "soilTemp10cm": 24.5
+    },
+    {
+      "id": 51,
+      "pointId": 8,
+      "recordedAt": "2026-08-16T08:00:00+08:00",
+      "airTemp": 27.2,
+      "airRh": 42,
+      "soilVwc": 19.4,
+      "soilTemp10cm": 26.2
+    },
+    {
+      "id": 52,
+      "pointId": 8,
+      "recordedAt": "2026-08-17T08:00:00+08:00",
+      "airTemp": 27.8,
+      "airRh": 40,
+      "soilVwc": 19,
+      "soilTemp10cm": 26.6
+    },
+    {
+      "id": 53,
+      "pointId": 8,
+      "recordedAt": "2026-08-18T08:00:00+08:00",
+      "airTemp": 28.2,
+      "airRh": 39,
+      "soilVwc": 18.6,
+      "soilTemp10cm": 27
+    },
+    {
+      "id": 54,
+      "pointId": 8,
+      "recordedAt": "2026-08-19T08:00:00+08:00",
+      "airTemp": 28.6,
+      "airRh": 38,
+      "soilVwc": 18.2,
+      "soilTemp10cm": 27.3
+    },
+    {
+      "id": 55,
+      "pointId": 8,
+      "recordedAt": "2026-08-20T08:00:00+08:00",
+      "airTemp": 28.1,
+      "airRh": 40,
+      "soilVwc": 18.4,
+      "soilTemp10cm": 26.9
+    },
+    {
+      "id": 56,
+      "pointId": 8,
+      "recordedAt": "2026-08-21T08:00:00+08:00",
+      "airTemp": 28.8,
+      "airRh": 37,
+      "soilVwc": 17.9,
+      "soilTemp10cm": 27.5
+    },
+    {
+      "id": 57,
+      "pointId": 8,
+      "recordedAt": "2026-08-22T08:00:00+08:00",
+      "airTemp": 29,
+      "airRh": 36,
+      "soilVwc": 17.6,
+      "soilTemp10cm": 27.8
     }
   ]
 }

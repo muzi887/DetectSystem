@@ -209,6 +209,8 @@ import {
 import { message } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useDataStore } from '@/stores/data'
+import { useRemoteSensingStore } from '@/stores/remoteSensing'
+import { factorsFromAlert } from '@/utils/pestFactors'
 import {
   getTreatment,
   parseDiseaseFromAlert,
@@ -248,6 +250,7 @@ type LevelFilterKey = 'all' | 'high' | 'medium' | 'low'
 const ALERT_PAGE_SIZE = 6
 
 const dataStore = useDataStore()
+const remoteStore = useRemoteSensingStore()
 const { disclaimer: treatmentDisclaimer } = useTreatmentGuide()
 
 const alertPanelCollapsed = ref(false)
@@ -390,8 +393,20 @@ const ruleSuggestions = computed(() => {
   return buildRuleSuggestions(selectedArea.value)
 })
 
+const pestFactorLines = computed(() => {
+  const area = selectedArea.value
+  if (!area || !area.message.includes('[虫情风险]')) return []
+  const field = remoteStore.fields.find((item) => Number(item.monitorPointId) === area.pointId)
+  const prediction = remoteStore.pestPredictions.find((row) => row.fieldId === field?.id)
+  return factorsFromAlert(area.message, prediction)
+})
+
 const suggestionCollapsePanels = computed((): TreatmentPanel[] => {
   const panels = [...knowledgePanels.value]
+  const factors = pestFactorLines.value
+  if (factors.length) {
+    panels.push({ key: 'pest-factors', title: '风险因子', lines: factors })
+  }
   const rules = ruleSuggestions.value
   if (rules.length) {
     panels.push({ key: 'linkage', title: '联动处置建议', lines: rules })
@@ -408,15 +423,21 @@ const suggestionCollapsePanels = computed((): TreatmentPanel[] => {
 
 const exportLines = computed(() => {
   const knowledge = flattenTreatmentPanels(knowledgePanels.value)
+  const factors = pestFactorLines.value
   const rules = ruleSuggestions.value
-  if (rules.length) {
-    return [...knowledge, ...rules.map((line) => `【联动处置建议】${line}`)]
+  const extra = [
+    ...factors.map((line) => `【风险因子】${line}`),
+    ...rules.map((line) => `【联动处置建议】${line}`)
+  ]
+  if (extra.length) {
+    return [...knowledge, ...extra]
   }
   return knowledge.length ? knowledge : ruleSuggestions.value
 })
 
 function resolveDefaultCollapseKeys(panels: TreatmentPanel[]): string[] {
   const keys: string[] = []
+  if (panels.some((p) => p.key === 'pest-factors')) keys.push('pest-factors')
   if (panels.some((p) => p.key === 'linkage')) keys.push('linkage')
   if (panels.some((p) => p.key === 'chemical')) keys.push('chemical')
   else if (panels.some((p) => p.key === 'summary')) keys.push('summary')
@@ -510,7 +531,11 @@ function focusSelectedOnMap(area: EnrichedAlert) {
 }
 
 onMounted(async () => {
-  await Promise.all([dataStore.fetchAlerts(), dataStore.fetchMonitorPoints()])
+  await Promise.all([
+    dataStore.fetchAlerts(),
+    dataStore.fetchMonitorPoints(),
+    remoteStore.fetchAll().catch(() => undefined)
+  ])
   syncDefaultSelection()
 })
 

@@ -2,6 +2,8 @@ import http from '@/utils/http'
 
 export const evaluateAllAlerts = () => http.post('/alerts/evaluate-all')
 
+export const publishAlert = (id: number) => http.post(`/alerts/${id}/publish`)
+
 export const evaluateExtremeEvents = () => http.post('/weather/extreme-events/evaluate')
 
 export const fetchForecast = (pointId?: number) =>
@@ -16,7 +18,13 @@ export const evaluatePestRisk = () => http.post('/pest-risk/evaluate')
 
 export const fetchPestPredictions = () => http.get('/pestRiskPredictions')
 
-export const publishAlert = (id: number) => http.post(`/alerts/${id}/publish`)
+export const fetchDailyReport = () => http.get('/reports/daily')
+
+export const fetchNotifications = () => http.get('/notifications')
+
+export const markNotificationRead = (id: number) => http.patch(`/notifications/${id}`, { read: true })
+
+export const fetchDroneMissions = () => http.get('/droneMissions')
 
 export const fetchThresholds = (pointId: number) =>
   http.get(`/field-sensors/${pointId}/thresholds`)

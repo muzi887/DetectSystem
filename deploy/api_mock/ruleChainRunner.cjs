@@ -529,11 +529,59 @@ function runChain3OnDb(db, now) {
   return { created }
 }
 
+function appendNotifications(db, createdAlerts, now) {
+  const clock = now || new Date()
+  if (!Array.isArray(db.notifications)) db.notifications = []
+  let nextId = nextAlertId(db.notifications)
+  for (const alert of createdAlerts || []) {
+    let title = String(alert.message || '').slice(0, 40)
+    if (alert.draft) title = '草稿 ' + title
+    db.notifications.push({
+      id: nextId,
+      title,
+      read: false,
+      alertId: alert.id,
+      createdAt: clock.toISOString()
+    })
+    nextId += 1
+  }
+}
+
 function runAllChains(db, now) {
   const env = runChain1OnDb(db, now)
   const extreme = runChain2OnDb(db, now)
   const pest = runChain3OnDb(db, now)
-  return { created: env.created.concat(extreme.created, pest.created) }
+  const created = env.created.concat(extreme.created, pest.created)
+  appendNotifications(db, created, now)
+  return { created }
+}
+
+function buildDailyReport(input) {
+  const alerts = input.alerts || []
+  const pending = alerts.filter((row) => !row.handled).length
+  const pointLines = (input.points || []).map((point) => {
+    const status = point.online === false ? '离线' : '在线'
+    return '- ' + point.name + '（' + status + '，气温 ' + (point.temp != null ? point.temp : '—') + '℃，墒情 ' + (point.soilMoisture != null ? point.soilMoisture : '—') + '%）'
+  })
+  const extremeEvents = input.extremeEvents || []
+  const extremeLines = extremeEvents.length
+    ? extremeEvents.map((event) => '- ' + event.title + '（' + event.startAt + '）')
+    : ['- 无']
+  return [
+    '# 监测日报',
+    '生成时间：' + input.generatedAt,
+    '',
+    '## 监测点',
+    ...(pointLines.length ? pointLines : ['- 无监测点']),
+    '',
+    '## 预警统计',
+    '- 总数: ' + alerts.length,
+    '- 待处理: ' + pending,
+    '',
+    '## 极端天气',
+    ...extremeLines,
+    ''
+  ].join('\n')
 }
 
 module.exports = {
@@ -547,6 +595,8 @@ module.exports = {
   filterReadings,
   tickSoilVwc,
   tickSensorSimulation,
+  appendNotifications,
+  buildDailyReport,
   profileForPoint,
   publishAlert
 }

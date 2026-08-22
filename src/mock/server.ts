@@ -5,6 +5,7 @@ import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 import type { Request, Response } from 'express'
 import { DEFAULT_THRESHOLD_PROFILE } from '../utils/alertRules.ts'
+import { buildDailyReport } from '../utils/dailyReport.ts'
 import { filterReadings } from '../utils/sensorReadings.ts'
 import { profileForPoint, publishAlert, runAllChains, runChain1OnDb, runChain2OnDb, runChain3OnDb, tickSensorSimulation } from './persistRules.ts'
 
@@ -155,6 +156,18 @@ server.put('/field-sensors/:pointId/thresholds', (req: Request, res: Response) =
   else db.thresholdProfiles.push(body)
   writeDb(db)
   return res.jsonp(body)
+})
+
+server.get('/reports/daily', (_req: Request, res: Response) => {
+  const db = readDb(res)
+  if (!db) return
+  const markdown = buildDailyReport({
+    generatedAt: new Date().toISOString(),
+    points: Array.isArray(db.monitorPoints) ? db.monitorPoints : [],
+    alerts: (Array.isArray(db.alerts) ? db.alerts : []).filter((row: { draft?: boolean }) => row.draft !== true),
+    extremeEvents: Array.isArray(db.extremeEvents) ? db.extremeEvents : []
+  })
+  return res.jsonp({ markdown })
 })
 
 server.get('/moisture/value', (req: Request, res: Response) => {

@@ -1,14 +1,38 @@
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useDataStore } from '@/stores/data'
-import { evaluateAllAlerts } from '@/api/rules'
+import { evaluateAllAlerts, fetchNotifications } from '@/api/rules'
+
+export type SiteNotification = {
+  id: number
+  title: string
+  read: boolean
+  alertId: number
+  createdAt: string
+}
 
 export function useAlertEngine() {
   const dataStore = useDataStore()
+  const notifications = ref<SiteNotification[]>([])
   let timer: ReturnType<typeof setInterval> | undefined
 
+  async function loadNotifications() {
+    try {
+      const res = await fetchNotifications()
+      notifications.value = res.data || []
+    } catch {
+      notifications.value = []
+    }
+  }
+
+  async function refresh() {
+    await dataStore.fetchAlerts()
+    await loadNotifications()
+  }
+
   onMounted(() => {
+    void loadNotifications()
     timer = setInterval(() => {
-      void dataStore.fetchAlerts()
+      void refresh()
     }, 30_000)
   })
 
@@ -18,8 +42,8 @@ export function useAlertEngine() {
 
   async function triggerEvaluateAll() {
     await evaluateAllAlerts()
-    await dataStore.fetchAlerts()
+    await refresh()
   }
 
-  return { triggerEvaluateAll }
+  return { triggerEvaluateAll, notifications, loadNotifications, refresh }
 }

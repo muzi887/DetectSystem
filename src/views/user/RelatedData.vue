@@ -11,11 +11,18 @@
           <div class="header-actions">
             <a-select
               v-if="currentTab === 'weather'"
+              :key="`weather-point-${weatherPointOptionKey}`"
               v-model:value="selectedWeatherPointId"
               class="weather-point-select"
               popup-class-name="weather-point-select-dropdown"
-              :options="weatherPointOptions"
-              placeholder="选择监测站" />
+              placeholder="选择监测站">
+              <a-select-option
+                v-for="point in dataStore.filteredMonitorPoints"
+                :key="point.id"
+                :value="Number(point.id)">
+                {{ point.name }}
+              </a-select-option>
+            </a-select>
             <a-select
               v-if="currentTab === 'sensor'"
               v-model:value="selectedSensorPointIds"
@@ -63,6 +70,13 @@
             v-if="currentTab === 'drone' || currentTab === 'gis'"
             class="full-content map-visual">
             <NdviLayerControls v-if="currentTab === 'drone'" />
+            <a-alert
+              v-if="currentTab === 'drone' && remoteStore.selectedFieldHighRisk"
+              class="high-risk-banner"
+              type="warning"
+              show-icon
+              message="建议地面复核"
+              :description="`${selectedFieldName} 虫情风险为高，请结合 NDVI 与预警草稿安排踏查。`" />
             <RemoteSensingMap
               ref="remoteMapRef"
               :key="currentTab"
@@ -71,6 +85,8 @@
               :bounds="remoteRasterLayer.bounds"
               :compare-image-url="ndviCompareImageUrl"
               :compare-opacity="remoteStore.compareOpacity"
+              :high-risk-bounds="droneHighRiskBounds"
+              :flight-path="droneFlightPath"
               :show-monitor-points="currentTab === 'gis'"
               :enable-moisture-query="currentTab === 'gis'"
               :monitor-points="dataStore.filteredMonitorPoints"
@@ -131,7 +147,7 @@
 
           <div
             v-if="currentTab === 'weather'"
-            class="weather-grid">
+            class="weather-layout">
             <div
               v-if="activeExtremeTitles.length"
               class="weather-extreme-tags">
@@ -144,52 +160,80 @@
                 {{ title }}
               </a-tag>
             </div>
-            <a-table
-              v-if="forecastDays.length"
-              class="forecast-table"
-              size="small"
-              :pagination="false"
-              :data-source="forecastDays"
-              :columns="forecastColumns"
-              row-key="date" />
-            <div
-              v-else
-              class="forecast-empty">
-              暂无该站 7 日预报
-            </div>
-            <template v-if="weatherMetrics.length">
-              <a-card
-                v-for="item in weatherMetrics"
-                :key="item.label"
-                class="weather-card"
-                :title="item.label">
-                {{ item.value }}
-              </a-card>
-            </template>
-            <div
-              v-else
-              class="weather-empty">
-              暂无该监测站气象读数
-            </div>
-            <div class="threshold-settings">
-              <div class="threshold-title">阈值配置</div>
-              <a-form layout="inline">
-                <a-form-item label="墒情提示">
-                  <a-input-number v-model:value="thresholdForm.waterStressHint" :min="1" :max="50" />
-                </a-form-item>
-                <a-form-item label="墒情告警">
-                  <a-input-number v-model:value="thresholdForm.waterStressAlert" :min="1" :max="50" />
-                </a-form-item>
-                <a-form-item label="气温提示">
-                  <a-input-number v-model:value="thresholdForm.heatHint" :min="20" :max="50" />
-                </a-form-item>
-                <a-form-item label="气温告警">
-                  <a-input-number v-model:value="thresholdForm.heatAlert" :min="20" :max="50" />
-                </a-form-item>
-                <a-form-item>
-                  <a-button type="primary" @click="savePointThresholds">保存阈值</a-button>
-                </a-form-item>
-              </a-form>
+            <div class="weather-body">
+              <div class="weather-metrics">
+                <template v-if="weatherMetrics.length">
+                  <a-card
+                    v-for="item in weatherMetrics"
+                    :key="item.label"
+                    class="weather-card"
+                    :title="item.label">
+                    {{ item.value }}
+                  </a-card>
+                </template>
+                <div
+                  v-else
+                  class="weather-empty">
+                  暂无该监测站气象读数
+                </div>
+              </div>
+              <aside class="weather-side">
+                <section class="weather-forecast-block">
+                  <h4 class="weather-side-title">7 日预报</h4>
+                  <a-table
+                    v-if="forecastDays.length"
+                    class="forecast-table"
+                    size="small"
+                    :pagination="false"
+                    :data-source="forecastDays"
+                    :columns="forecastColumns"
+                    row-key="date" />
+                  <div
+                    v-else
+                    class="forecast-empty">
+                    暂无该站 7 日预报
+                  </div>
+                </section>
+                <section class="threshold-settings">
+                  <h4 class="threshold-title">阈值配置</h4>
+                  <a-form
+                    layout="vertical"
+                    class="threshold-form">
+                    <div class="threshold-grid">
+                      <a-form-item label="墒情提示">
+                        <a-input-number
+                          v-model:value="thresholdForm.waterStressHint"
+                          :min="1"
+                          :max="50" />
+                      </a-form-item>
+                      <a-form-item label="墒情告警">
+                        <a-input-number
+                          v-model:value="thresholdForm.waterStressAlert"
+                          :min="1"
+                          :max="50" />
+                      </a-form-item>
+                      <a-form-item label="气温提示">
+                        <a-input-number
+                          v-model:value="thresholdForm.heatHint"
+                          :min="20"
+                          :max="50" />
+                      </a-form-item>
+                      <a-form-item label="气温告警">
+                        <a-input-number
+                          v-model:value="thresholdForm.heatAlert"
+                          :min="20"
+                          :max="50" />
+                      </a-form-item>
+                    </div>
+                    <a-button
+                      type="primary"
+                      class="threshold-save-btn"
+                      @click="savePointThresholds">
+                      保存阈值
+                    </a-button>
+                  </a-form>
+                </section>
+              </aside>
             </div>
           </div>
         </div>
@@ -218,18 +262,17 @@
 
     <a-modal
       v-model:visible="reportModalVisible"
-      title="生成月度数据简报"
+      wrap-class-name="glass-report-modal-wrap"
+      root-class-name="glass-report-modal-root"
+      title="生成监测日报"
+      ok-text="下载 txt"
+      :confirm-loading="reportLoading"
       @ok="handleDownload">
-      <p>正在聚合分析最近 30 天的{{ currentTabName }}...</p>
-      <a-progress
-        :percent="reportProgress"
-        status="active" />
-      <div
-        v-if="reportProgress === 100"
-        style="margin-top: 10px; color: green">
-        <CheckCircleOutlined />
-        简报生成完毕，可下载。
-      </div>
+      <p v-if="reportLoading">正在生成监测日报...</p>
+      <pre
+        v-else-if="reportMarkdown"
+        class="report-preview">{{ reportPreview }}</pre>
+      <p v-else>暂无日报内容</p>
     </a-modal>
   </AppLayout>
 </template>
@@ -245,9 +288,9 @@ import { useDataStore, type WeatherReading } from '@/stores/data.ts'
 import { useRemoteSensingStore } from '@/stores/remoteSensing'
 import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
-import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
+import { FilePdfOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { fetchExtremeEvents, fetchForecast, fetchSensorReadings, fetchThresholds, saveThresholds } from '@/api/rules'
+import { fetchDailyReport, fetchExtremeEvents, fetchForecast, fetchSensorReadings, fetchThresholds, saveThresholds } from '@/api/rules'
 import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
 import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
 import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
@@ -274,9 +317,13 @@ function mdLabel(iso: string) {
 
 const weatherPointOptions = computed(() =>
   dataStore.filteredMonitorPoints.map((point) => ({
-    value: point.id,
+    value: Number(point.id),
     label: point.name
   }))
+)
+
+const weatherPointOptionKey = computed(() =>
+  weatherPointOptions.value.map((item) => item.value).join(',')
 )
 
 function formatWeatherMetrics(reading: WeatherReading) {
@@ -360,11 +407,20 @@ async function savePointThresholds() {
 }
 
 function getWeatherPointName(pointId: number) {
+  const id = Number(pointId)
   return (
-    dataStore.filteredMonitorPoints.find((point) => point.id === pointId)?.name ??
-    dataStore.monitorPoints.find((point) => point.id === pointId)?.name ??
-    `监测站 #${pointId}`
+    dataStore.filteredMonitorPoints.find((point) => Number(point.id) === id)?.name ??
+    `监测站 #${id}`
   )
+}
+
+function syncSelectedWeatherPoint(preferredId?: number) {
+  const points = dataStore.filteredMonitorPoints
+  if (!points.length) return
+  const preferred =
+    preferredId != null ? Number(preferredId) : Number(selectedWeatherPointId.value)
+  const match = points.find((point) => Number(point.id) === preferred)
+  selectedWeatherPointId.value = Number(match?.id ?? points[0].id)
 }
 
 function buildWeatherAiConclusion(reading: WeatherReading, pointName: string) {
@@ -447,6 +503,25 @@ const remoteRasterLayer = computed(() => {
     return remoteStore.currentMoistureRaster ?? MOISTURE_DEMO_LAYER
   }
   return NDVI_DEMO_LAYER
+})
+
+const selectedFieldName = computed(() => {
+  return (
+    remoteStore.fields.find((item) => item.id === remoteStore.selectedFieldId)?.name ??
+    remoteStore.selectedFieldId ??
+    '当前地块'
+  )
+})
+
+const droneHighRiskBounds = computed(() => {
+  if (currentTab.value !== 'drone' || !remoteStore.selectedFieldHighRisk) return null
+  const field = remoteStore.fields.find((item) => item.id === remoteStore.selectedFieldId)
+  return field?.bounds ?? null
+})
+
+const droneFlightPath = computed(() => {
+  if (currentTab.value !== 'drone') return null
+  return remoteStore.currentDronePath
 })
 
 const ndviCompareImageUrl = computed(() => {
@@ -688,24 +763,43 @@ const switchTab = async (key: string) => {
 }
 
 const reportModalVisible = ref(false)
-const reportProgress = ref(0)
-let timer: any = null
+const reportLoading = ref(false)
+const reportMarkdown = ref('')
+const reportPreview = computed(() =>
+  reportMarkdown.value.split('\n').slice(0, 20).join('\n')
+)
 
-const handleGenerateReport = () => {
+const handleGenerateReport = async () => {
   reportModalVisible.value = true
-  reportProgress.value = 0
-  timer = setInterval(() => {
-    if (reportProgress.value >= 100) {
-      clearInterval(timer)
-    } else {
-      reportProgress.value += 10
-    }
-  }, 200)
+  reportLoading.value = true
+  reportMarkdown.value = ''
+  try {
+    const res = await fetchDailyReport()
+    reportMarkdown.value = res.data?.markdown || ''
+    if (!reportMarkdown.value) throw new Error('empty report')
+  } catch {
+    reportModalVisible.value = false
+    message.error('日报生成失败，请检查 Mock 服务')
+  } finally {
+    reportLoading.value = false
+  }
 }
 
 const handleDownload = () => {
+  if (!reportMarkdown.value) {
+    message.error('暂无日报内容')
+    return
+  }
+  const blob = new Blob([reportMarkdown.value], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  const today = new Date()
+  const stamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  link.href = url
+  link.download = `监测日报-${stamp}.txt`
+  link.click()
+  URL.revokeObjectURL(url)
   reportModalVisible.value = false
-  message.success(`已下载《${currentTabName.value}分析简报.pdf》`)
 }
 
 function onWindowResize() {
@@ -748,6 +842,13 @@ onMounted(async () => {
     tasks.push(loadForecast(selectedWeatherPointId.value))
     tasks.push(loadSensorReadings(selectedSensorPointIds.value))
     await Promise.all(tasks)
+    syncSelectedWeatherPoint()
+    if (currentTab.value === 'weather') {
+      await Promise.all([
+        loadThresholds(selectedWeatherPointId.value),
+        loadForecast(selectedWeatherPointId.value)
+      ])
+    }
     await nextTick()
     renderSensorChart()
   } finally {
@@ -782,9 +883,7 @@ watch(remoteRasterLayer, async () => {
 watch(currentTab, (tab) => {
   if (tab !== 'weather') return
   const field = remoteStore.fields.find((item) => item.id === remoteStore.selectedFieldId)
-  if (field?.monitorPointId) {
-    selectedWeatherPointId.value = field.monitorPointId
-  }
+  syncSelectedWeatherPoint(field?.monitorPointId)
   void loadThresholds(selectedWeatherPointId.value)
   void loadForecast(selectedWeatherPointId.value)
 })
@@ -796,13 +895,12 @@ watch(selectedWeatherPointId, (pointId) => {
 
 watch(
   () => dataStore.filteredMonitorPoints,
-  (points) => {
-    if (points.length && !points.some((point) => point.id === selectedWeatherPointId.value)) {
-      selectedWeatherPointId.value = points[0].id
-    }
+  () => {
+    syncSelectedWeatherPoint()
+    const points = dataStore.filteredMonitorPoints
     if (!points.length) return
     const selectedStillInRegion = selectedSensorPointIds.value.every((id) =>
-      points.some((point) => point.id === id)
+      points.some((point) => Number(point.id) === Number(id))
     )
     if (!selectedStillInRegion || selectedSensorPointIds.value.length === 0) {
       selectedSensorPointIds.value = defaultSensorPointIds(points)
@@ -814,13 +912,17 @@ watch(
 watch(
   () => dataStore.selectedRegion,
   () => {
+    syncSelectedWeatherPoint()
     const points = dataStore.filteredMonitorPoints
     if (points.length) {
-      selectedWeatherPointId.value = points[0].id
       selectedSensorPointIds.value = defaultSensorPointIds(points)
     }
     if (currentTab.value === 'sensor') {
       void loadSensorReadings(selectedSensorPointIds.value)
+    }
+    if (currentTab.value === 'weather') {
+      void loadThresholds(selectedWeatherPointId.value)
+      void loadForecast(selectedWeatherPointId.value)
     }
   }
 )
@@ -892,6 +994,15 @@ watch(
 .map-visual {
   position: relative;
   overflow: hidden;
+}
+
+.high-risk-banner {
+  position: absolute;
+  top: 74px;
+  left: 12px;
+  right: auto;
+  max-width: min(420px, calc(100% - 24px));
+  z-index: 4;
 }
 
 .map-caption {
@@ -981,12 +1092,74 @@ watch(
   gap: 10px;
 }
 
+.header-actions :deep(.ant-btn-primary) {
+  background-color: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+}
+
+.header-actions :deep(.ant-btn-default),
+.header-actions :deep(.ant-btn-background-ghost) {
+  background-color: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
 .weather-point-select {
-  min-width: 180px;
+  min-width: 240px;
+  max-width: 360px;
 }
 
 .weather-point-select--multi {
   min-width: 260px;
+}
+
+.weather-point-select :deep(.ant-select-selector) {
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  border-radius: 8px !important;
+  color: var(--glass-text-primary) !important;
+  box-shadow: none !important;
+}
+
+.weather-point-select.ant-select-focused :deep(.ant-select-selector),
+.weather-point-select :deep(.ant-select-selector:hover) {
+  border-color: var(--glass-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.weather-point-select :deep(.ant-select-selection-item),
+.weather-point-select :deep(.ant-select-selection-placeholder) {
+  color: var(--glass-text-primary) !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.weather-point-select :deep(.ant-select-arrow),
+.weather-point-select :deep(.ant-select-clear) {
+  color: var(--glass-text-muted) !important;
+}
+
+.weather-point-select :deep(.ant-select-selection-search-input) {
+  color: var(--glass-text-primary) !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selection-item) {
+  background-color: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  border-radius: 6px !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selection-item-content) {
+  color: var(--glass-text-primary) !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selection-item-remove) {
+  color: var(--glass-text-muted) !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selection-item-remove:hover) {
+  color: var(--glass-text-primary) !important;
 }
 
 .weather-empty {
@@ -994,39 +1167,196 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 120px;
   color: var(--glass-text-muted);
   font-size: 14px;
 }
 
 .weather-extreme-tags {
-  grid-column: 1 / -1;
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }
 
-.forecast-table,
-.forecast-empty {
-  grid-column: 1 / -1;
+.forecast-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+  --ant-color-bg-container: transparent;
+  --ant-table-header-bg: transparent;
+  --ant-table-row-hover-bg: var(--glass-bg-item-hover);
+  --ant-table-border-color: var(--glass-border);
+  --ant-color-text: var(--glass-text-primary);
+  --ant-color-text-heading: var(--glass-text-secondary);
+}
+
+.forecast-table::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.forecast-table::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.forecast-table::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.forecast-table :deep(.ant-table),
+.forecast-table :deep(.ant-table-container),
+.forecast-table :deep(.ant-table-content),
+.forecast-table :deep(.ant-table-thead > tr > th),
+.forecast-table :deep(.ant-table-tbody > tr > td) {
+  background: transparent !important;
+}
+
+.forecast-table :deep(.ant-table) {
+  color: var(--glass-text-primary);
+}
+
+.forecast-table :deep(.ant-table-thead > tr > th) {
+  color: var(--glass-text-secondary) !important;
+  font-weight: 600;
+  text-shadow: var(--glass-text-shadow);
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 8px 10px !important;
+}
+
+.forecast-table :deep(.ant-table-tbody > tr > td) {
+  color: var(--glass-text-primary) !important;
+  text-shadow: var(--glass-text-shadow);
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 7px 10px !important;
+}
+
+.forecast-table :deep(.ant-table-tbody > tr:last-child > td) {
+  border-bottom: none !important;
+}
+
+.forecast-table :deep(.ant-table-tbody > tr.ant-table-row:hover > td) {
+  background: var(--glass-bg-item-hover) !important;
+}
+
+.forecast-table :deep(.ant-table-cell) {
+  border-color: var(--glass-border) !important;
 }
 
 .forecast-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--glass-text-muted);
   font-size: 14px;
-  padding: 8px 0 4px;
+  padding: 12px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+.report-preview {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--glass-text-primary);
+  background-color: var(--glass-bg-input);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.report-preview::-webkit-scrollbar {
+  width: 8px;
+}
+
+.report-preview::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.report-preview::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
 }
 
 .threshold-settings {
-  grid-column: 1 / -1;
-  padding: 12px 4px 0;
+  flex-shrink: 0;
+  padding: 12px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
 }
 
+.weather-side-title,
 .threshold-title {
-  margin-bottom: 8px;
-  color: var(--glass-text, #fff);
+  margin: 0 0 8px;
+  color: var(--light-green);
+  font-size: 14px;
   font-weight: 600;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.threshold-form {
+  margin: 0;
+}
+
+.threshold-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+
+.threshold-form :deep(.ant-form-item) {
+  margin-bottom: 8px;
+}
+
+.threshold-form :deep(.ant-form-item-label) {
+  padding: 0 0 2px;
+}
+
+.threshold-form :deep(.ant-form-item-label > label) {
+  color: var(--glass-text-secondary) !important;
+  text-shadow: var(--glass-text-shadow);
+}
+
+.threshold-form :deep(.ant-input-number) {
+  width: 100%;
+  background-color: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.threshold-form :deep(.ant-input-number-input) {
+  color: var(--glass-text-primary) !important;
+}
+
+.threshold-form :deep(.ant-input-number-handler-wrap) {
+  background: transparent;
+  border-inline-start-color: var(--glass-border) !important;
+}
+
+.threshold-save-btn.ant-btn-primary {
+  width: 100%;
+  margin-top: 4px;
+  background-color: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
 }
 
 .chart-wrapper--weather {
@@ -1036,22 +1366,54 @@ watch(
   flex-direction: column;
 }
 
-.weather-grid {
-  display: grid;
+.weather-layout {
   flex: 1;
   min-height: 0;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: 1fr;
-  gap: 16px;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
   box-sizing: border-box;
-  width: 100%;
+  overflow: hidden;
+}
+
+.weather-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+.weather-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+.weather-side {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.weather-forecast-block {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .weather-card {
   min-width: 0;
   width: 100%;
-  min-height: 110px;
+  min-height: 0;
   height: 100%;
   background: var(--glass-bg-subtle) !important;
   border: 1px solid var(--glass-border) !important;
@@ -1065,7 +1427,7 @@ watch(
 :deep(.weather-card.ant-card) {
   min-width: 0;
   width: 100%;
-  min-height: 110px;
+  min-height: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1073,14 +1435,14 @@ watch(
 
 :deep(.weather-card .ant-card-head) {
   min-height: auto;
-  padding: 0 12px;
+  padding: 0 10px;
 }
 
 :deep(.weather-card .ant-card-head-title) {
   white-space: normal;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.35;
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 :deep(.weather-card .ant-card-body) {
@@ -1088,7 +1450,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 8px 16px;
+  padding: 8px 8px 12px;
   line-height: 1.35;
   word-break: break-word;
 }
@@ -1193,10 +1555,28 @@ watch(
     gap: 8px;
   }
 
-  .weather-grid {
+  .weather-layout {
+    padding: 12px 16px;
+  }
+
+  .weather-body {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    overflow: auto;
+  }
+
+  .weather-side {
+    overflow: visible;
+  }
+
+  .weather-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: minmax(110px, 1fr);
-    padding: 20px;
+    grid-auto-rows: minmax(110px, auto);
+  }
+
+  .weather-forecast-block {
+    flex: 0 0 auto;
+    min-height: 220px;
   }
 
   .ai-analysis-box {
@@ -1230,11 +1610,13 @@ watch(
     min-height: 420px;
   }
 
-  .weather-grid {
+  .weather-layout {
+    padding: 12px;
+  }
+
+  .weather-metrics {
     grid-template-columns: minmax(0, 1fr);
     grid-auto-rows: minmax(100px, auto);
-    padding: 16px;
-    gap: 12px;
   }
 
   .weather-card {
@@ -1254,5 +1636,111 @@ watch(
     min-width: 120px;
     padding: 8px;
   }
+}
+</style>
+
+<style>
+.weather-point-select-dropdown.ant-select-dropdown {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+  padding: 4px;
+}
+
+.weather-point-select-dropdown .ant-select-item {
+  color: var(--glass-text-primary);
+  border-radius: 6px;
+}
+
+.weather-point-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--glass-bg-item-hover) !important;
+}
+
+.weather-point-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--glass-bg-active) !important;
+  color: var(--glass-text-primary) !important;
+  font-weight: 600;
+}
+
+.weather-point-select-dropdown .ant-select-item-option-state {
+  color: var(--light-green);
+}
+
+.weather-point-select-dropdown .rc-virtual-list-holder {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.weather-point-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar {
+  width: 8px;
+}
+
+.weather-point-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.weather-point-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.glass-report-modal-wrap .ant-modal-content,
+.glass-report-modal-root .ant-modal-content {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-report-modal-wrap .ant-modal-header,
+.glass-report-modal-root .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.glass-report-modal-wrap .ant-modal-title,
+.glass-report-modal-root .ant-modal-title {
+  color: var(--light-green) !important;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.glass-report-modal-wrap .ant-modal-close,
+.glass-report-modal-root .ant-modal-close {
+  color: var(--glass-text-muted) !important;
+}
+
+.glass-report-modal-wrap .ant-modal-close:hover,
+.glass-report-modal-root .ant-modal-close:hover {
+  color: var(--glass-text-primary) !important;
+}
+
+.glass-report-modal-wrap .ant-modal-body,
+.glass-report-modal-wrap .ant-modal-body p,
+.glass-report-modal-root .ant-modal-body,
+.glass-report-modal-root .ant-modal-body p {
+  color: var(--glass-text-primary);
+}
+
+.glass-report-modal-wrap .ant-modal-footer,
+.glass-report-modal-root .ant-modal-footer {
+  border-top: 1px solid var(--glass-border) !important;
+}
+
+.glass-report-modal-wrap .ant-btn-default,
+.glass-report-modal-root .ant-btn-default {
+  background: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.glass-report-modal-wrap .ant-btn-primary,
+.glass-report-modal-root .ant-btn-primary {
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
 }
 </style>

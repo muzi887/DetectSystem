@@ -35,6 +35,8 @@ const props = defineProps<{
   enableMoistureQuery?: boolean
   monitorPoints?: MonitorPointRecord[]
   monitorAlerts?: Alert[]
+  highRiskBounds?: RasterBounds | null
+  flightPath?: [number, number][] | null
 }>()
 
 const emit = defineEmits<{
@@ -45,6 +47,8 @@ const mapRef = ref<HTMLDivElement | null>(null)
 let map: L.Map | null = null
 let rasterOverlay: L.ImageOverlay | null = null
 let compareOverlay: L.ImageOverlay | null = null
+let highRiskRect: L.Rectangle | null = null
+let flightLine: L.Polyline | null = null
 let monitorLayer: ReturnType<typeof createMonitorPointLayer> | null = null
 let moisturePopup: L.Popup | null = null
 let moisturePointerDown: L.Point | null = null
@@ -102,6 +106,31 @@ function syncRasterOverlays(options: { fitView?: boolean } = {}) {
   if (fitView) {
     map.fitBounds(props.bounds, { padding: [24, 24], maxZoom: 14 })
   }
+  syncHighRiskOutline()
+  syncFlightPath()
+}
+
+function syncFlightPath() {
+  if (!map) return
+  flightLine?.remove()
+  flightLine = null
+  if (props.mode !== 'ndvi' || !props.flightPath?.length) return
+  flightLine = L.polyline(props.flightPath, {
+    color: '#69c0ff',
+    weight: 3
+  }).addTo(map)
+}
+
+function syncHighRiskOutline() {
+  if (!map) return
+  highRiskRect?.remove()
+  highRiskRect = null
+  if (props.mode !== 'ndvi' || !props.highRiskBounds) return
+  highRiskRect = L.rectangle(props.highRiskBounds, {
+    color: '#cf1322',
+    weight: 3,
+    fill: false
+  }).addTo(map)
 }
 
 function syncCompareOpacity() {
@@ -241,6 +270,22 @@ watch(
 )
 
 watch(
+  () => [props.mode, props.highRiskBounds] as const,
+  () => {
+    if (map) syncHighRiskOutline()
+  },
+  { deep: true }
+)
+
+watch(
+  () => [props.mode, props.flightPath] as const,
+  () => {
+    if (map) syncFlightPath()
+  },
+  { deep: true }
+)
+
+watch(
   () => props.compareOpacity,
   () => {
     if (map) syncCompareOpacity()
@@ -266,6 +311,10 @@ onBeforeUnmount(() => {
   unbindMoistureQuery()
   monitorLayer?.detach()
   monitorLayer = null
+  highRiskRect?.remove()
+  highRiskRect = null
+  flightLine?.remove()
+  flightLine = null
   compareOverlay = null
   rasterOverlay = null
   removeLeafletMap(map)

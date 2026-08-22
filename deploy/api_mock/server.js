@@ -8,7 +8,7 @@ const {
   evaluateDisasterRules,
   queryMoistureByNearestPoint
 } = require('./agriMockCore.cjs')
-const { runChain1OnDb, runChain2OnDb, runChain3OnDb, runAllChains, tickSensorSimulation, profileForPoint, publishAlert, DEFAULT_THRESHOLD_PROFILE, filterReadings } = require('./ruleChainRunner.cjs')
+const { runChain1OnDb, runChain2OnDb, runChain3OnDb, runAllChains, tickSensorSimulation, profileForPoint, publishAlert, DEFAULT_THRESHOLD_PROFILE, filterReadings, buildDailyReport } = require('./ruleChainRunner.cjs')
 
 const dbPath = path.join(__dirname, 'db.json')
 
@@ -141,6 +141,18 @@ server.put('/field-sensors/:pointId/thresholds', (req, res) => {
   else db.thresholdProfiles.push(body)
   writeDb(db)
   return res.jsonp(body)
+})
+
+server.get('/reports/daily', (req, res) => {
+  const db = readDb(res)
+  if (!db) return
+  const markdown = buildDailyReport({
+    generatedAt: new Date().toISOString(),
+    points: Array.isArray(db.monitorPoints) ? db.monitorPoints : [],
+    alerts: (Array.isArray(db.alerts) ? db.alerts : []).filter((row) => row.draft !== true),
+    extremeEvents: Array.isArray(db.extremeEvents) ? db.extremeEvents : []
+  })
+  return res.jsonp({ markdown })
 })
 
 server.get('/moisture/value', (req, res) => {

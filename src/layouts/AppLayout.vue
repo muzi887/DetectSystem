@@ -78,6 +78,16 @@
           </Teleport>
         </div>
 
+        <button
+          type="button"
+          class="notify-bell"
+          aria-label="打开通知"
+          @click="notifyOpen = true">
+          <a-badge :count="unreadCount">
+            <BellOutlined class="notify-bell-icon" />
+          </a-badge>
+        </button>
+
         <div class="account-menu">
           <a-dropdown placement="bottomRight">
             <div class="account-trigger">
@@ -144,6 +154,26 @@
       </nav>
     </a-drawer>
 
+    <a-drawer
+      v-model:open="notifyOpen"
+      title="站内通知"
+      :width="360">
+      <div
+        v-if="notifications.length === 0"
+        class="notify-empty">
+        暂无通知
+      </div>
+      <button
+        v-for="item in notifications"
+        :key="item.id"
+        type="button"
+        class="notify-item"
+        :class="{ 'notify-item--unread': !item.read }"
+        @click="openNotification(item)">
+        {{ item.title }}
+      </button>
+    </a-drawer>
+
     <main class="content-slot">
       <slot></slot>
     </main>
@@ -161,15 +191,32 @@ import {
   LogoutOutlined,
   SettingOutlined,
   SearchOutlined,
-  MenuOutlined
+  MenuOutlined,
+  BellOutlined
 } from '@ant-design/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
-import { useAlertEngine } from '@/composables/useAlertEngine'
+import { useAlertEngine, type SiteNotification } from '@/composables/useAlertEngine'
+import { markNotificationRead } from '@/api/rules'
 import RegionSelect from '@/components/RegionSelect.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
-useAlertEngine()
+const { notifications } = useAlertEngine()
+const notifyOpen = ref(false)
+const unreadCount = computed(() => notifications.value.filter((item) => !item.read).length)
+
+async function openNotification(item: SiteNotification) {
+  try {
+    if (!item.read) {
+      await markNotificationRead(item.id)
+      item.read = true
+    }
+  } catch {
+    message.warning('标记已读失败')
+  }
+  notifyOpen.value = false
+  router.push('/warnings')
+}
 
 const navItems: { to: string; label: string; requiresRole: FarmUserRole }[] = [
   { to: '/home', label: '首页', requiresRole: 'cooperative' },
@@ -409,6 +456,45 @@ const handleLogout = () => {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+}
+
+.notify-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.notify-bell-icon {
+  font-size: 18px;
+  color: #fff;
+}
+
+.notify-empty {
+  color: rgb(0 0 0 / 45%);
+}
+
+.notify-item {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 13px;
+  color: rgb(0 0 0 / 75%);
+  background: rgb(0 0 0 / 4%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.notify-item--unread {
+  font-weight: 600;
+  background: rgb(24 144 255 / 10%);
 }
 
 .global-search-box {

@@ -315,9 +315,28 @@ export function runChain3OnDb(db: any, now: Date): { created: AlertRow[] } {
   return { created }
 }
 
+export function appendNotifications(db: any, createdAlerts: AlertRow[], now = new Date()): void {
+  if (!Array.isArray(db.notifications)) db.notifications = []
+  let nextId = nextAlertId(db.notifications)
+  for (const alert of createdAlerts) {
+    let title = String(alert.message || '').slice(0, 40)
+    if (alert.draft) title = `草稿 ${title}`
+    db.notifications.push({
+      id: nextId,
+      title,
+      read: false,
+      alertId: alert.id,
+      createdAt: now.toISOString()
+    })
+    nextId += 1
+  }
+}
+
 export function runAllChains(db: any, now: Date): { created: AlertRow[] } {
   const env = runChain1OnDb(db, now)
   const extreme = runChain2OnDb(db, now)
   const pest = runChain3OnDb(db, now)
-  return { created: [...env.created, ...extreme.created, ...pest.created] }
+  const created = [...env.created, ...extreme.created, ...pest.created]
+  appendNotifications(db, created, now)
+  return { created }
 }

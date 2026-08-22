@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dedupeAlerts, nextAlertId, tickSensorSimulation, tickSoilVwc } from './persistRules.ts'
+import { appendNotifications, dedupeAlerts, nextAlertId, tickSensorSimulation, tickSoilVwc } from './persistRules.ts'
 
 test('dedupe skips unhandled same pointId+ruleId+chain', () => {
   const existing = [
@@ -66,4 +66,20 @@ test('tick updates xiongxian lastSeenAt and same-day reading', () => {
   assert.equal(db.weatherReadings[0].soilVwc, 13.2)
   assert.equal(db.sensorReadings[0].soilVwc, 13.2)
   assert.equal(db.sensorReadings.length, 1)
+})
+
+test('appendNotifications writes one row per created alert', () => {
+  const db = { notifications: [] as Array<{ title: string; read: boolean; alertId: number }> }
+  appendNotifications(
+    db,
+    [
+      { id: 9, message: 'hello world', draft: false },
+      { id: 10, message: '[虫情风险] 地块 雄县 - 风险等级：high（湿度）', draft: true }
+    ] as any,
+    new Date('2026-08-21T08:00:00+08:00')
+  )
+  assert.equal(db.notifications.length, 2)
+  assert.equal(db.notifications[0].alertId, 9)
+  assert.equal(db.notifications[0].read, false)
+  assert.equal(db.notifications[1].title.startsWith('草稿'), true)
 })

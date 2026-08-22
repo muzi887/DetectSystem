@@ -125,11 +125,14 @@ function onCompareToggle(checked: boolean | string | number) {
 .ndvi-layer-controls {
   position: absolute;
   top: 12px;
-  left: 12px;
+  right: 12px;
+  left: auto;
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 10px 16px;
+  max-width: calc(100% - 64px);
   padding: 10px 14px;
   border-radius: 8px;
   background: rgb(0 0 0 / 55%);
