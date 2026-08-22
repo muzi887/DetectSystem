@@ -52,7 +52,7 @@
       "soilMoisture": 12,
       "status": "warning",
       "online": true,
-      "lastSeenAt": "2026-08-22T06:57:47.798Z"
+      "lastSeenAt": "2026-08-22T07:13:47.935Z"
     },
     {
       "id": 3,
@@ -139,7 +139,7 @@
       "id": 2,
       "pointId": 2,
       "updatedAt": "2026-06-05T14:00:00+08:00",
-      "soilVwc": 11.4,
+      "soilVwc": 14.2,
       "soilTemp10cm": 31.5,
       "soilEc": 312,
       "airTemp": 35.6,
@@ -569,7 +569,7 @@
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T06:57:47.799Z",
+      "lastSeenAt": "2026-08-22T07:13:47.935Z",
       "alertEmitted": true
     },
     {
@@ -577,7 +577,7 @@
       "ruleId": "water_stress",
       "level": "alert",
       "startedAt": "2026-08-01T00:00:00+08:00",
-      "lastSeenAt": "2026-08-22T06:57:47.799Z",
+      "lastSeenAt": "2026-08-22T07:13:47.935Z",
       "alertEmitted": true
     },
     {
@@ -585,7 +585,7 @@
       "ruleId": "heat_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T06:57:47.799Z",
+      "lastSeenAt": "2026-08-22T07:13:47.935Z",
       "alertEmitted": true
     },
     {
@@ -593,7 +593,7 @@
       "ruleId": "water_stress",
       "level": "hint",
       "startedAt": "2026-08-22T00:10:34.583Z",
-      "lastSeenAt": "2026-08-22T06:57:47.799Z",
+      "lastSeenAt": "2026-08-22T07:13:47.935Z",
       "alertEmitted": true
     }
   ],
@@ -1383,7 +1383,7 @@
       "recordedAt": "2026-08-22T08:00:00+08:00",
       "airTemp": 35.6,
       "airRh": 28.4,
-      "soilVwc": 11.4,
+      "soilVwc": 14.2,
       "soilTemp10cm": 31.5
     },
     {
