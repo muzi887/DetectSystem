@@ -199,6 +199,6 @@ function onCompareToggle(checked: boolean | string | number) {
 
 <style>
 .ndvi-layer-select-dropdown .ant-select-item {
-  color: #1a2a1a;
+  color: var(--glass-text-primary);
 }
 </style>

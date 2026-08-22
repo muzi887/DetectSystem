@@ -49,6 +49,7 @@
                   <div class="form-inline-group">
                     <a-select
                       v-model:value="formState.cropType"
+                      popup-class-name="glass-select-dropdown"
                       style="flex-grow: 1">
                       <a-select-option value="wheat">小麦</a-select-option>
                       <a-select-option value="corn">玉米</a-select-option>

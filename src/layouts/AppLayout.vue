@@ -113,7 +113,7 @@
                 <a-menu-divider />
                 <a-menu-item
                   key="logout"
-                  style="color: #ff4d4f"
+                  class="account-logout-item"
                   @click="handleLogout">
                   <LogoutOutlined />
                   退出登录
@@ -157,7 +157,8 @@
     <a-drawer
       v-model:open="notifyOpen"
       title="站内通知"
-      :width="360">
+      class="glass-notify-drawer"
+      :width="400">
       <div
         v-if="notifications.length === 0"
         class="notify-empty">
@@ -475,7 +476,7 @@ const handleLogout = () => {
 }
 
 .notify-empty {
-  color: rgb(0 0 0 / 45%);
+  color: var(--glass-text-muted);
 }
 
 .notify-item {
@@ -485,16 +486,27 @@ const handleLogout = () => {
   padding: 10px 12px;
   text-align: left;
   font-size: 13px;
-  color: rgb(0 0 0 / 75%);
-  background: rgb(0 0 0 / 4%);
-  border: none;
+  line-height: 1.55;
+  color: var(--glass-text-secondary);
+  background: var(--glass-bg-item);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid transparent;
   border-radius: 8px;
   cursor: pointer;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.notify-item:hover {
+  background: var(--glass-bg-item-hover);
+  color: var(--glass-text-primary);
 }
 
 .notify-item--unread {
   font-weight: 600;
-  background: rgb(24 144 255 / 10%);
+  color: var(--glass-text-primary);
+  background: rgb(115 209 61 / 12%);
+  border-left-color: #73d13d;
 }
 
 .global-search-box {

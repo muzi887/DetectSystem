@@ -42,12 +42,17 @@
                         <a-tag :color="getLevelColor(item.level)">
                           {{ getLevelText(item.level) }}
                         </a-tag>
-                        <a-tag v-if="item.source === 'auto'">自动</a-tag>
-                        <a-tag v-else>手动</a-tag>
+                        <span
+                          class="source-tag"
+                          :class="item.source === 'auto' ? 'source-tag--auto' : 'source-tag--manual'">
+                          {{ item.source === 'auto' ? '自动' : '手动' }}
+                        </span>
                         <span class="point-name">{{ item.pointName }}</span>
-                        <a-tag :color="item.handled ? 'green' : 'red'">
+                        <span
+                          class="handle-tag"
+                          :class="item.handled ? 'handle-tag--done' : 'handle-tag--pending'">
                           {{ item.handled ? '已处理' : '待处理' }}
-                        </a-tag>
+                        </span>
                       </div>
                       <span class="alert-time">{{ formatTime(item.time) }}</span>
                     </div>
@@ -257,6 +262,49 @@ onMounted(() => {
   background-color: var(--glass-bg-subtle) !important;
   border-color: var(--glass-border-strong) !important;
   color: var(--glass-text-primary) !important;
+}
+
+.draft-switch.ant-switch {
+  background: var(--glass-bg-input) !important;
+  border: 1px solid var(--glass-border-strong);
+}
+
+.draft-switch.ant-switch-checked {
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green);
+}
+
+.source-tag,
+.handle-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border-strong);
+  background: var(--glass-bg-item);
+  color: var(--glass-text-secondary);
+}
+
+.source-tag--auto {
+  border-color: rgb(115 209 61 / 45%);
+  color: #b7eb8f;
+}
+
+.source-tag--manual {
+  color: var(--glass-text-muted);
+}
+
+.handle-tag--pending {
+  border-color: rgb(255 120 117 / 50%);
+  color: #ffccc7;
+}
+
+.handle-tag--done {
+  border-color: rgb(115 209 61 / 45%);
+  color: #b7eb8f;
 }
 
 .glass-page :deep(.ant-card-body) {

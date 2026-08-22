@@ -29,10 +29,17 @@
   text-shadow: var(--glass-title-shadow);
 }
 
-.glass-page .ant-card-extra .ant-btn-primary,
-.glass-ant-card .ant-card-extra .ant-btn-primary {
+.glass-page .ant-btn-primary,
+.glass-ant-card .ant-btn-primary {
   background-color: var(--dark-green) !important;
   border-color: var(--dark-green) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.glass-page .ant-btn-primary:hover,
+.glass-ant-card .ant-btn-primary:hover {
+  background-color: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
 }
 
 .glass-panel,

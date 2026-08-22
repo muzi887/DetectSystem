@@ -39,13 +39,37 @@
     <a-drawer
       v-model:open="drawerOpen"
       :title="selectedPoint?.name || '监测站'"
-      :width="360">
-      <p>状态：{{ selectedPoint?.online === false ? '离线' : '在线' }}</p>
-      <p>最后上报：{{ formatLastSeen(selectedPoint?.lastSeenAt) }}</p>
-      <p>气温：{{ drawerTemp }} ℃</p>
-      <p>湿度：{{ drawerRh }}</p>
-      <p>墒情：{{ drawerVwc }} %</p>
+      root-class-name="station-drawer"
+      :width="480">
+      <div class="station-status-row">
+        <span
+          class="station-online"
+          :class="selectedPoint?.online === false ? 'is-offline' : 'is-online'">
+          {{ selectedPoint?.online === false ? '离线' : '在线' }}
+        </span>
+        <span class="station-last-seen">最后上报 {{ formatLastSeen(selectedPoint?.lastSeenAt) }}</span>
+      </div>
+      <div class="station-metric-grid">
+        <div class="station-metric">
+          <span class="station-metric-label">气温</span>
+          <span class="station-metric-value">{{ drawerTemp }} ℃</span>
+        </div>
+        <div class="station-metric">
+          <span class="station-metric-label">湿度</span>
+          <span class="station-metric-value">{{ drawerRh }}</span>
+        </div>
+        <div class="station-metric">
+          <span class="station-metric-label">墒情</span>
+          <span class="station-metric-value">{{ drawerVwc }} %</span>
+        </div>
+        <div class="station-metric">
+          <span class="station-metric-label">土温</span>
+          <span class="station-metric-value">{{ drawerSoilTemp }} ℃</span>
+        </div>
+      </div>
+      <h4 class="station-table-title">近 7 日读数</h4>
       <a-table
+        class="glass-ant-table"
         size="small"
         :pagination="false"
         :data-source="drawerRows"
@@ -96,6 +120,11 @@ const drawerRh = computed(() =>
 const drawerVwc = computed(
   () => liveReading.value?.soilVwc ?? selectedPoint.value?.soilMoisture ?? '—'
 )
+const drawerSoilTemp = computed(() => {
+  if (liveReading.value?.soilTemp10cm != null) return liveReading.value.soilTemp10cm
+  const last = drawerReadings.value.at(-1)
+  return last?.soilTemp10cm ?? '—'
+})
 
 const drawerRows = computed(() =>
   drawerReadings.value.map((row) => ({
@@ -275,6 +304,78 @@ onBeforeUnmount(() => {
   background-color: var(--glass-bg-subtle) !important;
   border-color: var(--glass-border-strong) !important;
   color: var(--glass-text-primary) !important;
+}
+
+.station-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.station-online {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border-strong);
+  background: var(--glass-bg-item);
+}
+
+.station-online.is-online {
+  border-color: rgb(115 209 61 / 50%);
+  color: #b7eb8f;
+}
+
+.station-online.is-offline {
+  border-color: rgb(255 255 255 / 25%);
+  color: var(--glass-text-muted);
+}
+
+.station-last-seen {
+  font-size: 12px;
+  color: var(--glass-text-muted);
+  text-shadow: var(--glass-text-shadow);
+}
+
+.station-metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.station-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg-subtle);
+}
+
+.station-metric-label {
+  font-size: 12px;
+  color: var(--glass-text-muted);
+}
+
+.station-metric-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--glass-text-primary);
+  text-shadow: var(--glass-text-shadow);
+}
+
+.station-table-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--light-green);
+  text-shadow: var(--glass-title-shadow);
 }
 
 .map-container :deep(.custom-marker) {

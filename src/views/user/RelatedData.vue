@@ -720,7 +720,15 @@ function renderSensorChart() {
       top: 0
     },
     grid: { top: '18%', left: '3%', right: '6%', bottom: 40, containLabel: true },
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(30, 50, 30, 0.88)',
+      borderColor: 'rgba(255, 255, 255, 0.25)',
+      borderWidth: 1,
+      textStyle: { color: '#fff' },
+      extraCssText:
+        'backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); border-radius: 8px;'
+    },
     xAxis: {
       type: 'category',
       boundaryGap: false,

@@ -36,3 +36,169 @@ body {
   margin: 0;
   font-family: var(--font-sans);
 }
+
+/* 下拉、抽屉、菜单：与顶栏深绿半透明一致（挂载到 body，需全局选择器） */
+.ant-select-dropdown,
+.weather-point-select-dropdown.ant-select-dropdown,
+.ndvi-layer-select-dropdown.ant-select-dropdown,
+.region-select-dropdown.ant-select-dropdown,
+.farm-role-dropdown.ant-select-dropdown {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+  padding: 4px;
+}
+
+.ant-select-dropdown .ant-select-item,
+.weather-point-select-dropdown .ant-select-item,
+.ndvi-layer-select-dropdown .ant-select-item,
+.region-select-dropdown .ant-select-item,
+.farm-role-dropdown .ant-select-item {
+  color: var(--glass-text-primary);
+  border-radius: 6px;
+}
+
+.ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--glass-bg-item-hover) !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--glass-bg-active) !important;
+  color: var(--glass-text-primary) !important;
+  font-weight: 600;
+}
+
+.ant-select-dropdown .ant-select-item-option-state {
+  color: var(--light-green);
+}
+
+.ant-select-dropdown .ant-select-item-empty {
+  color: var(--glass-text-muted);
+}
+
+.ant-select-dropdown .rc-virtual-list-holder {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.ant-drawer-content {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border-left: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+.ant-drawer-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.ant-drawer-title {
+  color: var(--light-green) !important;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-shadow: var(--glass-title-shadow);
+}
+
+.ant-drawer-close {
+  color: var(--glass-text-muted) !important;
+}
+
+.ant-drawer-close:hover {
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-drawer-body {
+  color: var(--glass-text-primary);
+}
+
+.ant-dropdown .ant-dropdown-menu {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+  padding: 4px;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  color: var(--glass-text-primary) !important;
+  border-radius: 6px;
+}
+
+.ant-dropdown .ant-dropdown-menu-item:hover,
+.ant-dropdown .ant-dropdown-menu-item-active {
+  background: var(--glass-bg-item-hover) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-divider {
+  background: var(--glass-border) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item.account-logout-item,
+.ant-dropdown .ant-dropdown-menu-item.account-logout-item .anticon {
+  color: #ff7875 !important;
+}
+
+.glass-ant-table {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  --ant-color-bg-container: transparent;
+  --ant-table-header-bg: transparent;
+  --ant-table-row-hover-bg: var(--glass-bg-item-hover);
+  --ant-table-border-color: var(--glass-border);
+  --ant-color-text: var(--glass-text-primary);
+  --ant-color-text-heading: var(--glass-text-secondary);
+}
+
+.glass-ant-table .ant-table,
+.glass-ant-table .ant-table-container,
+.glass-ant-table .ant-table-content,
+.glass-ant-table .ant-table-thead > tr > th,
+.glass-ant-table .ant-table-tbody > tr > td {
+  background: transparent !important;
+}
+
+.glass-ant-table .ant-table {
+  color: var(--glass-text-primary);
+}
+
+.glass-ant-table .ant-table-thead > tr > th {
+  color: var(--glass-text-secondary) !important;
+  font-weight: 600;
+  text-shadow: var(--glass-text-shadow);
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.glass-ant-table .ant-table-tbody > tr > td {
+  color: var(--glass-text-primary) !important;
+  text-shadow: var(--glass-text-shadow);
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.glass-ant-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: var(--glass-bg-item-hover) !important;
+}
+
+.glass-ant-table .ant-table-cell {
+  border-color: var(--glass-border) !important;
+}
