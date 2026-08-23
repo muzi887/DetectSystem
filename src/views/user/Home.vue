@@ -49,6 +49,7 @@
         <div class="recent-analyses-head">
           <h3>近期识别</h3>
           <router-link
+            v-if="pagedAnalyses.length"
             to="/analysis"
             class="recent-analyses-more">
             去智能分析
@@ -74,12 +75,13 @@
           class="analysis-empty">
           <GlassEmpty
             description="暂无识别记录。启动识病服务并在智能分析页上传叶片后，最近结果会显示在这里。" />
-          <router-link
-            to="/analysis"
-            class="quick-btn">
-            去智能分析
-          </router-link>
         </div>
+        <router-link
+          v-if="!pagedAnalyses.length"
+          to="/analysis"
+          class="quick-btn analysis-empty-action">
+          去智能分析
+        </router-link>
         <a-pagination
           v-if="showAnalysisPagination"
           v-model:current="analysisPage"
@@ -248,7 +250,8 @@ onMounted(() => {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 24px;
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .welcome {
@@ -326,6 +329,7 @@ onMounted(() => {
   padding-bottom: 15px;
   border-bottom: 1px solid var(--glass-border);
   margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .recent-analyses-head h3 {
@@ -427,6 +431,9 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .analysis-card {
@@ -462,14 +469,35 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 8px 0 4px;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 0;
+  flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.analysis-empty :deep(.ant-empty) {
+  margin-block: 0;
+}
+
+.analysis-empty :deep(.ant-empty-image) {
+  height: 48px;
+  margin-bottom: 8px;
 }
 
 .analysis-empty :deep(.ant-empty-description) {
   white-space: normal;
   word-break: break-word;
+}
+
+.analysis-empty-action {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 4px 14px;
+  font-size: 13px;
+  border-radius: 6px;
 }
 
 .home-list {
@@ -582,6 +610,8 @@ onMounted(() => {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     gap: 16px;
+    flex: none;
+    height: auto;
   }
 
   .welcome,

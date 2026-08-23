@@ -355,6 +355,7 @@ const handleLogout = () => {
   min-height: 0;
   box-sizing: border-box;
   padding: 20px 40px;
+  overflow-x: hidden;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

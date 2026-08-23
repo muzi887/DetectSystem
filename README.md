@@ -111,21 +111,12 @@ DetectSystem/
 | 组件 | 端口 | 服务器路径 | 托管方式 |
 |------|------|------------|----------|
 | Vue 前端 | 88 | `/www/wwwroot/DetectSystem/frontend/dist/` | Nginx 静态站 |
-| Flask 业务+识病 | 5000 | `ml-bjj/serving` | 宝塔 Python 项目 |
+| Flask 业务+识病 | 5000 | `/www/wwwroot/DetectSystem/api_flask/` | 宝塔 Python 项目（入口 `serving/serve.py`） |
 | MySQL | 3306 | 宝塔库 `detect_system` | 仅本机/远程开发机，不对浏览器开放 |
 
-`deploy/api_mock/` 为归档，默认不再起 Node :3000。
+`deploy/api_mock/` 为归档，默认不再起 Node :3000。业务数据在 MySQL。
 
-**仅更新前端 UI：**
-
-```bash
-pnpm build
-# 上传 dist/ 覆盖 frontend/dist/，浏览器强刷
-```
-
-**Mock 有改动时**：若只改了遥感表，可执行 `pnpm sync:mock-db` 同步 `fields` / `ndviLayers` / `moistureLayers`；若改了 `monitorPoints`、`weatherReadings`、`alerts` 等，请整体同步或上传 `src/mock/db.json` 与 `deploy/api_mock/db.json`，重启 Node 项目。
-
-详细步骤见 [deploy/宝塔部署-不用PM2.md](deploy/宝塔部署-不用PM2.md)；故障排查见 [deploy/线上故障排查笔记.md](deploy/线上故障排查笔记.md)。
+首次清空重传、日常发版与排错见 [docs/互联网+/部署/云服务器部署更新说明.md](docs/互联网+/部署/云服务器部署更新说明.md)。
 
 ---
 
@@ -137,8 +128,7 @@ pnpm build
 | [docs/小挑/前端/相关数据页/P1阶段学习笔记总结.md](docs/小挑/前端/相关数据页/P1阶段学习笔记总结.md) | 相关数据页 P0/P1 交付与验收 |
 | [docs/小挑/前端/相关数据页/气象Tab动态数据学习笔记.md](docs/小挑/前端/相关数据页/气象Tab动态数据学习笔记.md) | 气象 Tab 三站九项实现说明 |
 | [docs/模拟数据说明.md](docs/模拟数据说明.md) | Mock、json-server、Flask 接口 |
-| [deploy/宝塔部署-不用PM2.md](deploy/宝塔部署-不用PM2.md) | 线上部署 |
-| [deploy/线上故障排查笔记.md](deploy/线上故障排查笔记.md) | 502 / 404 / 反代排错 |
+| [docs/互联网+/部署/云服务器部署更新说明.md](docs/互联网+/部署/云服务器部署更新说明.md) | 首次部署、日常更新、故障排查 |
 
 ---
 

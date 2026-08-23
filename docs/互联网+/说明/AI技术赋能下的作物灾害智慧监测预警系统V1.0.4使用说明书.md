@@ -1,29 +1,30 @@
 # AI技术赋能下的作物灾害智慧监测预警系统
 ## 软件使用说明书
-版本号： 1.0.4
+版本号： 2.1.0
 终端类型： Web 浏览器访问（PC / 平板 / 手机）
 开发单位： 河北地质大学 · 坤灵智巡创工队
 线上地址： http://82.157.234.123:88
-主要技术： Vue 3、TypeScript、Ant Design Vue、ECharts、Leaflet；业务数据由后端接口提供；图片分析由服务器端分析服务提供。
+主要技术： Vue 3、TypeScript、Ant Design Vue、ECharts、Leaflet；业务与识病由同一套 Flask 服务（`ml-bjj/serving`）提供；数据保存在 MySQL 库 `detect_system`。智能分析对小麦、玉米、番茄、水稻共 23 类（含「健康」）做叶片分类，按所选作物做掩码后再取第一名。
 适用对象： 农业合作社管理人员、农技推广人员、项目评审、教学培训及系统维护人员。
 # 第一章 系统简介
 ## 1.1 系统做什么
 AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关的监测、预警与辅助决策，在一张 Web 页面里完成以下工作：
 1. 在地图上查看监测点位置与状态（状态机中文显示：正常 / 预警 / 严重 / 离线 / 维护中 / 未知）；
-2. 查看传感器、无人机、气象、GIS 等分类农情数据；
-3. 上传作物图片做病害/灾害分类，返回识别结果并写入预警列表；
-4. 新建、处理、删除预警记录；
+2. 查看传感器、无人机、气象、GIS 等分类农情数据；气象页可看九类读数、7 日预报，并保存该站墒情/气温阈值；
+3. 上传作物图片做 23 类病害分类，返回识别结果、置信度、防治条目；非「健康」结果写入带 `[AI识别]` 前缀的预警；
+4. 查看、新建、处理、删除预警；规则链可自动写入 `[自动预警]`、`[极端天气]`，高风险虫情以草稿形式写入 `[虫情风险]`，须「确认发布」后才进入正式待办；
 5. 针对待处理预警查看监测点信息与系统给出的处置建议。
+登录时浏览器向 Flask 发送 `POST /login`，服务端查 `users` 表校验手机号与验证码（或备用密码）。预警与监测点等业务数据来自同一 MySQL 库，由约 60 秒一次的调度扫描三条规则链后写入 `alerts` 表。
 系统面向作物灾害监测、农情数据展示和预警处置等业务场景，可用于农业合作社日常管理、农技推广辅助研判、教学培训及创新创业项目展示。
 ## 1.2 功能模块一览
 | 导航菜单 | 路由 | 主要功能 |
 |----------|------|----------|
 | 首页 | /home | 监测点数量、待处理预警数、系统状态汇总、最新预警列表、快捷入口 |
-| 相关数据 | /related-data | 分传感器、无人机、气象、GIS 四类农情 Tab；地图类支持 NDVI 期次对比与 GIS 点选查墒情；气象页按监测站查看九类读数；底部分析条随 Tab 与操作变化；简报按钮走演示流程 |
-| 灾害实时监测 | /map | Leaflet 地图、监测点聚类、监测点详情、手动触发/标记解决 |
-| 智能分析 | /analysis | 上传图片、选择作物与分类、调用分析接口并生成预警 |
-| 灾害预警 | /warnings | 预警列表、新建/标记状态/删除 |
-| 智慧决策 | /decision | 待处理预警列表、小地图定位、监测数据与建议文案 |
+| 相关数据 | /related-data | 分传感器、无人机、气象、GIS 四类农情 Tab；气象页含九类读数、7 日预报与阈值保存；地图类支持 NDVI 期次对比与 GIS 点选查墒情；底部分析条随 Tab 与操作变化；简报下载监测日报 txt |
+| 灾害实时监测 | /map | Leaflet 地图、监测点聚类、监测点详情、手动触发/标记解决；数据来自 Flask REST |
+| 智能分析 | /analysis | 上传叶片图、选择小麦/玉米/番茄/水稻，调用 `/api/analysis/image` 做 23 类识别并生成 `[AI识别]` 预警 |
+| 灾害预警 | /warnings | 预警列表、新建/标记状态/删除；「含草稿」开关；虫情草稿「确认发布」 |
+| 智慧决策 | /decision | 待处理预警列表、小地图定位、监测数据与建议文案；按消息前缀区分规则链与识病 |
 | 关于我们 | /about | 团队与产品说明、技术栈展示、联系邮箱 |
 ## 1.3 统一领域术语
 为保证说明书表述统一，本文采用以下领域术语：
@@ -37,12 +38,17 @@ AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关
 | 预警记录 | 系统或用户创建的一条风险提示记录，通常关联到某个监测点 |
 | 待处理预警 | 尚未完成处置的预警记录，需要继续跟踪或现场核查 |
 | 已处理预警 | 已完成处置或确认闭环的预警记录 |
+| 草稿预警 | 规则链写入但尚未正式发布的预警（主要是高风险虫情），默认不进入待办列表 |
+| 规则链 | 服务端按读数或预报自动生成预警的逻辑：链 1 墒情/气温耐受，链 2 极端天气，链 3 虫情风险 |
+| 作物掩码 | 识病时只保留当前所选作物对应的病名（含「健康」），再取置信度最高的一类 |
+| 23 类 | 小麦、玉米、番茄、水稻叶片分类的类别集合，含「健康」在内共 23 个中文病名 |
+| 防治条目 | 按病名从防治库取出的症状、药剂、农艺与安全说明，供辅助参考 |
 | 智能分析 | 上传作物图片后生成识别结果、风险等级和农技建议的过程 |
-| 处置建议 | 系统根据预警级别、监测值和规则模板生成的辅助处理建议 |
+| 处置建议 | 系统根据预警级别、监测值、消息前缀和防治库生成的辅助处理建议 |
 | 农田小气候读数 | 气象 Tab 中按监测站展示的土壤与近地大气九类实时指标 |
 下文提到具体菜单时保留界面原名，例如「相关数据」「灾害实时监测」「灾害预警」。
 ## 1.4 运行环境与部署说明
-系统采用浏览器/服务器架构，用户通过 Web 浏览器访问前端页面，业务接口和图片分析服务由服务器端提供。
+系统采用浏览器/服务器架构。用户用浏览器打开前端页面；Nginx 把页面静态资源和 `/api` 请求转到云服务器。业务接口与图片识别由 **同一进程** Flask（监听 5000 端口，代码在 `ml-bjj/serving`）提供。监测点、用户、预警、气象读数、阈值、7 日预报等保存在 MySQL 库 `detect_system`。未配置 `DATABASE_URL` 时后端明确失败，不会改走本地 json 文件。
 
 | 项目 | 配置 |
 |------|------|
@@ -51,16 +57,17 @@ AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关
 | 主频 | 2.50 GHz |
 | 内存 | 16 GB |
 | 硬盘 | 220 GB 云盘 |
-| 运行内容 | 托管前端构建产物；提供业务接口、图片分析接口和静态资源访问 |
+| 运行内容 | Nginx 托管前端构建产物并反向代理 `/api`；Flask 提供登录、REST、规则链调度与 23 类识病；MySQL 保存业务数据 |
 服务组成：
-1. 前端页面服务： 提供登录、首页、数据展示、地图监测、智能分析、预警管理、智慧决策等页面。
-2. 业务接口服务： 提供用户登录、监测点、预警记录、农情数据等业务数据接口。
-3. 图片分析服务： 处理作物图片上传和识别请求，返回识别结果、风险等级和建议内容。
+1. 前端页面：登录、首页、数据展示、地图监测、智能分析、预警管理、智慧决策等页面（浏览器访问，不直连数据库）。
+2. Flask 业务与识病服务：`POST /login`、监测点/预警等 REST、三条规则链与约 60 秒调度、`/api/analysis/image` 识病、`/api/treatments` 防治库。
+3. MySQL `detect_system`：用户、监测点、预警、气象读数、阈值、预报等表。浏览器不直接访问该库。
 正式部署时可根据服务器环境配置域名、端口、反向代理和 HTTPS 证书。用户侧无需安装客户端软件，只需使用浏览器访问系统地址。
 ## 1.5 访问与登录
 1. 使用 Chrome、Edge 等浏览器打开系统访问地址：http://82.157.234.123:88。
 2. 在登录页输入手机号、验证码，选择登录角色，勾选用户协议后点击「进入系统」。
 3. 测试账号： 手机号 `13800000000`，验证码 `2026`；备用密码兼容 `123456`。
+前端将手机号、验证码（或备用密码）和角色提交到 `POST /login`。Flask 读取 `users` 表，由 `handle_farm_login` 校验：手机号须在库中，验证码为 `2026` 或密码与库中一致。成功返回登录令牌与用户信息；失败返回 401。
 登录成功后进入首页 `/home`；失败时页面会提示错误信息，请核对手机号、验证码、角色或备用密码是否填写正确。
 # 第二章 登录与退出
 ## 2.1 登录
@@ -78,7 +85,7 @@ AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关
 ### 2.1.3 角色说明
 当前登录角色分为管理员、农技员、合作社。合作社角色偏查看首页和关于页，农技员可进入监测、分析、预警、决策等业务页面，管理员保留最高权限。登录后，Header 右侧显示当前用户名（极窄屏仅显示头像）。
 ### 2.1.4 注意
-1. 需能访问系统部署地址及后端服务。
+1. 需能访问系统部署地址及 Flask 服务。
 2. 会话状态保存在浏览器本地，关闭页面前建议主动退出。
 ## 2.2 退出
 1. 点击页面右上角用户头像/用户名区域，打开下拉菜单。
@@ -125,6 +132,7 @@ AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关
 ## 4.1 登录与身份选择
 适用对象： 农技员、合作社管理人员、管理员。
 进入方式： 使用浏览器打开系统访问地址，进入登录页面。
+技术方法： 点击「进入系统」后，前端调用 `POST /login`。Flask 蓝图 `biz.py` 从 `users` 表读出用户列表，交给 `handle_farm_login`：手机号必须存在；验证码 `2026` 或备用密码与库中 `password` 字段一致即通过。角色写入返回的用户对象，用于前端菜单权限。
 ### 4.1.1 操作步骤
 1. 在「手机号」中输入测试手机号 `13800000000`。
 2. 在「验证码」中输入 `2026`。
@@ -145,18 +153,21 @@ AI技术赋能下的作物灾害智慧监测预警系统用于作物灾害相关
 想查地图就点「实时监测」，要处置预警点「处理预警」，上传识别走「智能分析」。需要找菜单、监测点或某条预警时，在 Header 搜索框输入关键词即可。
 窄屏布局： 欢迎区、指标区、预警列表改为单列纵向排列；指标卡片在手机上为单列显示。
 ## 4.3 相关数据
-顶栏点「相关数据」进入。本页把传感器、无人机遥感、气象和 GIS 几类农情放在一起，主要看长势、墒情和灾害风险。
+顶栏点「相关数据」进入。本页把传感器、无人机遥感、气象和 GIS 几类农情放在一起，主要看长势、墒情和灾害风险。传感器近 7 日读数、气象九类读数、阈值和 7 日预报均由 Flask 查 MySQL 后返回；无人机 NDVI 与 GIS 墒情栅格仍为演示图层，与地面三站读数对照使用。
 无人机与 GIS 两个 Tab 使用可缩放、可拖拽的交互地图展示遥感热力图（卫星底图 + 影像叠加）；GIS Tab 上还标有监测站圆点，可与地面传感器读数对照。两个 Tab 的地图均可用滚轮或左上角按钮缩放、拖拽平移；切换地块或影像日期后，视野会自动适应当前图层范围。
 ### 4.3.1 切换农情数据源
 PC 上在右侧点「传感器数据(地)」「无人机遥感(空)」「气象数据(天)」「GIS 数据(图)」之一；平板/手机则在主内容区下方以 2 列或全宽按钮切换。主区域会即时换成对应图表或地图，初次加载可能出现短暂遮罩。若从 GIS Tab 切走再回来，「最近一次地图查墒情」相关提示会清空。
 ### 4.3.2 传感器数据
-切到「传感器数据(地)」后，页头显示「物联网传感器监控」，副标题为「最近 7 天环境参数趋势」。中间是一幅折线图，横轴为近 7 个自然日，纵轴为当日报警条数；鼠标移到某个日期上，可弹出 Tooltip 查看具体次数。页面底部的分析条会统计近期高风险预警数量，并引用最新一条未处理预警的摘要。
+切到「传感器数据(地)」后，页头显示「物联网传感器监控」，副标题为「最近 7 天环境参数趋势」。中间是一幅折线图，横轴为近 7 个自然日，纵轴为当日报警条数；鼠标移到某个日期上，可弹出 Tooltip 查看具体次数。折线数据来自 `GET /field-sensors/{监测点id}/readings`（按日起止过滤）。页面底部的分析条会统计近期高风险预警数量，并引用最新一条未处理预警的摘要。
 ![[attachments/4.3.2.png]]
 ### 4.3.3 气象站实时数据
 「气象数据(天)」Tab 用来查看单座监测站当下的土壤与近地大气状况。页头主标题固定为「气象站实时数据」；副标题会在监测站名称后接上「土壤墒情与局地小气候实时监测」，例如选中河间站时类似「监测站 · 河间市 · …」，换站后这行文字同步更换。
 操作方面，在右侧点「气象数据(天)」，用主区右上角的监测站下拉框在河间、雄县、栾城三座演示站之间切换（初次进入默认河间）；阅读中间九宫格卡片上的九类读数，并留意底部分析条是否随站点变化。若刚从「无人机遥感」过来，且之前选过带监测站的地块，进入本 Tab 时会自动切到同一座站，便于对照空地两类信息。
 每个站都显示完整九项。前三个偏地下：`土壤体积含水率`（%vol）、`10cm土壤温度`（℃）、`土壤EC电导率`（μS/cm）；后六个偏近地面大气：`空气温度`、`空气相对湿度`（%RH）、`瞬时风速`（m/s）、`风向`（如 185°偏南风）、`大气气压`（hPa）、`小时降雨量`（mm，无雨时常显示「0.0 mm（无降水）」）。
-本 Tab 的数值由服务端演示数据提供，与地图上三个监测站圆点同名同站。雄县整体偏干、栾城偏湿，和 GIS 查墒情、监测点详情里的土壤湿度设定一致，用来演示「换一座站，整屏读数一起换」的效果，不等同于接入真实国家气象站网。
+本 Tab 的数值来自 MySQL 表 `weather_readings`（接口 `GET /weatherReadings`），与地图上三个监测站圆点同名同站。种子数据中雄县整体偏干、栾城偏湿，和 GIS 查墒情、监测点详情里的土壤湿度设定一致，用来演示「换一座站，整屏读数一起换」。调度还会对雄县站（监测点 id=2）做墒情演示抖动，供规则链观察耐受时间，不等同于接入国家气象站网的实时观测。
+同一 Tab 右侧还可：
+1. **7 日预报**：表格展示该站 `weatherForecast` 中未来若干日的最高/最低气温、降水、湿度等。链 2 用这些预报判断极端高温、霜冻、大风、暴雨或连续高温，命中后写入 `[极端天气]` 预警。
+2. **阈值配置**：可改作物、生育期，以及墒情提示/告警（默认 25% / 15%）、气温提示/告警（默认 32℃ / 38℃）。点「保存阈值」即 `PUT` 该站阈值档案。链 1 用这些阈值，并要求持续达到耐受时间（默认提示 30 分钟、告警 10 分钟）后才写 `[自动预警]`，避免单次读数抖动立刻报警。
 ![[attachments/4.3.3.png]]
 ### 4.3.4 无人机遥感（NDVI 地图）
 #### 界面组成
@@ -167,7 +178,7 @@ PC 上在右侧点「传感器数据(地)」「无人机遥感(空)」「气象�
 | 1号地块（河间市） | 2 期（如 2026-05-20、2026-05-01） | 支持历史对比 |
 | 2号地块（雄县） | 1 期 | 对比历史开关不可用 |
 | 3号地块（栾城区） | 1 期 | 对比历史开关不可用 |
-切换地块后，地图视野自动缩放到该地块范围；影像日期下拉仅显示当前地块可用日期。
+切换地块后，地图视野自动缩放到该地块范围；影像日期下拉仅显示当前地块可用日期。遥感地块种子目前主要覆盖河间、雄县、栾城；其他地区监测点仍可出现在地图与预警列表中。
 #### 历史影像对比（仅多期地块可用）
 适用于河间等拥有 2 期及以上 NDVI 影像的地块：
 1. 选择地块与当前「影像日期」。
@@ -182,15 +193,15 @@ PC 上在右侧点「传感器数据(地)」「无人机遥感(空)」「气象�
 GIS Tab 的主画面是一片贴在栾城附近的墒情热力图（演示数据），上面叠有 3 个监测站圆点。左下角有墒情说明、影像日期和操作提示；右下角是墒情（%）色标，从干旱到饱和由暖色过渡到冷色。墒情栅格只覆盖这一片演示区域，河间、雄县等地在图上以监测站圆点表示传感器位置，并不是每个县都有一张墒情图。
 点监测站圆点可查看该站温度、土壤湿度和状态；有待处理预警时会显示红色提示。此处与「灾害实时监测」不同：弹窗里没有「手动触发」「标记解决」按钮，只能看，不能在这里直接处置。
 查墒情可以这样试：先切到 GIS Tab，鼠标会变成十字形。在雄县附近轻轻点一下地图（不要按住拖很远再松手），点击处会弹出「墒情查询」，大约显示 12%，并标明参考站为「监测站 · 雄县」；地图会同时拉开视野，打开该站的详情弹窗，左下角也会出现「最近查值：12% · 监测站 · 雄县」，底部 AI 智能分析 会改成与这次查值相关的说法。点到栾城附近时，数值会接近 65%；河间附近大约 30%。查值弹窗和监测站弹窗可以同时留着，再点别处会更新结果；离开 GIS Tab 再回来，「最近查值」一行会清空。
-说明：这是演示用法——系统按点击位置找最近的监测站，用该站土壤湿度当作这一带的墒情示数，用来对照「热力图上看趋势、站点上看实测」，不是专业栅格反演或空间插值产品。
+说明：这是演示用法——系统按点击位置找最近的监测站（`query_moisture_by_nearest_point`，Haversine 距离），用该站土壤湿度当作这一带的墒情示数，用来对照「热力图上看趋势、站点上看实测」，不是专业栅格反演或空间插值产品。
 ![[attachments/4.3.5.png]]
 ### 4.3.6 AI 智能分析文案
-相关数据页底部的 AI 智能分析文案会随当前 Tab 和用户操作更新，并非固定话术。传感器 Tab 下，分析条侧重近期预警情况及最新一条未处理预警摘要；气象 Tab 下，文案随所选监测站变化，涉及降雨、空气干湿、土壤含水率及是否需留意灌溉；无人机 Tab 在未开「对比历史」时侧重当前地块长势与施肥建议，河间等多期地块开启两期对比后则改为描述 NDVI 影像差异；GIS Tab 在未点击地图前给出栾城偏湿、河间—雄县段偏干等区域概况，点击查墒情后会写入查值结果、参考监测站及灌溉或排水提示，并标明已定位到对应传感器。
+相关数据页底部的「AI 智能分析」文案会随当前 Tab 和用户操作更新，由前端按读数、预警摘要和查墒结果 **拼接句子**，不是再跑一次 23 类模型。传感器 Tab 下，分析条侧重近期预警情况及最新一条未处理预警摘要；气象 Tab 下，文案随所选监测站变化，涉及降雨、空气干湿、土壤含水率及是否需留意灌溉；无人机 Tab 在未开「对比历史」时侧重当前地块长势与施肥建议，河间等多期地块开启两期对比后则改为描述 NDVI 影像差异；GIS Tab 在未点击地图前给出栾城偏湿、河间—雄县段偏干等区域概况，点击查墒情后会写入查值结果、参考监测站及灌溉或排水提示，并标明已定位到对应传感器。
 ### 4.3.7 生成简报
-停留在当前农情 Tab 后，点右上角「生成 XXX 简报」。窗口里会出现进度条，提示正在汇总近 30 天该类数据；走满后点「确定」会弹出「已下载 PDF」类成功提示。注意：目前只演示流程，浏览器不会在本地真正生成文件。
+停留在当前农情 Tab 后，点右上角「生成 XXX 简报」。窗口标题为「生成监测日报」，先请求 `GET /reports/daily`。Flask 用 `build_daily_report` 汇总监测点在线状态、预警条数与极端天气事件，生成 markdown 预览。点「下载 txt」后，浏览器下载名为 `监测日报-时间戳.txt` 的文本文件（不是 PDF）。
 ![[attachments/4.3.7.png]]
 ## 4.4 灾害实时监测
-从导航栏进入「灾害实时监测」，主界面是一张可缩放的 Leaflet 地图。
+从导航栏进入「灾害实时监测」，主界面是一张可缩放的 Leaflet 地图。监测点与预警列表通过 Flask REST（`/monitorPoints`、`/alerts`）从 MySQL 读取；点「刷新数据」会重新拉取。
 ### 4.4.1 查看地图与监测点
 页面加载后自动标出全部监测点，拉近看单点、拉远看聚类。需要一眼看全时点「缩放至全部」；怀疑数据过期就点「刷新数据」重新拉取监测点与预警。颜色与中文状态对照见 3.1.4 节。
 ![[attachments/4.4.1.png]]
@@ -198,35 +209,74 @@ GIS Tab 的主画面是一片贴在栾城附近的墒情热力图（演示数据
 点地图标记弹出详情，能看到名称、温度、土壤湿度和中文状态；若该点有待处理预警，弹窗顶部会有红色提示。需要人工介入时点「手动触发」建一条中级别人工预警；现场处置完毕后用「标记解决」把关联待处理预警关掉。
 ![[attachments/4.4.2.png]]
 ### 4.4.3 状态判断口径
-监测点状态统一使用 3.1.4 节中的状态机：正常、预警、严重、离线、维护中、未知。监测点状态表示监测对象当前状况，预警记录表示系统或用户创建的风险处置记录，两者在页面中联动展示。
+监测点状态统一使用 3.1.4 节中的状态机：正常、预警、严重、离线、维护中、未知。前端 `deriveMonitorStatus` 按温度、土壤湿度校准展示色；预警记录表示系统或用户创建的风险处置记录，两者在页面中联动展示。
 ## 4.5 智能分析
-导航栏进入「智能分析」。在上传区选 JPG / PNG / WEBP 图片（建议 ≤ 2MB），下拉选作物（桃、苹果、小麦、水稻），右侧选分析类型（灾害识别、病虫害识别、气候灾害识别、其他），必要时填补充说明，再点「确定」或「识别」。提交后页面给出识别结果、置信度、风险等级和农技建议；有风险的结果可归档进预警列表。成功时会提示「分析完成！请查看下方结果卡片」，新纪录在「灾害预警」页可查。窄屏下上传区与结果区上下排列。
+导航栏进入「智能分析」。本页把叶片图交给 Flask `/api/analysis/image`，用已训练的 23 类分类模型推理，而不是按文件摘要抽签分类。
+### 4.5.1 操作步骤
+1. 在上传区选择 JPG / PNG 图片（建议 ≤ 2MB；批量识别还支持 WEBP）。
+2. 下拉选择作物：**小麦、玉米、番茄、水稻**（京津冀版不提供其他作物选项）。
+3. 右侧可点分析类型按钮（灾害 / 病虫害 / 气候 / 其他）。当前权重是病虫害分类模型，非「病虫害」类型仅作界面说明，不改变 23 类输出空间。
+4. 必要时填写补充说明，点「开始分析」（或底部「识别」做批量）。
+5. 页面展示中文病名、置信度进度条、风险标签和防治条目；置信度偏低时提示人工复核，并可填写 23 类中的实际病名做纠错。
+6. 非「健康」结果会向 `/alerts` 写入一条预警，消息形如 `[AI识别] 监测到 小麦 - 小麦锈病 (置信度: xx%)`，随后可在「灾害预警」页查看。
+成功时结果区显示病名与置信度；模型未就绪时接口返回 503，页面提示无法识图。窄屏下上传区与结果区上下排列。
 ![[attachments/4.5.1.png]]
 ![[attachments/4.5.1(2).png]]
-### 4.5.2 分析类型说明
+### 4.5.2 技术方法（与源程序对应）
+1. **加载 23 类权重**：Flask 启动时读取 `pest-cls-best.pt`。类名须为 23 个，且与元数据一致，否则 `MODEL_READY` 保持为否，识图接口返回 503。
+2. **前向推理**：`inference.py` 将叶片图缩放、归一化后输入分类网络，得到 23 维分数并做 softmax。
+3. **作物掩码**：`crop_filter.py` 的 `CROP_CLASS_GROUPS` 只保留该作物病名（均含「健康」），再重新归一化，取第一名。这样选「水稻」时不会把玉米病名当作结果。
+4. **环境叠级**：若请求带了监测点 id、表单又未填温湿墒，则 `fetch_point_weather` 读取该点 `weather_readings` 中 id 最大的一行，交给 `apply_disease_env_rules` 按病名与湿度/气温微调本次 `level`。
+5. **防治库**：按病名查询防治条目，返回症状、化学/生物/农艺措施等，供结果区折叠面板展示。
+6. **归档预警**：前端在非健康时 `POST /alerts`，消息带 `[AI识别]` 前缀。
+本说明书不把历史 8 类训练准确率写成 23 类指标。23 类中文病名如下。
+
+| 作物 | 类别（均含「健康」） |
+|------|----------------------|
+| 小麦 | 健康、小麦锈病、小麦赤霉病、小麦白粉病、小麦蚜虫为害 |
+| 玉米 | 健康、玉米大斑病、玉米锈病、玉米南方锈病、玉米小斑病、玉米弯孢叶斑病、玉米褐斑病、玉米瘤黑粉病、玉米茎腐病、玉米穗腐病 |
+| 番茄 | 健康、番茄早疫病 |
+| 水稻 | 健康、水稻白叶枯病、水稻褐斑病、水稻负泥虫为害、稻瘟病、水稻叶鞘腐败病、水稻叶黑粉病、水稻窄条斑病、稻颈瘟 |
+合计 23 类（「健康」在四组中为同一类别，不重复计数）。
+### 4.5.3 分析类型说明
 | 按钮 | 适用场景（说明性） |
 |------|-------------------|
-| 灾害识别 | 一般性灾害/长势异常 |
-| 病虫害识别 | 病斑、虫害相关 |
-| 气候灾害识别 | 冻害、涝渍等 |
+| 灾害识别 | 一般性灾害/长势异常（界面分类，模型仍输出 23 类病名） |
+| 病虫害识别 | 病斑、虫害相关（与当前模型一致） |
+| 气候灾害识别 | 冻害、涝渍等（界面分类，模型仍输出 23 类病名） |
 | 其他 | 以上未覆盖情况 |
 识别结果会带置信度文案写入预警；非「健康」类结果可归档为较高预警级别，供后续处置和决策分析使用。
 ## 4.6 灾害预警
-「灾害预警」页用来查、建、改、删预警记录，也是风险管理主入口。
+「灾害预警」页用来查、建、改、删预警记录，也是风险管理主入口。列表数据来自 `GET /alerts`。
+消息前缀与来源：
+
+| 前缀 | 来源 | 说明 |
+|------|------|------|
+| `[自动预警]` | 链 1 | 墒情或气温突破阈值并持续达到耐受时间 |
+| `[极端天气]` | 链 2 | 7 日预报命中极端高温、霜冻、大风、暴雨或连续高温 |
+| `[虫情风险]` | 链 3 | 高风险时以 **草稿** 写入，须点「确认发布」 |
+| `[AI识别]` | 智能分析 | 23 类非健康结果由前端写入 |
+| （无上述前缀） | 人工 | 本页「新建预警」或地图「手动触发」 |
+
+默认列表隐藏草稿。打开右上角「含草稿」后可见 `draft=true` 的记录；虫情草稿提供「确认发布」，调用 `POST /alerts/{id}/publish`，把 `draft` 置为否。
 ### 4.6.1 新建预警
 点「新建预警」，选好监测点和级别（低/中/高），填完预警信息并确定，列表里会出现一条「待处理」记录。
 ![[attachments/4.6.1.png]]
 ### 4.6.2 处理预警
-待处理记录可「标记解决」变已处理；已处理的也能「标记未处理」便于重新跟踪。不需要的记录可删除，删除后页面无法恢复，操作前请确认。列表为空时显示与首页一致的空状态。
+待处理记录可「标记解决」变已处理；已处理的也能「标记未处理」便于重新跟踪。不需要的记录可删除，删除后页面无法恢复，操作前请确认。列表为空时显示与首页一致的空状态。草稿须先发布再按待办处置。
 ![[attachments/4.6.2.png]]
 ### 4.6.3 与其他模块联动
-新建预警或智能分析产出的记录会同步到三处：本页列表、地图对应监测点弹窗（有待处理提示时）、「智慧决策」左侧待处理列表。
+新建预警、规则链写入或智能分析产出的记录会同步到三处：本页列表、地图对应监测点弹窗（有待处理提示时）、「智慧决策」左侧待处理列表。首页待处理计数不统计未发布草稿。
 ## 4.7 智慧决策
 进「智慧决策」后，左侧是待处理预警列表，右侧看该点的监测数据和文字建议。
 ### 4.7.1 选择预警
 点列表里的一条预警即可高亮选中，「区域概览」小地图会标出位置和经纬度。还没选时，右侧提示「请从左侧列表选择一个预警进行决策分析」。窄屏（≤992px）先显示列表、下方才是详情，监测数据卡片在手机上单列排布。
 ### 4.7.2 查看建议
-选中预警后，上方卡片给出温度、土壤湿度、监测点状态等实时读数；「处置建议」区按级别和监测值生成多条文字提示。需要留档时点右上角「导出方案」（具体格式以实现为准）。
+选中预警后，上方卡片给出温度、土壤湿度、监测点状态等实时读数。「处置建议」按消息前缀分支：
+- `[AI识别]`：从消息中解析病名，读取防治库，展示症状与措施面板；
+- `[虫情风险]`：展示规则给出的风险因子（如连续高湿、降水偏多、NDVI 偏低等）；
+- `[自动预警]` / `[极端天气]` 及人工预警：按级别和监测值给出联动处置条文。
+需要留档时点右上角「导出方案」，浏览器下载 txt 文本。
 ![[attachments/4.7.2.png]]
 ## 4.8 关于我们
 导航栏点「关于我们」可查看团队与产品介绍。
@@ -256,99 +306,259 @@ GIS Tab 的主画面是一片贴在栾城附近的墒情热力图（演示数据
 4. 遥感热力图、气象站九类读数、传感器折线图等，均用于辅助判断，须结合田间实际情况解读；在气象 Tab 换站后，卡片数字与底部分析条会一起更新。
 5. GIS「点击查墒情」为演示联动，数值取自最近监测站传感器，非专业空间插值产品。
 6. 无人机「历史对比」仅在有多期影像的地块可用；单期地块开关不可用属正常设计。
-7. 「生成简报」按钮目前只走演示流程，不会在用户电脑上生成真实 PDF 文件。
+7. 「生成简报」会预览监测日报 markdown，并下载 txt 文件，不会生成 PDF。
 ## 5.3 图片分析
-1. 建议上传 JPG、PNG 或 WEBP 格式图片。
+1. 建议上传 JPG、PNG 或 WEBP 格式图片（单张上传界面以 JPG/PNG 为主）。
 2. 上传图片应尽量清晰，避免主体过小、严重模糊或光照过暗。
-3. 智能分析结果用于辅助识别和风险提示，不应直接替代实地农情判断。
-4. 分析完成后，用户可根据结果进入「灾害预警」页查看关联预警记录。
+3. 须先选择与叶片一致的作物，系统只在该作物的类别里取第一名，避免串作物。
+4. 智能分析结果用于辅助识别和风险提示，不应直接替代实地农情判断；低置信度应人工复核后再作为高等级预警依据。
+5. 分析完成后，用户可根据结果进入「灾害预警」页查看关联的 `[AI识别]` 记录。
 ## 5.4 预警处置
 1. 新建预警时，应选择正确的监测点和预警级别。
 2. 预警处置完成后，应及时点击「标记解决」，保证首页统计和智慧决策列表同步更新。
-3. 删除预警记录后不可在页面中直接恢复，操作前应确认该记录不再需要。
-4. 智慧决策页面提供的处置建议为辅助参考，实际生产处置仍需结合当地农技规范和现场复核结果。
+3. 虫情草稿须先「确认发布」，再按待办跟踪。
+4. 删除预警记录后不可在页面中直接恢复，操作前应确认该记录不再需要。
+5. 智慧决策页面提供的处置建议为辅助参考，实际生产处置仍需结合当地农技规范和现场复核结果。
 ## 5.5 运行环境
 1. 推荐使用 Chrome 或 Edge 最新版浏览器访问系统。
 2. 系统支持 PC、平板和手机浏览器访问；涉及地图、图表和表格操作时，建议使用 PC 或平板获得更完整的显示效果。
-3. 如系统地址无法访问，应联系维护人员检查服务器、网络和后端服务状态。
+3. 如系统地址无法访问，应联系维护人员检查 Nginx、Flask 与 MySQL 是否正常。
 # 附录
 ## A. 软件信息
 | 项目 | 内容 |
 |------|------|
 | 软件全称 | AI技术赋能下的作物灾害智慧监测预警系统 |
 | 软件简称 | AI作物灾害监测预警系统 |
-| 版本 | 1.0.4 |
+| 版本 | 2.1.0 |
 | 终端类型 | Web 浏览器访问 |
 | 适用方向 | 作物灾害监测、农情数据展示、预警管理、辅助决策 |
 | 开发单位 | 河北地质大学 · 坤灵智巡创工队 |
-本说明书描述 V1.0.4 版本的功能与操作，与线上一致（http://82.157.234.123:88）。
+本说明书描述 V2.1.0 的功能与操作（相对此前材料补充了 Flask + MySQL 业务后端与 23 类识别），与线上地址 http://82.157.234.123:88 的目标架构一致。
 ### A.2 源程序规模
-本系统源程序采用 Vue 3 + TypeScript + JavaScript + Python 开发，统计口径为生产代码目录（前端 `src/`、图像分析服务 `server/`、业务接口 `deploy/api_mock/`），不含第三方依赖包、构建产物与演示数据文件。
+鉴别材料统计口径为附录 D / 源程序文件所列 20 个自研模块，不含第三方依赖包、构建产物、模型权重、演示影像，也不含登录壳、Vite、Axios 封装和关于页。Vue 文件在源程序全文中去掉样式块。
 
 | 项目 | 数值 |
 |------|------|
-| 源程序文件数 | 44 个 |
-| 有效代码行数（非空行） | 约 6,538 行 |
-| 前端有效代码 | 约 6,146 行 |
-| 后端有效代码 | 约 392 行（含农业业务规则与图像分析服务） |
-按开发语言分布（有效代码行）：
+| 鉴别材料收录文件数 | 20 个 |
+| 收录有效代码（非空行） | 约 4,722 行 |
+| 其中 Python（Flask 业务后端） | 14 个文件，约 1,930 行 |
+| 其中 TypeScript | 1 个文件，约 127 行 |
+| 其中 Vue（已去样式） | 5 个文件，约 2,665 行 |
+按开发语言分布（鉴别材料、有效代码行）：
 
 | 语言/类型 | 文件数 | 有效代码行 | 主要用途 |
 |-----------|--------|------------|----------|
-| Vue 单文件组件 | 16 | 约 4,592 行 | 登录、首页、相关数据、地图监测、智能分析、预警、决策等业务页面 |
-| TypeScript | 22 | 约 1,292 行 | 状态管理、路由、地图组合逻辑、监测状态机、接口封装 |
-| JavaScript | 2 | 约 272 行 | 农业领域业务规则与接口服务 |
-| Python | 1 | 约 120 行 | 作物图像预处理、特征提取与分类建议 |
-| 样式表（CSS） | 3 | 约 262 行 | 玻璃拟态主题、地图与页面公共样式 |
-按功能模块分布（有效代码行）：
+| Python | 14 | 约 1,930 行 | MySQL 表结构、登录与 REST、三条规则链、调度、23 类识病与作物掩码 |
+| TypeScript | 1 | 约 127 行 | 监测点六态状态机与地图配色 |
+| Vue 单文件组件（去样式） | 5 | 约 2,665 行 | 相关数据、识病、预警发布、决策、地图监测 |
+按功能模块分布（鉴别材料、有效代码行）：
 
 | 功能模块 | 有效代码行 | 说明 |
 |----------|------------|------|
-| 业务页面 | 约 3,500 行 | 七大导航模块对应的用户界面与交互 |
-| 布局与公共组件 | 约 1,090 行 | 顶栏导航、全局搜索、遥感地图、空状态展示 |
-| 状态与业务逻辑 | 约 1,072 行 | 监测点/预警/气象/遥感数据管理、状态机、检索 |
-| 后端服务 | 约 392 行 | 登录校验、灾害规则评估、查墒情、图像分析 |
-源程序核心业务逻辑见附录 D；完整源码见同目录《AI技术赋能下的作物灾害智慧监测预警系统V1.0.4-源程序.md》（12 个文件、约 3,095 行）。全系统业务页面与领域规则代码合计约 6,500 行。
+| 数据模型与连接 | 约 241 行 | `models.py`、`db.py` |
+| 业务 HTTP 与登录查墒 | 约 396 行 | `biz.py`、`agri_derived.py` |
+| 三条规则链、落库、日报、调度 | 约 715 行 | 墒情气温 / 极端天气 / 虫情草稿 / persist / daily_report / scheduler |
+| 23 类识病 | 约 578 行 | 作物掩码、推理、识病 HTTP、环境叠级 |
+| 前端业务页面与状态机 | 约 2,792 行 | 状态机与五个业务页（去样式） |
+源程序核心业务逻辑见附录 D；完整源码见同目录《AI技术赋能下的作物灾害智慧监测预警系统V1.0.4-源程序.md》（文内版本 2.1.0，20 个文件、约 4,722 行）。
 ## B. 运行环境建议
 | 项目 | 建议 |
 |------|------|
 | 客户端 | Chrome、Edge 等现代浏览器 |
 | 屏幕设备 | PC、平板、手机浏览器均可访问 |
-| 服务器 | 支持前端静态资源、业务接口和图片分析服务的服务器环境 |
-| 网络 | 客户端可访问系统部署地址，服务器端服务保持正常运行 |
+| 服务器 | Nginx 静态前端 + Flask（业务与识病）+ MySQL `detect_system` |
+| 网络 | 客户端可访问系统部署地址，服务器端 Flask 与数据库保持正常运行 |
 ## C. 技术支持
 问题反馈可通过「关于我们」页脚邮箱 kunling-smart@hgu.edu.cn 联系团队。
 ## D. 源程序代码附录
-完整源程序见同目录《AI技术赋能下的作物灾害智慧监测预警系统V1.0.4-源程序.md》（含附录 D 所列 8 个核心模块及 4 个主要业务页面，约 3,095 行有效代码）；本附录摘录系统核心业务逻辑源程序，与第四章各节操作说明相对应。所列代码均为 V1.0.4 实际运行版本中的自研部分，不含第三方框架模板。
+完整源程序见同目录《AI技术赋能下的作物灾害智慧监测预警系统V1.0.4-源程序.md》（与下表 20 个模块一致，约 4,722 行有效代码）；本附录摘录自研业务逻辑，与第一章运行环境和第四章各节操作说明相对应。所列代码为 V2.1.0 实际运行版本中的自研部分，不含第三方框架模板与界面样式。
 ### D.1 节选说明
 | 原则 | 说明 |
 |------|------|
-| 只收录业务代码 | 监测状态机、遥感对比、GIS 查墒情、灾害规则评估、图像分析流水线等农业监测预警逻辑 |
-| 不收录通用脚手架 | 不含 Vite 配置、Axios 基础封装、标准路由守卫、Ant Design 表单样板等 |
-| 与正文功能对应 | 下列各段代码分别对应第四章「相关数据」「灾害实时监测」「智能分析」「灾害预警」「智慧决策」 |
-| 术语与正文一致 | 监测点状态机、九类农田小气候读数、NDVI 期次对比、最近站查墒情等表述与正文统一 |
+| 以 Python 自研后端为主 | 表结构、登录 REST、三条规则链、调度、23 类推理与作物掩码 |
+| 不收录通用脚手架 | 不含 Vite 配置、Axios 基础封装、标准路由守卫、登录页、关于页样式 |
+| 与正文功能对应 | 下列各段分别对应 1.4、4.1、4.3～4.7 |
+| 术语与正文一致 | 规则链、草稿、作物掩码、23 类、消息前缀与正文统一 |
 ### D.2 代码模块与功能对照
 | 序号 | 源文件路径 | 对应说明书功能 | 核心职责 |
 |------|------------|----------------|----------|
-| 1 | `src/utils/monitorStatus.ts` | 3.1.4、4.4 | 监测点六态状态机与阈值推导 |
-| 2 | `src/stores/data.ts` | 4.2、4.6 | 监测点/预警/气象读数聚合与落库 |
-| 3 | `src/composables/useGlobalSearch.ts` | 3.2、4.2.2 | 菜单、监测点、预警全局检索 |
-| 4 | `src/composables/useMonitorPointLayer.ts` | 4.3.5、4.4 | 地图聚类、弹窗处置、GIS 查值联动高亮 |
-| 5 | `src/stores/remoteSensing.ts` | 4.3.4 | NDVI 地块切换与两期影像对比状态 |
-| 6 | `deploy/api_mock/agriMockCore.cjs` | 4.3、4.7 | 农情登录、NDVI 摘要、墒情趋势、灾害规则、最近站查墒情 |
-| 7 | `src/mock/server.ts` | 1.4、4.3 | 农业领域 REST 路由注册 |
-| 8 | `server/app.py` | 4.5 | 作物图像预处理—特征—分类—建议流水线 |
-### D.3 监测点状态机（`src/utils/monitorStatus.ts`）
-依据温度、土壤湿度推导「正常 / 预警 / 严重 / 离线 / 维护中 / 未知」，并定义状态转移与地图配色。
-```typescript
-export const MONITOR_STATUS_META: Record<MonitorStatus, MonitorStatusMeta> = {
-  normal:   { label: '正常',   color: '#52c41a', priority: 1, /* ... */ next: ['warning', 'offline', 'maintenance'] },
-  warning:  { label: '预警',   color: '#fa8c16', priority: 2, /* ... */ next: ['normal', 'critical', 'offline', 'maintenance'] },
-  critical: { label: '严重',   color: '#cf1322', priority: 3, /* ... */ next: ['warning', 'normal', 'offline', 'maintenance'] },
-  offline:  { label: '离线',   color: '#8c8c8c', priority: 4, /* ... */ next: ['normal', 'warning', 'maintenance'] },
-  maintenance: { label: '维护中', color: '#722ed1', priority: 0, /* ... */ next: ['normal', 'offline'] },
-  unknown:  { label: '未知',   color: '#1890ff', priority: -1, /* ... */ next: ['normal', 'warning', 'offline'] }
+| 1 | `ml-bjj/serving/models.py` | 1.4 | 业务表结构（监测点、预警、气象读数、阈值、预报等） |
+| 2 | `ml-bjj/serving/db.py` | 1.4 | 数据库连接（`DATABASE_URL`，无库则明确失败） |
+| 3 | `ml-bjj/serving/blueprints/biz.py` | 1.4、4.1、4.6 | 登录与业务 HTTP（监测点/预警/预报等） |
+| 4 | `ml-bjj/serving/rules/agri_derived.py` | 4.1、4.3.5 | 登录校验、最近站查墒情等 |
+| 5 | `ml-bjj/serving/rules/alert_rules.py` | 4.6 | 链 1：墒情/气温双阈值与耐受 |
+| 6 | `ml-bjj/serving/rules/extreme_weather_rules.py` | 4.3、4.6 | 链 2：7 日预报极端天气 |
+| 7 | `ml-bjj/serving/rules/pest_risk_rules.py` | 4.6、4.7 | 链 3：虫情风险与草稿 |
+| 8 | `ml-bjj/serving/rules/persist.py` | 4.6 | 规则结果落库、去重、发布草稿 |
+| 9 | `ml-bjj/serving/rules/daily_report.py` | 4.3.7 | 按监测点与预警生成监测日报 markdown |
+| 10 | `ml-bjj/serving/scheduler.py` | 1.4 | 定时扫描规则链 |
+| 11 | `ml-bjj/serving/crop_filter.py` | 4.5 | 23 类名单与作物掩码 |
+| 12 | `ml-bjj/serving/inference.py` | 4.5 | 加载权重与分类推理 |
+| 13 | `ml-bjj/serving/app.py` | 4.5 | 识病 HTTP、按监测点补环境后叠级别 |
+| 14 | `ml-bjj/serving/disease_env_rules.py` | 4.5 | 病名×温湿墒调整风险等级 |
+| 15 | `src/utils/monitorStatus.ts` | 3.1.4、4.4 | 监测点六态（前端展示，与说明书色表一致） |
+| 16 | `src/views/user/DataAnalysis.vue` | 4.5 | 上传、选作物、展示防治 |
+| 17 | `src/views/user/WarningSystem.vue` | 4.6 | 预警列表与发布草稿 |
+| 18 | `src/views/user/RelatedData.vue` | 4.3 | 四 Tab（传感器/气象/遥感/GIS） |
+| 19 | `src/views/user/DecisionSupport.vue` | 4.7 | 按预警类型展示建议 |
+| 20 | `src/views/user/MapVisualization.vue` | 4.4 | 地图监测点与抽屉读数 |
+### D.3 数据库连接（`ml-bjj/serving/db.py`）
+未配置 `DATABASE_URL` 时抛出 `DatabaseNotConfigured`，不回退本地数据文件。
+```python
+def database_url() -> str:
+    url = (os.environ.get("DATABASE_URL") or "").strip()
+    if not url:
+        raise DatabaseNotConfigured("未配置数据库：请设置环境变量 DATABASE_URL")
+    return url
+```
+### D.4 登录校验（`ml-bjj/serving/rules/agri_derived.py`）
+对应说明书 1.5、4.1：查 `users` 表后的纯函数校验。
+```python
+def handle_farm_login(users: list[dict], body: dict) -> dict:
+    phone = body.get("phone")
+    password = body.get("password")
+    code = body.get("code")
+    requested_role = normalize_role(body.get("role"))
+    user = next((item for item in users if item.get("phone") == phone), None)
+    pass_password = bool(user and password and user.get("password") == password)
+    pass_demo_code = bool(user and code == "2026")
+    if not user or (not pass_password and not pass_demo_code):
+        return {"ok": False, "status": 401, "body": {"message": "手机号、验证码或备用密码错误"}}
+    return {
+        "ok": True,
+        "status": 200,
+        "body": {
+            "code": 200,
+            "message": "登录成功",
+            "token": f"qinghe-{requested_role}-{int(time.time() * 1000)}",
+            "user": {
+                "id": user.get("id"),
+                "name": user.get("name"),
+                "phone": user.get("phone"),
+                "role": requested_role,
+            },
+        },
+    }
+```
+`biz.py` 中 `POST /login` 读取 `User` 表后调用上述函数。GIS 查墒使用同一文件中的 `query_moisture_by_nearest_point`。
+### D.5 链 1 墒情/气温阈值与耐受（`ml-bjj/serving/rules/alert_rules.py`）
+默认墒情提示 25、告警 15；气温提示 32℃、告警 38℃；耐受 30/10 分钟。持续达到时间后才组装 `[自动预警]` 文案。`detect_hits` 在墒情低于告警线时写入 `water_stress`；`evaluate_reading` 按已持续时间决定是否生成预警。
+```python
+DEFAULT_THRESHOLD_PROFILE: dict[str, Any] = {
+    "pointId": 0,
+    "crop": "小麦",
+    "growthStage": "拔节",
+    "waterStressHint": 25,
+    "waterStressAlert": 15,
+    "waterStressHintMinutes": 30,
+    "waterStressAlertMinutes": 10,
+    "heatHint": 32,
+    "heatAlert": 38,
+    "heatHintMinutes": 30,
+    "heatAlertMinutes": 10,
+    "waterloggingAlert": 80,
+    "waterloggingMinutes": 10,
 }
+def build_env_alert_message(point_name: str, hit: dict, elapsed_minutes: int) -> str:
+    kind = "提示阈值" if hit["level"] == "hint" else "告警阈值"
+    if hit["metric"] == "airTemp":
+        return (
+            f"[自动预警] {point_name} - 气温 {hit['value']}℃ 超过{kind} {hit['threshold']}℃，"
+            f"已持续 {elapsed_minutes} min"
+        )
+    ...
+```
+### D.6 链 2 极端天气预报（`ml-bjj/serving/rules/extreme_weather_rules.py`）
+对 7 日预报逐日判断最高温 ≥40℃、最低温 ≤-5℃、风速 ≥17.2 m/s、日降水 ≥50 mm，以及连续 3 日最高温 ≥38℃。
+```python
+def evaluate_forecast(point_id: int, point_name: str, days: list[dict]) -> dict:
+    ...
+        if temp_max >= 40:
+            events.append(make_event("extreme_heat_40", "high_temperature", "极端高温", ...))
+        if precip >= 50:
+            events.append(make_event("extreme_rain", "heavy_rain", "暴雨", ...))
+```
+落库消息带 `[极端天气]` 前缀。
+### D.7 链 3 虫情草稿（`ml-bjj/serving/rules/pest_risk_rules.py`）
+高风险时生成 `draft: True` 的预警，须发布后才进入待办。
+```python
+    if risk_level == "high":
+        result["draftAlert"] = {
+            "message": f"[虫情风险] 地块 {field_name} - 风险等级：high（{'；'.join(factors)}）",
+            "source": "auto",
+            "ruleId": "pest_risk",
+            "chain": "pest",
+            "draft": True,
+        }
+```
+```python
+def publish_alert(session: Session, alert_id: int) -> dict | None:
+    row = session.get(Alert, alert_id)
+    if not row:
+        return None
+    row.draft = False
+    return row.to_camel()
+```
+### D.8 监测日报（`ml-bjj/serving/rules/daily_report.py`）
+对应 4.3.7：生成 markdown，前端下载为 txt。
+```python
+def build_daily_report(input_data: dict) -> str:
+    return "\n".join(
+        [
+            "# 监测日报",
+            f"生成时间：{input_data.get('generatedAt')}",
+            "",
+            "## 监测点",
+            ...
+            "## 预警统计",
+            f"- 总数: {len(alerts)}",
+            f"- 待处理: {pending}",
+            "",
+            "## 极端天气",
+            ...
+        ]
+    )
+```
+### D.9 23 类与作物掩码（`ml-bjj/serving/crop_filter.py`）
+```python
+CANONICAL_CLASSES = [
+    "健康",
+    "小麦锈病", "小麦赤霉病", "小麦白粉病", "小麦蚜虫为害",
+    "玉米大斑病", "玉米锈病", "玉米南方锈病", "玉米小斑病",
+    "玉米弯孢叶斑病", "玉米褐斑病", "玉米瘤黑粉病", "玉米茎腐病", "玉米穗腐病",
+    "番茄早疫病",
+    "水稻白叶枯病", "水稻褐斑病", "水稻负泥虫为害", "稻瘟病",
+    "水稻叶鞘腐败病", "水稻叶黑粉病", "水稻窄条斑病", "稻颈瘟",
+]
+def classes_for_crop(crop_type: str) -> set[str] | None:
+    ...
+```
+### D.10 分类推理（`ml-bjj/serving/inference.py`）
+softmax 之后按作物掩码再取第一名。
+```python
+        probs = torch.softmax(logits, dim=1)[0].tolist()
+        filtered = mask_and_renorm(probs, self.classes, crop_type)
+        topk = rank_topk(filtered, self.classes, k=3)
+        ...
+        label = str(mapped[0]["label"])
+        confidence = float(mapped[0]["confidence"])
+```
+### D.11 识病 HTTP 与补环境（`ml-bjj/serving/app.py`）
+模型未就绪返回 503；就绪后 `get_classifier().predict_detailed`；可用监测点最新气象叠级。
+```python
+    if app.config.get("MODEL_READY") is False:
+        return jsonify({"error": "模型未就绪，无法识图", "message": "模型未就绪"}), 503
+    ...
+        pred = get_classifier().predict_detailed(img, crop_type)
+    ...
+    if env is None and point_id is not None:
+        env = fetch_point_weather(point_id)
+    env_out = apply_disease_env_rules(pred.label, level, env, treatment.get("timing"))
+```
+`prepare_runtime` 在类数不是 23 时不把 `MODEL_READY` 置为真。
+### D.12 监测点状态机（`src/utils/monitorStatus.ts`）
+依据温度、土壤湿度推导「正常 / 预警 / 严重 / 离线 / 维护中 / 未知」，与 3.1.4 色表一致。
+```typescript
 export function deriveMonitorStatus(input: MonitorStatusInput): MonitorStatus {
   if (input.maintenance) return 'maintenance'
   if (input.online === false) return 'offline'
@@ -363,182 +573,24 @@ export function deriveMonitorStatus(input: MonitorStatusInput): MonitorStatus {
   return current === 'unknown' || current === 'offline' ? 'normal' : current
 }
 ```
-### D.4 农情数据 Store（`src/stores/data.ts`）
-拉取监测点后调用状态机校准，并维护预警列表与气象九类读数。
+### D.13 智能分析写入预警（`src/views/user/DataAnalysis.vue`）
+作物选项为小麦/玉米/番茄/水稻；非健康结果写入 `[AI识别]`。
 ```typescript
-async function fetchMonitorPoints() {
-  const res = await http.get('/monitorPoints')
-  monitorPoints.value = (res.data || [])
-    .filter((item: any) => item.id && item.status)
-    .map((item: any) => {
-      const fixedTemp = parseFloat(item.temp)
-      const fixedMoisture = parseFloat(item.soilMoisture)
-      const status = deriveMonitorStatus({
-        status: item.status,
-        temp: fixedTemp,
-        soilMoisture: fixedMoisture,
-        online: item.online,
-        maintenance: item.maintenance
+      await store.createAlert({
+        ...
+        message: `[AI识别] 监测到 ${cropName} - ${aiResult} (置信度: ${pct}%)`,
       })
-      return {
-        ...item,
-        status,
-        temp: Number.isFinite(fixedTemp) ? fixedTemp.toFixed(1) : '0.0',
-        soilMoisture: fixedMoisture.toFixed(1)
-      }
-    })
-}
-export interface WeatherReading {
-  pointId: number
-  soilVwc: number; soilTemp10cm: number; soilEc: number
-  airTemp: number; airRh: number; windSpeed: number
-  windDirection: number; windDirectionText: string
-  pressure: number; hourlyRain: number
-}
 ```
-### D.5 全局农情检索（`src/composables/useGlobalSearch.ts`）
-按关键词同时检索导航菜单、监测点名称、预警摘要，并跳转至对应业务页。
+### D.14 草稿发布（`src/views/user/WarningSystem.vue`）
 ```typescript
-const results = computed<SearchResult[]>(() => {
-  const k = keyword.value.trim().toLowerCase()
-  if (!k) return []
-  const list: SearchResult[] = []
-  for (const item of MENU_ITEMS) {
-    const match = item.title.toLowerCase().includes(k)
-      || item.keywords.some((kw) => kw.toLowerCase().includes(k))
-    if (match) list.push({ type: 'menu', id: `menu-${item.path}`, title: item.title, path: item.path })
-  }
-  for (const p of dataStore.monitorPoints || []) {
-    if ((p.name || '').toLowerCase().includes(k)) {
-      list.push({
-        type: 'monitor', id: `monitor-${p.id}`, title: p.name,
-        subtitle: `状态: ${getMonitorStatusLabel(p.status)}`,
-        path: '/map', query: { highlight: p.id }
-      })
-    }
-  }
-  for (const a of dataStore.alerts || []) {
-    const msg = (a.message || '').toString()
-    if (msg.toLowerCase().includes(k)) {
-      list.push({ type: 'alert', id: `alert-${a.id}`, title: msg.slice(0, 40), path: '/warnings' })
-    }
-  }
-  return list
-})
+              <a-switch
+                v-model:checked="showDrafts"
+                checked-children="含草稿"
+                un-checked-children="待办" />
+...
+                    v-if="item.draft"
+                    确认发布
+...
+    await publishAlert(alert.id)
 ```
-### D.6 地图监测点图层与 GIS 联动（`src/composables/useMonitorPointLayer.ts`）
-支持聚类渲染、弹窗内手动触发/标记解决；GIS 查墒情时以 `fitBounds` 同时框住点击处与最近监测站。
-```typescript
-function highlightPoint(pointId: number, options: HighlightPointOptions = {}) {
-  const marker = markersById.get(pointId)
-  if (!marker) return
-  const markerLatLng = marker.getLatLng()
-  cluster.zoomToShowLayer(marker, () => {
-    if (options.queryLatLng) {
-      const bounds = L.latLngBounds(options.queryLatLng, markerLatLng)
-      map.fitBounds(bounds, { padding: [100, 100], maxZoom: options.maxZoom ?? 14, animate: true })
-    } else {
-      map.flyTo(markerLatLng, options.maxZoom ?? 14, { duration: 0.8 })
-    }
-    map.once('moveend', () => openMarkerPopupLayer(marker))
-  })
-}
-```
-### D.7 遥感 NDVI 两期对比（`src/stores/remoteSensing.ts`）
-管理地块、影像期次与历史对比开关；单期地块自动禁用对比功能。
-```typescript
-const canCompareNdvi = computed(() => compareDatesForField.value.length > 0)
-function setCompareEnabled(enabled: boolean) {
-  if (enabled && !canCompareNdvi.value) return
-  compareEnabled.value = enabled
-  if (!enabled) { compareNdviDate.value = ''; return }
-  syncCompareDateForField()
-}
-function syncCompareDateForField() {
-  const options = compareDatesForField.value
-  if (options.length === 0) { resetCompare(); return }
-  if (!options.includes(compareNdviDate.value)) {
-    compareNdviDate.value = latestDate(options)
-  }
-}
-```
-### D.8 农业业务规则引擎（`deploy/api_mock/agriMockCore.cjs`）
-封装登录校验、NDVI 摘要、墒情趋势、灾害阈值规则评估与最近监测站查墒情（Haversine 距离）。
-```javascript
-function queryMoistureByNearestPoint(db, lat, lng) {
-  const latNum = Number(lat), lngNum = Number(lng)
-  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
-    return { ok: false, status: 400, body: { message: '请提供有效的 lat、lng 查询参数' } }
-  }
-  let nearest = points[0], minDistKm = Infinity
-  for (const point of points) {
-    const distKm = haversineKm(latNum, lngNum, Number(point.lat), Number(point.lng))
-    if (distKm < minDistKm) { minDistKm = distKm; nearest = point }
-  }
-  return {
-    ok: true, status: 200,
-    body: {
-      moisture: Number(nearest.soilMoisture),
-      source: 'nearest-point',
-      nearestPointId: nearest.id,
-      pointName: nearest.name,
-      distanceKm: Number(minDistKm.toFixed(1))
-    }
-  }
-}
-function evaluateDisasterRules(db, body = {}) {
-  const temp = Number(body.temp ?? point?.temp ?? 0)
-  const soilMoisture = Number(body.soilMoisture ?? point?.soilMoisture ?? 0)
-  const rules = []
-  if (temp >= 38) rules.push({ rule: 'high_temperature', level: 'critical', reason: '温度达到高温危险阈值' })
-  else if (temp >= 32) rules.push({ rule: 'heat_attention', level: 'warning', reason: '温度进入持续关注区间' })
-  if (soilMoisture <= 10) rules.push({ rule: 'drought_risk', level: 'critical', reason: '土壤湿度低于重旱阈值' })
-  else if (soilMoisture <= 20) rules.push({ rule: 'water_stress', level: 'warning', reason: '土壤湿度低于警戒线' })
-  if (soilMoisture >= 80) rules.push({ rule: 'waterlogging_risk', level: 'warning', reason: '土壤湿度偏高，需关注涝渍' })
-  const level = rules.some((r) => r.level === 'critical') ? 'critical' : rules.length ? 'warning' : 'normal'
-  return { code: 200, message: '灾害规则评估完成', data: { pointId, pointName, level, rules, advice: /* ... */ } }
-}
-```
-### D.9 农业领域接口路由（`src/mock/server.ts`）
-在 json-server 之上注册农情专用接口，与前端 `/api` 代理及说明书 1.4 节服务组成一致。
-```typescript
-server.post('/login', (req, res) => {
-  const result = agriMockCore.handleFarmLogin(readDb(res), req.body)
-  return res.status(result.status).jsonp(result.body)
-})
-server.get('/ndvi/summary', (_req, res) => res.jsonp(agriMockCore.buildNdviSummary(readDb(res))))
-server.get('/soilMoisture/trend', (_req, res) => res.jsonp(agriMockCore.buildSoilMoistureTrend(readDb(res))))
-server.post('/disasterRules/evaluate', (req, res) => res.jsonp(agriMockCore.evaluateDisasterRules(readDb(res), req.body)))
-server.get('/moisture/value', (req, res) => {
-  const result = agriMockCore.queryMoistureByNearestPoint(readDb(res), req.query.lat, req.query.lng)
-  return res.status(result.status).jsonp(result.body)
-})
-```
-### D.10 作物图像分析流水线（`server/app.py`）
-智能分析模块采用「预处理 → 特征提取 → 分类 → 农技建议」四段式结构，按作物类型与图像摘要生成识别结果。
-```python
-CROP_DISEASE_LABELS = {
-    "peach": ["桃疮痂病", "桃褐腐病", "桃缩叶病", "健康"],
-    "apple": ["苹果腐烂病", "苹果轮纹病", "健康"],
-    "wheat": ["小麦锈病", "小麦赤霉病", "健康"],
-    "rice": ["稻瘟病", "纹枯病", "健康"]
-}
-def extract_agri_features(sample):
-    digest_value = int(sample.digest[:8], 16)
-    spot_score = (digest_value % 100) / 100
-    texture_score = ((digest_value // 100) % 100) / 100
-    moisture_hint = "偏湿" if texture_score > 0.66 else "偏干" if texture_score < 0.33 else "适中"
-    return {"spotScore": round(spot_score, 2), "textureScore": round(texture_score, 2), "moistureHint": moisture_hint}
-def classify_crop_disaster(sample, features):
-    labels = CROP_DISEASE_LABELS.get(sample.crop_type, ["未知病害"])
-    result = labels[int(sample.digest[-4:], 16) % len(labels)]
-    confidence = round(0.78 + features["spotScore"] * 0.18, 2)
-    level = "low" if result == "健康" else "high" if confidence >= 0.9 else "medium"
-    return {"result": result, "confidence": min(confidence, 0.98), "level": level}
-def run_ai_model_prediction(image_file, crop_type, category=""):
-    sample = preprocess_image_sample(image_file, crop_type, category)
-    features = extract_agri_features(sample)
-    classification = classify_crop_disaster(sample, features)
-    advice = build_agri_advice(sample, classification, features)
-    return sample, features, classification, advice
-```
+完整函数体、表定义与五个业务页面见源程序全文。

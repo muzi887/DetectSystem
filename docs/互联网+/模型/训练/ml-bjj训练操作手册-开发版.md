@@ -29,6 +29,7 @@ DetectSystem/
     scripts/
       classify_rice.py                    ← 水稻 YOLO → 中文类文件夹
       prepare_from_class_folders.py       ← ★ 当前：中文类文件夹 → bjj_cls
+      augment_class.py                    ← 少样本类离线增强（默认弯孢）
       prepare_from_wheat_plantvillage.py  ← 历史：小麦Kaggle + PlantVillage → 8 类
       train_cls.py
       predict.py
@@ -167,6 +168,17 @@ python ml-bjj\scripts\prepare_from_class_folders.py
 
 成功：终端打印各类 train/val 张数；缺失的类会警告。
 
+**为何要跑 prepare？** 训练脚本只读 `bjj_cls`，不读 `data/<中文类名>/`。`prepare` 会把各类源图**复制**到 `train|val` 并按约 75%/25% 随机划分——这一步叫「切分」。若以后往源图夹增删图片却**没再跑 prepare**，`bjj_cls` 里仍是上一次切分的结果，就叫「旧切分」；此时源图张数与 `bjj_cls` 会对不上。
+
+**如何核对是否一致**（维护方改源图或打包前建议执行）：
+
+```powershell
+# 示例：某类源图总数应 ≈ bjj_cls 的 train + val
+# 穗腐、颈瘟、健康等任一类均可按此方式抽查
+```
+
+也可在项目根用 Python 逐类比对：各类 `data/<类名>/` 图片数应等于 `data/bjj_cls/train/<类名>/` + `data/bjj_cls/val/<类名>/`。**若相等，说明已同步，可直接训练或打包；若不等，先 prepare 再训。**
+
 只处理部分类时可：
 
 ```powershell
@@ -237,11 +249,43 @@ curl http://127.0.0.1:5000/health
 
 ### 4.6 打包给组员（交付）
 
-从 `ml-bjj/` 拷贝：
+**可以只发训练集，不必发完整 `data/` 中文类文件夹**——组员 `train_cls.py` 只读 `data/bjj_cls/`。
 
-- 必带：`scripts/`、`data/bjj_cls/`、`requirements.txt`、交付版手册
-- 可选：完整 `data/` 中文类文件夹（仅当对方要重跑 prepare）
-- **不带**：`.venv/`、`__pycache__/`、原始 `*.zip`、`archive_riceLeafDiseases/`
+### 发件人（维护数据的一方）必须先做
+
+改过 `data/<中文类名>/`（补图、增强、删图）后，**打包前必须重切**，否则组员训的是旧数据：
+
+```powershell
+python ml-bjj\scripts\prepare_from_class_folders.py
+```
+
+抽查 `bjj_cls` 各类 train/val 张数是否与源图一致（train+val = 源图总数，且约 75/25）。**若某类源图已是 375 张而 bjj 仍只有 44 张，说明未重切，不要打包发出。**
+
+弯孢等少样本类若跑了离线增强，也需先 prepare 再打包。见 [`玉米弯孢叶斑病-离线增强方案.md`](./玉米弯孢叶斑病-离线增强方案.md)。
+
+### 最小交付包（从 `ml-bjj/` 拷贝或压缩）
+
+| 必带 | 说明 |
+|------|------|
+| `scripts/` | 至少含 `train_cls.py`、`predict.py` |
+| `data/bjj_cls/` | 含 `train/`、`val/` 共 23 类；可带 `classes.txt`、`label_map.json` |
+| `requirements.txt` | 依赖清单 |
+| [`ml-bjj训练操作手册.md`](./ml-bjj训练操作手册.md) | 组员交付版 |
+
+| 可选 | 说明 |
+|------|------|
+| 完整 `data/<中文类名>/` | 仅当对方要自行补图并重跑 `prepare` |
+| `scripts/prepare_from_class_folders.py` | 与上条配套 |
+
+| **不要带** | 说明 |
+|------------|------|
+| `.venv/`、`__pycache__/` | 对方本机安装 |
+| `archive*`、`*.zip`、YOLO 解压包 | 体积大且训练不用 |
+| 仅单独一个 `bjj_cls` 文件夹 | **不够**——缺 `scripts` 与 `requirements.txt` 无法按手册训练 |
+
+### 组员侧
+
+解压到例如 `D:\ml-bjj`，按交付版手册安装依赖 → `train_cls.py` → 交回 `pest-cls-best.pt` 与抽测截图。无需执行 `prepare`。
 
 ---
 
@@ -318,6 +362,9 @@ A：源数据是 YOLO（`images` + `labels`），没有按类分文件夹；`cla
 **Q：训练完怎么接网站？**  
 A：启动 `python ml-bjj\serving\app.py`，详见 `[../网站/项目启动说明.md](../../网站/项目启动说明.md)`；并核对 serving / 知识库与新类别一致。
 
+**Q：能否只把 `data/bjj_cls` 打包发给组员训练？**  
+A：**可以**，但须是**打包前已 prepare** 的 `bjj_cls`，并与 `scripts/`、`requirements.txt`、交付版手册一起交付。发件人改源图后须重切，否则组员训不到新图。详见 **§4.2**、**§4.6**。
+
 ---
 
 
@@ -328,7 +375,9 @@ A：启动 `python ml-bjj\serving\app.py`，详见 `[../网站/项目启动说�
 | 文档                                         | 用途                    |
 | ------------------------------------------ | --------------------- |
 | `[京津冀AI模型精简方案-v3.md](../方案/京津冀AI模型精简方案-v3.md)` | 早期 8 类方案（目录已过时，逻辑可参考） |
-| `[ml-bjj训练操作手册.md](./ml-bjj训练操作手册.md)`     | 组员交付版（需随后按 23 类同步）    |
+| `[ml-bjj训练操作手册.md](./ml-bjj训练操作手册.md)`     | 组员交付版 |
+| `[玉米弯孢叶斑病-离线增强方案.md](./玉米弯孢叶斑病-离线增强方案.md)` | 少样本弯孢离线增强 |
+| `[玉米水稻补图-搜索词条.md](./玉米水稻补图-搜索词条.md)` | 补图搜索与来源 |
 | `[AI模型能力与本土化测试说明.md](../方案/AI模型能力与本土化测试说明.md)` | 实地拍图与抽测               |
 | `[../下一阶段任务与流程.md](../../规划/下一阶段任务与流程.md)`       | 整体路线                  |
 | `[../网站/项目启动说明.md](../../网站/项目启动说明.md)`       | 三终端启动                 |
@@ -338,5 +387,5 @@ A：启动 `python ml-bjj\serving\app.py`，详见 `[../网站/项目启动说�
 ---
 
 **文档版本**：V2.0（按 `data/` 中文类扁平结构 + 23 类重写；补充水稻 classify）  
-**最后更新**：2026-08-10  
+**最后更新**：2026-08-22（§4.2 改为「prepare 与核对」通用说明，去掉过时「当前旧切分」表）  
 **维护**：互联网＋项目组 / 算法组

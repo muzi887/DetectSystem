@@ -98,6 +98,38 @@ body {
   border-radius: 8px;
 }
 
+/* AppLayout 主内容区（关于我们等长页）：细玻璃滚动条，去掉系统箭头按钮 */
+.content-slot {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.content-slot::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.content-slot::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.content-slot::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.content-slot::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.content-slot::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .ant-drawer-content {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(var(--glass-blur));
