@@ -189,44 +189,46 @@
                       纠错
                     </a-button>
                   </div>
-                  <a-collapse
-                    v-if="treatmentPanels.length"
-                    v-model:activeKey="activeCollapseKeys"
-                    class="suggestion-collapse"
-                    :bordered="false">
-                    <a-collapse-panel
-                      v-for="panel in treatmentPanels"
-                      :key="panel.key"
-                      :header="panel.title">
-                      <ul class="suggestion-panel-list">
-                        <li
-                          v-for="(line, idx) in panel.lines"
-                          :key="idx">
-                          {{ line }}
-                        </li>
-                      </ul>
-                    </a-collapse-panel>
-                  </a-collapse>
-                  <p
-                    v-if="treatmentDisclaimer && treatmentPanels.length"
-                    class="treatment-disclaimer">
-                    {{ treatmentDisclaimer }}
-                  </p>
-                  <div
-                    v-if="!analysisResult.isHealthy"
-                    class="result-links">
-                    <a-button
-                      type="link"
-                      class="goto-link"
-                      @click="router.push('/warnings')">
-                      预警中心
-                    </a-button>
-                    <a-button
-                      type="link"
-                      class="goto-link"
-                      @click="router.push('/decision')">
-                      智慧决策
-                    </a-button>
+                  <div class="output-result-body">
+                    <a-collapse
+                      v-if="treatmentPanels.length"
+                      v-model:activeKey="activeCollapseKeys"
+                      class="suggestion-collapse"
+                      :bordered="false">
+                      <a-collapse-panel
+                        v-for="panel in treatmentPanels"
+                        :key="panel.key"
+                        :header="panel.title">
+                        <ul class="suggestion-panel-list">
+                          <li
+                            v-for="(line, idx) in panel.lines"
+                            :key="idx">
+                            {{ line }}
+                          </li>
+                        </ul>
+                      </a-collapse-panel>
+                    </a-collapse>
+                    <p
+                      v-if="treatmentDisclaimer && treatmentPanels.length"
+                      class="treatment-disclaimer">
+                      {{ treatmentDisclaimer }}
+                    </p>
+                    <div
+                      v-if="!analysisResult.isHealthy"
+                      class="result-links">
+                      <a-button
+                        type="link"
+                        class="goto-link"
+                        @click="router.push('/warnings')">
+                        预警中心
+                      </a-button>
+                      <a-button
+                        type="link"
+                        class="goto-link"
+                        @click="router.push('/decision')">
+                        智慧决策
+                      </a-button>
+                    </div>
                   </div>
                 </div>
                 <div
@@ -959,6 +961,37 @@ const handleFeedback = async () => {
   overflow: hidden;
 }
 
+.output-result-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.output-result-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.output-result-body::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.output-result-body::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.output-result-body::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .result-header {
   display: flex;
   align-items: center;
@@ -1037,9 +1070,8 @@ const handleFeedback = async () => {
 }
 
 .suggestion-collapse {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  flex: none;
+  overflow: visible;
   background: transparent;
 }
 
@@ -1107,6 +1139,12 @@ const handleFeedback = async () => {
   .output-panel :deep(.ant-card-body),
   .input-panel :deep(.ant-card-body) {
     overflow: visible;
+  }
+
+  .output-result,
+  .output-result-body {
+    overflow: visible;
+    flex: none;
   }
 
   .input-main {

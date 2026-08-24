@@ -167,23 +167,25 @@
                       导出方案
                     </a-button>
                   </template>
-                  <a-collapse
-                    v-model:activeKey="activeCollapseKeys"
-                    class="suggestion-collapse"
-                    :bordered="false">
-                    <a-collapse-panel
-                      v-for="panel in suggestionCollapsePanels"
-                      :key="panel.key"
-                      :header="panel.title">
-                      <ul class="suggestion-panel-list">
-                        <li
-                          v-for="(line, idx) in panel.lines"
-                          :key="idx">
-                          {{ line }}
-                        </li>
-                      </ul>
-                    </a-collapse-panel>
-                  </a-collapse>
+                  <div class="suggestion-panel-body">
+                    <a-collapse
+                      v-model:activeKey="activeCollapseKeys"
+                      class="suggestion-collapse"
+                      :bordered="false">
+                      <a-collapse-panel
+                        v-for="panel in suggestionCollapsePanels"
+                        :key="panel.key"
+                        :header="panel.title">
+                        <ul class="suggestion-panel-list">
+                          <li
+                            v-for="(line, idx) in panel.lines"
+                            :key="idx">
+                            {{ line }}
+                          </li>
+                        </ul>
+                      </a-collapse-panel>
+                    </a-collapse>
+                  </div>
                 </a-card>
               </div>
             </template>
@@ -245,7 +247,7 @@ type EnrichedAlert = {
   pointSoilMoisture: number | string
 }
 
-type LevelFilterKey = 'all' | 'high' | 'medium' | 'low'
+type LevelFilterKey = 'all' | 'critical' | 'high' | 'warning' | 'medium' | 'low'
 
 const ALERT_PAGE_SIZE = 6
 
@@ -277,11 +279,7 @@ const unhandledAlerts = computed(() => {
 
 function matchesLevelFilter(level: string, filter: LevelFilterKey): boolean {
   if (filter === 'all') return true
-  const normalized = normalizeAlertLevel(level)
-  if (filter === 'high') return normalized === 'critical' || normalized === 'high' || normalized === 'warning'
-  if (filter === 'medium') return normalized === 'medium'
-  if (filter === 'low') return normalized === 'low'
-  return true
+  return normalizeAlertLevel(level) === filter
 }
 
 const filteredAlerts = computed(() =>
@@ -295,23 +293,21 @@ const pagedAlerts = computed(() => {
   return filteredAlerts.value.slice(start, start + ALERT_PAGE_SIZE)
 })
 
+const LEVEL_FILTER_KEYS: Exclude<LevelFilterKey, 'all'>[] = [
+  'critical',
+  'high',
+  'warning',
+  'medium',
+  'low'
+]
+
 const levelFilterOptions = computed(() => [
   { key: 'all' as const, label: '全部', count: unhandledAlerts.value.length },
-  {
-    key: 'high' as const,
-    label: '高',
-    count: unhandledAlerts.value.filter((a) => matchesLevelFilter(a.level, 'high')).length
-  },
-  {
-    key: 'medium' as const,
-    label: '中',
-    count: unhandledAlerts.value.filter((a) => matchesLevelFilter(a.level, 'medium')).length
-  },
-  {
-    key: 'low' as const,
-    label: '低',
-    count: unhandledAlerts.value.filter((a) => matchesLevelFilter(a.level, 'low')).length
-  }
+  ...LEVEL_FILTER_KEYS.map((key) => ({
+    key,
+    label: getAlertLevelText(key),
+    count: unhandledAlerts.value.filter((alert) => matchesLevelFilter(alert.level, key)).length
+  }))
 ])
 
 watch(filteredAlerts, (list) => {
@@ -806,7 +802,40 @@ watch(
 .suggestion-panel :deep(.ant-card-body) {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.suggestion-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
+}
+
+.suggestion-panel-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.suggestion-panel-body::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 22%);
+  border-radius: 8px;
+}
+
+.suggestion-panel-body::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 8px;
+}
+
+.suggestion-panel-body::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .suggestion-collapse {
@@ -1018,6 +1047,12 @@ watch(
   .col-situation,
   .col-action {
     min-height: auto;
+  }
+
+  .suggestion-panel :deep(.ant-card-body),
+  .suggestion-panel-body {
+    overflow: visible;
+    flex: none;
   }
 
   .alert-message-preview {

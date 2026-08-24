@@ -29,7 +29,7 @@
 | 函数 | 干什么 |
 |------|--------|
 | `unhandledAlerts` | 未处理预警 enrich 监测点字段，按时间倒序 |
-| `matchesLevelFilter` / `filteredAlerts` / `pagedAlerts` | 高含 critical/high/warning；每页 6 条 |
+| `matchesLevelFilter` / `filteredAlerts` / `pagedAlerts` | 与标签同档：危急/高/警告/中/低；每页 6 条 |
 | `buildRuleSuggestions` | 看 `[自动预警]` / `[虫情风险]` / `[极端天气]` 和温湿关键字拼建议 |
 | `knowledgePanels` | 仅 AI 识别预警：`parseDiseaseFromAlert` + `buildTreatmentPanels` |
 | `pestFactorLines` | 虫情预警：地块 `monitorPointId` 对上 `pestPredictions` |

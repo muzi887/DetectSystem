@@ -248,6 +248,42 @@ body {
   color: var(--glass-text-primary) !important;
 }
 
+.ant-modal-confirm-title {
+  color: var(--light-green) !important;
+  text-shadow: var(--glass-title-shadow);
+}
+
+/* confirm 按钮在 .ant-modal-confirm-btns，不在 .ant-modal-footer */
+.ant-modal-confirm-btns .ant-btn-default {
+  background: var(--glass-bg-subtle) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-confirm-btns .ant-btn-default:hover {
+  background: var(--glass-bg-item-hover) !important;
+  border-color: var(--glass-border-strong) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-confirm-btns .ant-btn-primary {
+  background: var(--dark-green) !important;
+  border-color: var(--dark-green) !important;
+  color: var(--glass-text-primary) !important;
+  box-shadow: none !important;
+}
+
+.ant-modal-confirm-btns .ant-btn-primary:hover,
+.ant-modal-confirm-btns .ant-btn-primary:focus {
+  background: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
+  color: var(--glass-text-primary) !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-body > .anticon {
+  color: #d4b45a !important;
+}
+
 .ant-dropdown .ant-dropdown-menu {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(var(--glass-blur));

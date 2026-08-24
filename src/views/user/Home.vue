@@ -151,7 +151,7 @@ interface RecentAnalysisItem {
 }
 
 const HOME_ALERT_PAGE_SIZE = 3
-const HOME_ANALYSIS_PAGE_SIZE = 3
+const HOME_ANALYSIS_PAGE_SIZE = 1
 
 const dataStore = useDataStore()
 const recentAnalyses = ref<RecentAnalysisItem[]>([])
@@ -430,7 +430,8 @@ onMounted(() => {
 .analysis-card-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -439,7 +440,10 @@ onMounted(() => {
 .analysis-card {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 6px;
+  min-height: 0;
+  height: 100%;
   padding: 16px;
   border: 1px solid var(--glass-border);
   border-radius: 12px;

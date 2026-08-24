@@ -1,6 +1,6 @@
 # AI 模型当前能力与本土化测试说明
 
-> **基准日**：2026-08-22。  
+> **基准日**：2026-08-24。  
 > 训练流程见 [`ml-bjj训练操作手册-开发版.md`](../训练/ml-bjj训练操作手册-开发版.md)。  
 > 8 类历史配方见 [`京津冀AI模型精简方案-v3.md`](./京津冀AI模型精简方案-v3.md)。  
 > 难例 / 实地增训见 [`京津冀AI模型v3.1迭代说明.md`](./京津冀AI模型v3.1迭代说明.md)。  
@@ -14,12 +14,12 @@
 |----|--------|-------------|
 | **产品与 Serving** | `crop_filter.py`、`app.py` 启动门禁、防治库、智能分析作物下拉 | **23 类**；`cropType` **会**过滤结果 |
 | **标签与训练目录** | `ml-bjj/data/bjj_cls/classes.txt` 与 `train/` 子文件夹 | **23 类**（源图仍在补，见补图文档） |
-| **磁盘权重** | `ml-bjj/models/pest-cls-best.pt` + `pest-cls-meta.json` | 仍是 2026-07-08 **8 类 / 98.99%** |
+| **磁盘权重** | `ml-bjj/models/pest-cls-best.pt` + `pest-cls-meta.json` | **23 类 / 验证集 94.05%**（2026-08-24） |
 
 因此：
 
 - 不要写「网站还在用 8 类、不能按作物过滤、没有防治方案」——那是 7 月口径，已过时。
-- 不要写「线上已是 23 类 98.99%」——98.99% 只属于 8 类 meta；23 类权重还没训出来，Flask 会因类数不是 23 而退出。
+- 不要写「线上 23 类准确率 98.99%」——98.99% 只属于 2026-07 的 8 类 meta；当前 23 类指标是 **94.05%**。
 
 v2 对照：`ml-bjj/models/pest-cls-v2-27cls.pt`（27 类，仅备份）。
 
@@ -29,8 +29,8 @@ v2 对照：`ml-bjj/models/pest-cls-v2-27cls.pt`（27 类，仅备份）。
 
 | 项目 | 说明 |
 |------|------|
-| 主推权重文件名 | `ml-bjj/models/pest-cls-best.pt`（**内容仍是 8 类，待替换**） |
-| 元数据 | `ml-bjj/models/pest-cls-meta.json`（8 类列表、history、98.99%） |
+| 主推权重文件名 | `ml-bjj/models/pest-cls-best.pt`（**23 类**） |
+| 元数据 | `ml-bjj/models/pest-cls-meta.json`（23 类列表、history、**94.05%**） |
 | 骨干网络 | EfficientNet-B0（ImageNet 预训练 + 微调） |
 | 任务类型 | **图像分类**（一张图 → 病名 + 置信度；网站另给 topk / 复核） |
 | 输入尺寸 | 224×224 |
@@ -41,8 +41,8 @@ v2 对照：`ml-bjj/models/pest-cls-v2-27cls.pt`（27 类，仅备份）。
 
 | 文件 | 说明 |
 |------|------|
-| `pest-cls-best.pt` | 网站加载用；**当前仍是 8 类 ckpt** |
-| `pest-cls-meta.json` | 须与 ckpt 类名一致；现为 8 类 |
+| `pest-cls-best.pt` | 网站加载用；**当前 23 类 ckpt** |
+| `pest-cls-meta.json` | 须与 ckpt 类名一致；现为 23 类 / 94.05% |
 | `pest-cls-v2-27cls.pt` | v2 备份，不要当主推 |
 
 ---
@@ -122,7 +122,7 @@ python ml-bjj\scripts\predict.py --image "ml-bjj\data\bjj_cls\val\玉米大斑�
 | 小麦锈病 / 赤霉病 / 白粉病 | ✅ |
 | 玉米大斑病 / 锈病 / 南方锈病等 | ✅（权重到位后） |
 | 番茄早疫病 | ✅ |
-| 稻瘟病 / 稻颈瘟等水稻类 | ✅ 防治库、`rice` 掩码、Mock 样例已接。**真实出这几个病名**须 23 类权重（`bjj_cls` 已是 23 类，磁盘 `pest-cls-best.pt` 仍是 8 类） |
+| 稻瘟病 / 稻颈瘟等水稻类 | ✅ 防治库、`rice` 掩码、23 类权重均可真实输出这些病名 |
 | 桃、苹果相关 | ❌ 不输出。分析页无选项；Serving 拒收作物；病名（桃缩叶病等）不进防治/预警文案 |
 | 小麦条锈病 / 叶锈病 / 秆锈病 | ❌ 不作为独立类。别名一律回落为 **小麦锈病**（分析页、预警、防治接口） |
 
@@ -237,8 +237,8 @@ python ml-bjj\scripts\predict.py --image "图片.jpg" --weights ml-bjj\models\pe
 ## 九、能力边界一句话
 
 **Serving**：按 23 类 + 作物掩码 + 防治库设计，代码已落地。  
-**权重**：仍是京津冀 **8 类**分类器，验证集 **98.99%**，覆盖小麦/玉米/番茄。  
-**下一步**：补图 → `prepare_from_class_folders.py` → 重训 23 类 → 再谈实地 v3.1。
+**权重**：京津冀 **23 类**分类器，验证集 **94.05%**（2026-08-24），覆盖小麦/玉米/番茄/水稻。  
+**下一步**：云上同步 `.pt`、竞赛材料；补图与实地抽测可继续，不挡当前识病。
 
 ---
 
@@ -246,8 +246,8 @@ python ml-bjj\scripts\predict.py --image "图片.jpg" --weights ml-bjj\models\pe
 
 | 路径 | 说明 |
 |------|------|
-| `ml-bjj/models/pest-cls-best.pt` | 当前权重（8 类） |
-| `ml-bjj/models/pest-cls-meta.json` | 8 类 / 98.99% |
+| `ml-bjj/models/pest-cls-best.pt` | 当前权重（23 类） |
+| `ml-bjj/models/pest-cls-meta.json` | 23 类 / 94.05% |
 | `ml-bjj/data/bjj_cls/classes.txt` | 23 类标签 |
 | `ml-bjj/knowledge/treatments.json` | 23 类防治 |
 | `ml-bjj/serving/crop_filter.py` | 作物掩码 |
@@ -258,6 +258,6 @@ python ml-bjj\scripts\predict.py --image "图片.jpg" --weights ml-bjj\models\pe
 
 ---
 
-**文档版本**：V2.5（锈病别名回落；桃苹果病名不展示）  
-**最后更新**：2026-08-22  
+**文档版本**：V2.6（磁盘权重改为 23 类 / 94.05%）  
+**最后更新**：2026-08-24  
 **维护**：互联网＋项目组 / 算法组
