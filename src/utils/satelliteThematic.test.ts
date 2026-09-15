@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  buildSatelliteAiConclusion,
   daysForType,
   imageDayCount,
   itemById,
@@ -69,4 +70,69 @@ test('itemById finds day or summary', () => {
 test('imageDayCount ignores summary', () => {
   assert.equal(imageDayCount(sample, 'wind'), 2)
   assert.equal(imageDayCount(sample, 'heat'), 0)
+})
+
+test('buildSatelliteAiConclusion is empty when no map is selected', () => {
+  assert.equal(
+    buildSatelliteAiConclusion({
+      type: 'drought',
+      typeLabel: '干旱',
+      selectedLabel: null,
+      selectedId: '',
+      dayCount: 0,
+      latestDay: null
+    }),
+    '当前未选中干旱专题图，请切换灾害类型或日期。'
+  )
+})
+
+test('buildSatelliteAiConclusion reads the selected day and catalog window', () => {
+  const text = buildSatelliteAiConclusion({
+    type: 'wind',
+    typeLabel: '大风',
+    selectedLabel: '2025-08-16',
+    selectedId: '2025-08-16',
+    dayCount: 2,
+    latestDay: '2025-08-16',
+    events: [{ title: '极端高温', startAt: '2026-08-22' }]
+  })
+  assert.match(text, /大风（2025-08-16）/)
+  assert.match(text, /收录 2 期/)
+  assert.match(text, /最新一期 2025-08-16/)
+  assert.match(text, /当日暂无对应的大风站点记录/)
+  assert.match(text, /防倒伏/)
+  assert.doesNotMatch(text, /京津冀/)
+  assert.doesNotMatch(text, /pointId/)
+})
+
+test('buildSatelliteAiConclusion counts matching events on that day', () => {
+  const text = buildSatelliteAiConclusion({
+    type: 'heat',
+    typeLabel: '高温',
+    selectedLabel: '2026-08-22',
+    selectedId: '2026-08-22',
+    dayCount: 40,
+    latestDay: '2026-08-22',
+    events: [
+      { title: '极端高温', startAt: '2026-08-22' },
+      { title: '暴雨', startAt: '2026-08-22' }
+    ]
+  })
+  assert.match(text, /当日站点有 1 条高温记录/)
+  assert.match(text, /灌溉降温/)
+})
+
+test('buildSatelliteAiConclusion summary does not invent a single-day event count', () => {
+  const text = buildSatelliteAiConclusion({
+    type: 'wind',
+    typeLabel: '大风',
+    selectedLabel: '1–8 月汇总',
+    selectedId: 'summary',
+    dayCount: 2,
+    latestDay: '2025-08-16',
+    events: [{ title: '大风', startAt: '2025-08-16' }]
+  })
+  assert.match(text, /大风（1–8 月汇总）/)
+  assert.doesNotMatch(text, /当日/)
+  assert.match(text, /防倒伏/)
 })
