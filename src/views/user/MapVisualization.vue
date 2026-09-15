@@ -71,6 +71,7 @@
       <a-table
         class="glass-ant-table"
         size="small"
+        bordered
         :pagination="false"
         :data-source="drawerRows"
         :columns="drawerColumns"
@@ -92,7 +93,7 @@ import {
 import { createMonitorPointLayer, type MonitorPointRecord } from '@/composables/useMonitorPointLayer'
 import { getMonitorRegion } from '@/constants/monitorRegions'
 import { fetchSensorReadings } from '@/api/rules'
-import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
+import { latestDaysWithData, type SensorReading } from '@/utils/sensorReadings'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -157,10 +158,9 @@ function formatLastSeen(value?: string) {
 async function openPointDrawer(point: MonitorPointRecord) {
   selectedPoint.value = point
   drawerOpen.value = true
-  const { from, to } = last7DayRange()
   try {
-    const res = await fetchSensorReadings(point.id, from, to)
-    drawerReadings.value = res.data || []
+    const res = await fetchSensorReadings(point.id)
+    drawerReadings.value = latestDaysWithData(res.data || [])
   } catch {
     drawerReadings.value = []
   }

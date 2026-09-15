@@ -341,13 +341,20 @@ body {
   color: var(--glass-text-secondary) !important;
   font-weight: 600;
   text-shadow: var(--glass-text-shadow);
-  border-bottom: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border-strong) !important;
+  border-bottom: 1px solid var(--glass-border-strong) !important;
 }
 
 .glass-ant-table .ant-table-tbody > tr > td {
   color: var(--glass-text-primary) !important;
   text-shadow: var(--glass-text-shadow);
-  border-bottom: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border-strong) !important;
+  border-bottom: 1px solid var(--glass-border-strong) !important;
+}
+
+.glass-ant-table .ant-table-thead > tr > th:last-child,
+.glass-ant-table .ant-table-tbody > tr > td:last-child {
+  border-right: none !important;
 }
 
 .glass-ant-table .ant-table-tbody > tr.ant-table-row:hover > td {
@@ -355,7 +362,7 @@ body {
 }
 
 .glass-ant-table .ant-table-cell {
-  border-color: var(--glass-border) !important;
+  border-color: var(--glass-border-strong) !important;
 }
 
 .ant-tooltip .ant-tooltip-inner {

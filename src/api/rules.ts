@@ -10,7 +10,9 @@ export const fetchForecast = (pointId?: number) =>
   http.get('/weatherForecast', { params: pointId ? { pointId } : undefined })
 
 export const fetchSensorReadings = (pointId: number, from?: string, to?: string) =>
-  http.get(`/field-sensors/${pointId}/readings`, { params: { from, to } })
+  http.get(`/field-sensors/${pointId}/readings`, {
+    params: from || to ? { from, to } : undefined
+  })
 
 export const fetchExtremeEvents = () => http.get('/extremeEvents')
 
