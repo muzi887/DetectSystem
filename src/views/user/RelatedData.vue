@@ -41,8 +41,10 @@
               class="weather-point-select weather-point-select--multi"
               popup-class-name="weather-point-select-dropdown"
               :options="weatherPointOptions"
-              :max-tag-count="2"
-              placeholder="对比监测站（最多 3 个）"
+              :max-tag-count="0"
+              :max-tag-placeholder="sensorSelectSummary"
+              :show-search="false"
+              placeholder="选择监测站"
               @change="onSensorPointsChange" />
             <button
               v-if="currentTab === 'sensor'"
@@ -200,10 +202,13 @@
               <div class="satellite-side-bottom">
                 <div class="satellite-footer">
                   <p class="satellite-footer-meta">
-                    {{ satelliteTypeLabel }}有图 {{ satelliteImageDayCount }} 天
-                    <template v-if="satelliteLatestDay">
-                      · 最近 {{ satelliteLatestDay }}
+                    <template v-if="satelliteImageDayCount">
+                      {{ satelliteTypeLabel }}专题 {{ satelliteImageDayCount }} 期
+                      <template v-if="satelliteLatestDay">
+                        · 最新 {{ satelliteLatestDay }}
+                      </template>
                     </template>
+                    <template v-else>暂无{{ satelliteTypeLabel }}专题</template>
                   </p>
                   <button
                     type="button"
@@ -262,6 +267,7 @@
                     v-if="forecastDays.length"
                     class="forecast-table"
                     size="small"
+                    bordered
                     :pagination="false"
                     :data-source="forecastDays"
                     :columns="forecastColumns"
@@ -356,6 +362,7 @@
         <a-table
           class="glass-ant-table"
           size="small"
+          bordered
           :pagination="false"
           :data-source="sensorDetailRows"
           :columns="sensorDetailColumns"
@@ -388,6 +395,7 @@
           <a-table
             class="glass-ant-table"
             size="small"
+            bordered
             :pagination="false"
             :data-source="forecastDays"
             :columns="forecastColumns"
@@ -419,7 +427,7 @@
           {{
             currentTab === 'drone'
               ? '在灾害实时监测地图上对照田间监测点与当前 NDVI 图层。'
-              : '当前展示 docs/出图 中对应日期的灾害专题图。'
+              : '当前展示 satellite-maps 中对应日期的灾害专题图。'
           }}
         </p>
         <a-button
@@ -436,13 +444,95 @@
       wrap-class-name="glass-report-modal-wrap"
       root-class-name="glass-report-modal-root"
       title="生成监测日报"
-      ok-text="下载 txt"
-      :confirm-loading="reportLoading"
-      @ok="handleDownload">
+      :width="'min(1040px, 78vw)'"
+      centered
+      :footer="null">
       <p v-if="reportLoading">正在生成监测日报...</p>
-      <pre
-        v-else-if="reportMarkdown"
-        class="report-preview">{{ reportPreview }}</pre>
+      <template v-else-if="reportMarkdown">
+        <div
+          id="daily-report-print"
+          class="report-preview-html daily-report-doc">
+          <header class="daily-report-masthead">
+            <p class="daily-report-brand">作物灾害智慧监测预警系统 · V2.1.0</p>
+          </header>
+          <div class="daily-report-digest">
+            <div v-html="reportBodyHtml" />
+            <section v-if="forecastDays.length" class="daily-report-forecast">
+              <h2>7 日预报</h2>
+              <p class="daily-report-lead">
+                局地气象展望，用来解释上文墒情、气温与极端天气条目。
+              </p>
+              <table class="report-forecast-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>最高温</th>
+                    <th>最低温</th>
+                    <th>降水 mm</th>
+                    <th>风</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in forecastDays" :key="row.date">
+                    <td>{{ row.date }}</td>
+                    <td>{{ row.tempMax }}</td>
+                    <td>{{ row.tempMin }}</td>
+                    <td>{{ row.precipMm }}</td>
+                    <td>{{ row.windMax }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+          <template v-if="reportHasFigures">
+            <p class="daily-report-bridge">
+              空间附图取自相关数据页当前图层，与上文监测点、预警为同一观测时段，便于对照文字记录。
+            </p>
+            <div
+              class="daily-report-figures"
+              :class="{ 'is-pair': Boolean(reportNdviUrl && currentSatelliteItem) }">
+              <figure v-if="reportNdviUrl" class="daily-report-figure">
+                <div class="daily-report-figure-frame">
+                  <img
+                    class="report-appendix-img"
+                    :src="reportNdviUrl"
+                    alt="无人机 NDVI" />
+                </div>
+                <figcaption>
+                  <span class="daily-report-fig-label">附图 {{ reportNdviFigNo }}</span>
+                  <strong>无人机 NDVI</strong>
+                  <p>
+                    {{ selectedFieldName }} · {{ reportNdviCaption }}。植被指数热力可与监测点墒情、气温相互印证。
+                  </p>
+                </figcaption>
+              </figure>
+              <figure v-if="currentSatelliteItem" class="daily-report-figure">
+                <div class="daily-report-figure-frame">
+                  <img
+                    class="report-appendix-img"
+                    :src="currentSatelliteItem.url"
+                    alt="卫星专题图" />
+                </div>
+                <figcaption>
+                  <span class="daily-report-fig-label">附图 {{ reportSatelliteFigNo }}</span>
+                  <strong>卫星专题图 · {{ satelliteTypeLabel }}</strong>
+                  <p>
+                    {{ currentSatelliteItem.label }}。区域空间分布对应文中极端天气与预警统计，不宜与地块 NDVI
+                    直接叠合阅读。
+                  </p>
+                </figcaption>
+              </figure>
+            </div>
+          </template>
+          <footer class="daily-report-colophon">
+            内部监测简报 · 打印时选择「另存为 PDF」归档
+          </footer>
+        </div>
+        <div class="report-actions">
+          <a-button @click="handleDownload">下载 md</a-button>
+          <a-button type="primary" @click="handlePrintPdf">导出 PDF</a-button>
+        </div>
+      </template>
       <p v-else>暂无日报内容</p>
     </a-modal>
 
@@ -453,9 +543,8 @@
       wrap-class-name="satellite-viewer-wrap"
       :title="satelliteViewerTitle"
       destroy-on-close>
-      <img
+      <ZoomableImage
         v-if="currentSatelliteItem"
-        class="satellite-viewer-img"
         :src="currentSatelliteItem.url"
         :alt="satelliteViewerTitle" />
       <p
@@ -472,6 +561,7 @@ import { ref, reactive, onMounted, computed, nextTick, watch, onUnmounted } from
 import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import GlassEmpty from '@/components/GlassEmpty.vue'
+import ZoomableImage from '@/components/ZoomableImage.vue'
 import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
 import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
 import { NDVI_DEMO_LAYER } from '@/constants/remoteSensingLayers'
@@ -490,10 +580,13 @@ import {
   sameBands
 } from '@/utils/thresholdPresets'
 import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
-import { hasSensorTrendData, last7DayRange, type SensorReading } from '@/utils/sensorReadings'
+import { buildForecastMarkdownTable, markdownToSimpleHtml } from '@/utils/dailyReport'
+import { buildSensorChartOption } from '@/utils/sensorChartOption'
+import { buildSensorAiConclusion, hasSensorTrendData, latestDaysWithData, type SensorReading } from '@/utils/sensorReadings'
 import {
   EMPTY_CATALOG,
   SATELLITE_TYPES,
+  buildSatelliteAiConclusion,
   itemById,
   imageDayCount,
   latestDay,
@@ -825,6 +918,15 @@ function toggleGroundSection() {
 const remoteMapRef = ref<InstanceType<typeof RemoteSensingMap> | null>(null)
 
 const remoteRasterLayer = computed(() => remoteStore.currentNdviRaster ?? NDVI_DEMO_LAYER)
+const reportNdviUrl = computed(() => remoteRasterLayer.value.imageUrl)
+const reportNdviCaption = computed(
+  () => remoteStore.selectedNdviDate || remoteRasterLayer.value.date || '当前期'
+)
+const reportHasFigures = computed(
+  () => Boolean(reportNdviUrl.value || currentSatelliteItem.value)
+)
+const reportNdviFigNo = 1
+const reportSatelliteFigNo = computed(() => (reportNdviUrl.value ? 2 : 1))
 
 const selectedFieldName = computed(() => {
   return (
@@ -852,7 +954,7 @@ const ndviCompareImageUrl = computed(() => {
 
 const mapDataSource = computed(() => {
   if (currentTab.value === 'satellite') {
-    return currentSatelliteItem.value ? 'docs/出图' : '暂无专题图'
+    return currentSatelliteItem.value ? 'satellite-maps' : '暂无专题图'
   }
   return remoteRasterLayer.value.source
 })
@@ -875,13 +977,16 @@ const ndviLegend = [
 
 const legendSteps = computed(() => ndviLegend)
 
-function buildSatelliteAiConclusion() {
-  const typeLabel = satelliteTypeLabel.value
-  const item = currentSatelliteItem.value
-  if (!item) {
-    return `当前未选中${typeLabel}专题图，请切换灾害类型或日期。`
-  }
-  return `${typeLabel}专题图（${item.label}）来自出图目录，可对照京津冀空间分布评估影响范围，并跳转灾害预警查看站点告警。`
+function satelliteAiText() {
+  return buildSatelliteAiConclusion({
+    type: selectedSatelliteType.value,
+    typeLabel: satelliteTypeLabel.value,
+    selectedLabel: currentSatelliteItem.value?.label ?? null,
+    selectedId: selectedSatelliteId.value,
+    dayCount: satelliteImageDayCount.value,
+    latestDay: satelliteLatestDay.value,
+    events: extremeEvents.value
+  })
 }
 
 function buildDroneAiConclusion() {
@@ -908,21 +1013,12 @@ const aiConclusion = computed(() => {
 
   if (showSoilPanel.value) {
     if (!hasSensorChartData.value) {
-      return '所选监测站近 7 日暂无气温与墒情读数，请切换监测站或稍后重试。'
+      return '所选监测站暂无气温与墒情读数，请切换监测站或稍后重试。'
     }
-    const alerts = dataStore.filteredAlerts || []
-    const criticalCount = alerts.filter(
-      (a: any) => a.level === 'critical' || a.level === 'high'
-    ).length
-
-    const latestAlert = alerts.find((a: any) => !a.handled)
-    const latestMsg = latestAlert ? latestAlert.message : '目前设备运行平稳'
-
-    if (criticalCount > 0) {
-      return `系统分析检测到 ${criticalCount} 次高风险异常！最新问题为："${latestMsg}"，建议立即派人排查 pointId-${latestAlert?.pointId}。`
-    } else {
-      return `过去 7 天传感器网络运行平稳，偶发 ${alerts.length} 次轻微波动，建议维持当前灌溉策略。`
-    }
+    return buildSensorAiConclusion(sensorByStation.value, {
+      waterStressHint: thresholdForm.waterStressHint,
+      heatHint: thresholdForm.heatHint
+    })
   }
 
   if (currentTab.value === 'drone') {
@@ -930,7 +1026,7 @@ const aiConclusion = computed(() => {
   }
 
   if (currentTab.value === 'satellite') {
-    return buildSatelliteAiConclusion()
+    return satelliteAiText()
   }
 
   return '数据分析中...'
@@ -952,6 +1048,11 @@ function onSensorPointsChange(ids: number[]) {
     selectedSensorPointIds.value = ids.slice(0, 3)
     message.info('最多同时对比 3 个监测站')
   }
+}
+
+function sensorSelectSummary() {
+  const n = selectedSensorPointIds.value.length
+  return n ? `对比监测站 · ${n}` : '选择监测站'
 }
 
 const SENSOR_LINE_PALETTE = [
@@ -1000,15 +1101,14 @@ function buildTrendSeries(
 
 async function loadSensorReadings(pointIds: number[]) {
   const ids = pointIds.slice(0, 3)
-  const { from, to } = last7DayRange()
   try {
     const results = await Promise.all(
       ids.map(async (pointId) => {
-        const res = await fetchSensorReadings(pointId, from, to)
+        const res = await fetchSensorReadings(pointId)
         return {
           pointId,
           name: shortPointName(pointId),
-          rows: (res.data || []) as SensorReading[]
+          rows: latestDaysWithData((res.data || []) as SensorReading[])
         }
       })
     )
@@ -1027,47 +1127,10 @@ function renderSensorChart() {
 
   const { labels, series, legend } = buildTrendSeries(sensorByStation.value)
 
-  chartInstance.setOption({
-    backgroundColor: 'transparent',
-    legend: {
-      data: legend,
-      textStyle: { color: '#fff' },
-      top: 0
-    },
-    grid: { top: '18%', left: '3%', right: '6%', bottom: 40, containLabel: true },
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: 'rgba(30, 50, 30, 0.88)',
-      borderColor: 'rgba(255, 255, 255, 0.25)',
-      borderWidth: 1,
-      textStyle: { color: '#fff' },
-      extraCssText:
-        'backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); border-radius: 8px;'
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: labels,
-      axisLabel: { color: '#fff', margin: 10 }
-    },
-    yAxis: [
-      {
-        type: 'value',
-        name: '℃',
-        nameTextStyle: { color: '#fff' },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-        axisLabel: { color: '#fff' }
-      },
-      {
-        type: 'value',
-        name: '%',
-        nameTextStyle: { color: '#fff' },
-        splitLine: { show: false },
-        axisLabel: { color: '#fff' }
-      }
-    ],
-    series
-  }, true)
+  chartInstance.setOption(
+    buildSensorChartOption({ labels, legend, series }),
+    true
+  )
   chartInstance.resize()
 }
 
@@ -1087,9 +1150,7 @@ const reportModalVisible = ref(false)
 const reportLoading = ref(false)
 const reportMarkdown = ref('')
 const detailOpen = ref(false)
-const reportPreview = computed(() =>
-  reportMarkdown.value.split('\n').slice(0, 20).join('\n')
-)
+const reportBodyHtml = computed(() => markdownToSimpleHtml(reportMarkdown.value))
 
 const sensorDetailColumns = [
   { title: '监测站', dataIndex: 'station', key: 'station' },
@@ -1147,16 +1208,62 @@ const handleDownload = () => {
     message.error('暂无日报内容')
     return
   }
-  const blob = new Blob([reportMarkdown.value], { type: 'text/plain;charset=utf-8' })
+  const markdown = [
+    reportMarkdown.value.trimEnd(),
+    buildForecastMarkdownTable(forecastDays.value)
+  ]
+    .filter((part) => part)
+    .join('\n\n')
+  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   const today = new Date()
   const stamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   link.href = url
-  link.download = `监测日报-${stamp}.txt`
+  link.download = `监测日报-${stamp}.md`
   link.click()
   URL.revokeObjectURL(url)
   reportModalVisible.value = false
+}
+
+const PRINT_SHEET_ID = 'daily-report-print-sheet'
+
+function removePrintSheet() {
+  document.getElementById(PRINT_SHEET_ID)?.remove()
+  window.removeEventListener('afterprint', removePrintSheet)
+}
+
+function waitForPrintImages(root: HTMLElement) {
+  return Promise.all(
+    [...root.querySelectorAll('img')].map((img) => {
+      if (img.complete) return Promise.resolve()
+      return new Promise<void>((resolve) => {
+        img.addEventListener('load', () => resolve(), { once: true })
+        img.addEventListener('error', () => resolve(), { once: true })
+      })
+    })
+  )
+}
+
+async function handlePrintPdf() {
+  if (!reportMarkdown.value) {
+    message.error('暂无日报内容')
+    return
+  }
+  const source = document.getElementById('daily-report-print')
+  if (!source) {
+    message.error('暂无日报内容')
+    return
+  }
+  removePrintSheet()
+  const sheet = document.createElement('div')
+  sheet.id = PRINT_SHEET_ID
+  sheet.className = 'daily-report-doc'
+  sheet.innerHTML = source.innerHTML
+  document.body.appendChild(sheet)
+  window.addEventListener('afterprint', removePrintSheet)
+  await waitForPrintImages(sheet)
+  window.print()
 }
 
 function onWindowResize() {
@@ -1217,6 +1324,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', onWindowResize)
+  removePrintSheet()
   chartInstance?.dispose()
   chartInstance = null
 })
@@ -1389,8 +1497,12 @@ watch(
   justify-content: center;
   overflow: hidden;
   border-radius: 12px;
-  background: var(--glass-bg-subtle);
+  background: #fff;
   border: 1px solid var(--glass-border);
+}
+
+.satellite-stage .weather-empty {
+  color: #4a5a4a;
 }
 
 .satellite-stage-img {
@@ -1591,8 +1703,10 @@ watch(
 }
 
 .weather-point-select--multi {
-  min-width: 220px;
-  width: 260px;
+  min-width: 11rem;
+  max-width: 11rem;
+  width: 11rem;
+  flex-shrink: 0;
 }
 
 .weather-point-select :deep(.ant-select-selector) {
@@ -1607,8 +1721,14 @@ watch(
 }
 
 .weather-point-select--multi :deep(.ant-select-selector) {
-  height: auto !important;
-  min-height: 32px;
+  height: 32px !important;
+  overflow: hidden;
+  padding-inline: 12px 26px !important;
+}
+
+.weather-point-select--multi :deep(.ant-select-selection-overflow) {
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .weather-point-select.ant-select-focused :deep(.ant-select-selector),
@@ -1634,22 +1754,29 @@ watch(
 }
 
 .weather-point-select--multi :deep(.ant-select-selection-item) {
-  background-color: var(--glass-bg-subtle) !important;
-  border: 1px solid var(--glass-border-strong) !important;
-  border-radius: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
   color: var(--glass-text-primary) !important;
 }
 
 .weather-point-select--multi :deep(.ant-select-selection-item-content) {
   color: var(--glass-text-primary) !important;
+  font-size: 14px;
 }
 
 .weather-point-select--multi :deep(.ant-select-selection-item-remove) {
-  color: var(--glass-text-muted) !important;
+  display: none;
 }
 
-.weather-point-select--multi :deep(.ant-select-selection-item-remove:hover) {
-  color: var(--glass-text-primary) !important;
+.weather-point-select--multi :deep(.ant-select-selection-search) {
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .weather-empty {
@@ -1719,19 +1846,22 @@ watch(
   color: var(--glass-text-secondary) !important;
   font-weight: 600;
   text-shadow: var(--glass-text-shadow);
-  border-bottom: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border-strong) !important;
+  border-bottom: 1px solid var(--glass-border-strong) !important;
   padding: 8px 10px !important;
 }
 
 .forecast-table :deep(.ant-table-tbody > tr > td) {
   color: var(--glass-text-primary) !important;
   text-shadow: var(--glass-text-shadow);
-  border-bottom: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border-strong) !important;
+  border-bottom: 1px solid var(--glass-border-strong) !important;
   padding: 7px 10px !important;
 }
 
-.forecast-table :deep(.ant-table-tbody > tr:last-child > td) {
-  border-bottom: none !important;
+.forecast-table :deep(.ant-table-thead > tr > th:last-child),
+.forecast-table :deep(.ant-table-tbody > tr > td:last-child) {
+  border-right: none !important;
 }
 
 .forecast-table :deep(.ant-table-tbody > tr.ant-table-row:hover > td) {
@@ -1739,7 +1869,7 @@ watch(
 }
 
 .forecast-table :deep(.ant-table-cell) {
-  border-color: var(--glass-border) !important;
+  border-color: var(--glass-border-strong) !important;
 }
 
 .forecast-empty {
@@ -1755,35 +1885,50 @@ watch(
   border-radius: 12px;
 }
 
-.report-preview {
-  max-height: 320px;
-  overflow: auto;
-  margin: 0;
-  padding: 12px;
-  white-space: pre-wrap;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--glass-text-primary);
-  background-color: var(--glass-bg-input);
+.report-preview-html {
+  flex: 1;
+  min-height: 0;
+  max-height: min(62vh, 680px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0 0 12px;
+  padding: 32px 36px 28px;
   border: 1px solid var(--glass-border-strong);
   border-radius: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--dark-green) rgb(0 0 0 / 25%);
 }
 
-.report-preview::-webkit-scrollbar {
+.report-preview-html::-webkit-scrollbar {
   width: 8px;
 }
 
-.report-preview::-webkit-scrollbar-track {
+.report-preview-html::-webkit-scrollbar-track {
   background: rgb(0 0 0 / 22%);
   border-radius: 8px;
 }
 
-.report-preview::-webkit-scrollbar-thumb {
+.report-preview-html::-webkit-scrollbar-thumb {
   background: var(--dark-green);
   border: 1px solid var(--glass-border-strong);
   border-radius: 8px;
+}
+
+.report-preview-html::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.report-preview-html::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.report-actions {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .threshold-settings {
@@ -2156,6 +2301,13 @@ watch(
     max-width: none;
   }
 
+  .weather-point-select--multi {
+    flex: none;
+    width: 11rem;
+    min-width: 11rem;
+    max-width: 11rem;
+  }
+
   .satellite-date-select.weather-point-select {
     width: 100%;
     flex: none;
@@ -2295,6 +2447,11 @@ watch(
   border-radius: 8px;
 }
 
+.glass-report-modal-wrap .ant-modal {
+  max-width: min(1040px, 78vw);
+  padding-bottom: 0;
+}
+
 .glass-report-modal-wrap .ant-modal-content,
 .glass-report-modal-root .ant-modal-content {
   background: var(--glass-bg) !important;
@@ -2302,6 +2459,48 @@ watch(
   border: 1px solid var(--glass-border-strong);
   border-radius: 12px;
   box-shadow: var(--glass-shadow);
+}
+
+.glass-report-modal-wrap .ant-modal-body,
+.glass-report-modal-root .ant-modal-body {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 168px);
+  color: var(--glass-text-primary);
+}
+
+.glass-report-modal-wrap .ant-modal-body p,
+.glass-report-modal-root .ant-modal-body p {
+  color: var(--glass-text-primary);
+}
+
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc p,
+.glass-report-modal-root .ant-modal-body .daily-report-doc p {
+  color: #1f2a1c;
+}
+
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-brand,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-brand {
+  color: #4a5c43;
+}
+
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-meta,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-meta,
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-colophon,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-colophon {
+  color: #5c6b56;
+}
+
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-lead,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-lead,
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-figure figcaption p,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-figure figcaption p {
+  color: #4a5644;
+}
+
+.glass-report-modal-wrap .ant-modal-body .daily-report-doc .daily-report-bridge,
+.glass-report-modal-root .ant-modal-body .daily-report-doc .daily-report-bridge {
+  color: #3d4a38;
 }
 
 .glass-report-modal-wrap .ant-modal-header,
@@ -2326,13 +2525,6 @@ watch(
   color: var(--glass-text-primary) !important;
 }
 
-.glass-report-modal-wrap .ant-modal-body,
-.glass-report-modal-wrap .ant-modal-body p,
-.glass-report-modal-root .ant-modal-body,
-.glass-report-modal-root .ant-modal-body p {
-  color: var(--glass-text-primary);
-}
-
 .glass-report-modal-wrap .ant-modal-footer,
 .glass-report-modal-root .ant-modal-footer {
   border-top: 1px solid var(--glass-border) !important;
@@ -2349,6 +2541,13 @@ watch(
 .glass-report-modal-root .ant-btn-primary {
   background: var(--dark-green) !important;
   border-color: var(--dark-green) !important;
+}
+
+@media (width <= 576px) {
+  .glass-report-modal-wrap .ant-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+  }
 }
 
 .data-detail-drawer .ant-drawer-content {
@@ -2490,15 +2689,274 @@ watch(
 </style>
 
 <style>
-.satellite-viewer-wrap .ant-modal-body {
-  background: var(--dark-green);
+.satellite-viewer-wrap .ant-modal-content {
+  overflow: hidden;
 }
 
-.satellite-viewer-wrap .satellite-viewer-img {
-  display: block;
-  width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
+.satellite-viewer-wrap .ant-modal-body {
   background: var(--dark-green);
+  overflow: hidden;
+}
+
+#daily-report-print-sheet {
+  display: none;
+}
+
+.daily-report-doc {
+  box-sizing: border-box;
+  padding: 28px 32px 24px;
+  color: #1f2a1c;
+  background: #f7f4ee;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.daily-report-masthead {
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #4a5c43;
+}
+
+.daily-report-brand {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #4a5c43;
+}
+
+.daily-report-doc h1 {
+  margin: 0 0 8px;
+  font-family: 'Noto Serif SC', 'Songti SC', simsun, serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #2c3a26;
+}
+
+.daily-report-meta {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #5c6b56;
+}
+
+.daily-report-doc h2 {
+  margin: 22px 0 10px;
+  padding-left: 10px;
+  border-left: 4px solid #4a5c43;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5c43;
+}
+
+.daily-report-doc p {
+  margin: 0 0 8px;
+}
+
+.daily-report-doc ul {
+  margin: 0 0 12px;
+  padding-left: 1.2em;
+}
+
+.daily-report-doc li {
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.daily-report-doc table {
+  width: 100%;
+  margin: 0 0 8px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.daily-report-doc th {
+  padding: 8px 10px;
+  background: #4a5c43;
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+}
+
+.daily-report-doc td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #d7dfd2;
+  text-align: left;
+  background: #fff;
+}
+
+.daily-report-doc tbody tr:nth-child(even) td {
+  background: #eef2e8;
+}
+
+.daily-report-doc img,
+.daily-report-doc .report-appendix-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 420px;
+  margin: 8px auto 4px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #d7dfd2;
+}
+
+.daily-report-digest {
+  padding: 18px 20px 14px;
+  background: #fff;
+  border: 1px solid #d7dfd2;
+  border-radius: 8px;
+}
+
+.daily-report-digest h1 {
+  margin-bottom: 6px;
+}
+
+.daily-report-empty {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #5c6b56;
+}
+
+.daily-report-bridge {
+  margin: 20px 0 12px;
+  padding: 10px 14px;
+  background: #eef2e8;
+  border-left: 3px solid #4a5c43;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #3d4a38;
+}
+
+.daily-report-figures {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.daily-report-figures.is-pair {
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+
+.daily-report-figure {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d7dfd2;
+  border-radius: 8px;
+}
+
+.daily-report-figure-frame {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 12px;
+  background: #e8eee3;
+}
+
+.daily-report-doc .daily-report-figure img,
+.daily-report-doc .daily-report-figure .report-appendix-img {
+  width: auto;
+  max-width: 100%;
+  max-height: 260px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+
+.daily-report-figure figcaption {
+  padding: 12px 14px 14px;
+  border-top: 1px solid #e4eadc;
+  background: #f4f6f1;
+}
+
+.daily-report-fig-label {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  background: #4a5c43;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.daily-report-figure figcaption strong {
+  font-size: 14px;
+  color: #2c3a26;
+}
+
+.daily-report-figure figcaption p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #4a5644;
+}
+
+.daily-report-colophon {
+  margin: 28px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #d7dfd2;
+  font-size: 11px;
+  color: #7a8774;
+  text-align: center;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+  }
+
+  body > *:not(#daily-report-print-sheet) {
+    display: none !important;
+  }
+
+  #daily-report-print-sheet {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  #daily-report-print-sheet .daily-report-masthead {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  #daily-report-print-sheet img,
+  #daily-report-print-sheet .report-appendix-img {
+    max-height: 90mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #daily-report-print-sheet .daily-report-figures.is-pair {
+    grid-template-columns: 1fr;
+  }
+
+  #daily-report-print-sheet table,
+  #daily-report-print-sheet .daily-report-figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-actions {
+    display: none !important;
+  }
 }
 </style>
