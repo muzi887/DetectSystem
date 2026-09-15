@@ -10,9 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-dist.zip
-dist*.zip
 *.local
+
+# Zip archives — keep source trees, not dump files
+*.zip
+ml-bjj.zip.*
 
 # Editor directories and files
 .vscode/*
@@ -36,5 +38,3 @@ __pycache__/
 # ML training — ml-bjj 细则见 ml-bjj/.gitignore
 ml/
 ml-v2/
-ml-bjj*.zip
-ml-bjj.zip.*
