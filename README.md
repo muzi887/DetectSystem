@@ -1,6 +1,6 @@
 # AI技术赋能下的作物灾害智慧监测预警系统
 
-> 河北地质大学 · 坤灵智巡创工队
+> 河北地质大学 · 坤灵智巡创工队 · **V2.1.0**
 
 Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上部署（Vue 3 + TypeScript + Vite），集成地图监测、农情数据展示、图片分析、预警管理与决策建议等模块；业务数据由 **Flask + 云端 MySQL `detect_system`** 提供，识病同进程。
 
@@ -15,15 +15,15 @@ Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上�
 |------|------|
 | 首页 | 监测点数量、待处理预警、系统状态、最新预警、快捷入口 |
 | 灾害实时监测 | Leaflet 地图 + 聚类；监测点弹窗可手动触发 / 标记解决 |
-| 智能分析 | 上传作物图片，调用 Flask 识别并写入预警（演示级结果） |
-| 灾害预警 | 预警列表、新建 / 处理 / 删除 |
-| 智慧决策 | 待处理预警、区域小地图、监测数据与规则建议 |
-| 相关数据 | 传感器 7 日趋势；无人机 NDVI 地图与两期对比；GIS 墒情热力图与点选查墒情；**气象 Tab 三站九类读数**（监测站下拉切换）；底部分析条随 Tab 变化；简报按钮为演示流程 |
+| 智能分析 | 上传叶片图，选作物后调用 Flask 做 23 类识别，非健康结果写入 `[AI识别]` 预警 |
+| 灾害预警 | 预警列表、新建 / 处理 / 删除；「含草稿」与虫情草稿「确认发布」 |
+| 智慧决策 | 待处理预警五档筛选、区域小地图、监测数据与按类型分支的处置建议 |
+| 相关数据 | 地面监测站（土壤折线，可「查看气象数据」）；无人机 NDVI 与两期对比；卫星遥感入口；GIS 墒情热力与点选查墒；简报下载监测日报 txt |
 | 关于我们 | 团队与产品说明、技术栈、联系邮箱 |
 
 **角色说明**：合作社登录后仅可见「首页」「关于我们」；农技员 / 管理员可进入业务页面。
 
-**界面特性（v1.0.4）**：深绿玻璃拟态 UI、Leaflet 交互遥感地图、监测点状态中文化、平板/手机响应式（汉堡抽屉导航）。
+**界面特性**：深绿玻璃拟态 UI、Leaflet 交互地图、监测点状态中文化、平板/手机响应式（汉堡抽屉导航）。
 
 ---
 
@@ -37,13 +37,19 @@ Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上�
 
 ---
 
+## 开发工具
+
+本项目采用前后端分离的 Web 开发方式。前端以 Vue 3、TypeScript 编写，使用 Vite 作为构建与本地调试工具，包管理为 pnpm，界面与图表分别使用 Ant Design Vue、ECharts，地图为 Leaflet；代码规范由 ESLint、Prettier、Stylelint 辅助。后端业务与叶片识病同属一套 Python 3 环境，以 Flask 提供登录、REST 接口、规则链调度和 23 类图像识别，数据访问用 SQLAlchemy、PyMySQL，库结构变更用 Alembic；识病模型基于 PyTorch。业务数据存放在 MySQL 库 `detect_system`，可用 Navicat 等客户端维护。版本管理使用 Git；日常开发在 VS Code / Cursor 中进行，浏览器以 Chrome、Edge 调试。部署时由 Nginx 托管前端静态资源并反向代理接口，Flask 与 MySQL 在服务器上持续运行。
+
+---
+
 ## 快速开始
 
 ### 前置要求
 
 - Node.js 18+
 - pnpm（推荐）/ npm / yarn
-- Python 3 + `ml-bjj` 依赖（Flask）
+- Python 3.10+ 与 `ml-bjj` 虚拟环境（Flask）
 - 云端 MySQL `detect_system`（设置环境变量 `DATABASE_URL`，密码不要写入仓库）
 
 ### 安装与启动
@@ -51,8 +57,8 @@ Web 端由**张晓琳**（信息工程学院 · 计科）完成开发与线上�
 ```bash
 pnpm install
 
-# 本机 PowerShell 示例（密码只放本机环境，勿提交 Git）
-# $env:DATABASE_URL="mysql+pymysql://detect_system:<密码>@82.157.234.123:3306/detect_system"
+# 本机 PowerShell 示例（密码只放本机环境，勿提交 Git；本机连云库端口为 13306）
+# $env:DATABASE_URL="mysql+pymysql://detect_system:<密码>@82.157.234.123:13306/detect_system"
 
 # 终端 1：Flask 业务 + 识病（5000）
 ml-bjj\.venv\Scripts\Activate.ps1
@@ -64,7 +70,7 @@ pnpm dev
 
 本地访问：http://localhost:5173
 
-`pnpm mock` 已停用（会提示改走 Flask）。紧急演示才用 `pnpm mock:legacy`。
+`pnpm mock` 已停用（会提示改走 Flask）。紧急演示才用 `pnpm mock:legacy`。更完整的环境说明见 [docs/互联网+/网站/项目启动说明.md](docs/互联网+/网站/项目启动说明.md)。
 
 ### 构建与预览
 
@@ -94,14 +100,14 @@ DetectSystem/
 │   ├── api/              # API 封装
 │   ├── composables/      # 组合式函数（全局搜索、监测点图层等）
 │   ├── utils/            # http、monitorStatus 等
-│   ├── mock/             # db.json 与 json-server 源码
+│   ├── mock/             # 遗留 json-server 源码（主后端已停用）
 │   └── assets/           # 背景、热力图、插图
+├── ml-bjj/serving/       # Flask 业务 + 识病
 ├── deploy/
-│   ├── api_mock/         # 线上 Mock 部署包
+│   ├── api_mock/         # 归档的 Mock 部署包
 │   └── *.md              # 部署与排错笔记
-├── server/               # Flask 图片分析
-├── scripts/              # sync-mock-db、optimize-assets 等
-└── docs/                 # 使用说明、学习笔记、部署文档
+├── scripts/              # sync-mock-db、optimize-assets、源程序导出等
+└── docs/                 # 使用说明、互联网＋方案与部署文档
 ```
 
 ---
@@ -112,7 +118,7 @@ DetectSystem/
 |------|------|------------|----------|
 | Vue 前端 | 88 | `/www/wwwroot/DetectSystem/frontend/dist/` | Nginx 静态站 |
 | Flask 业务+识病 | 5000 | `/www/wwwroot/DetectSystem/api_flask/` | 宝塔 Python 项目（入口 `serving/serve.py`） |
-| MySQL | 3306 | 宝塔库 `detect_system` | 仅本机/远程开发机，不对浏览器开放 |
+| MySQL | 3306（云上）/ 13306（本机连云） | 宝塔库 `detect_system` | 仅本机/远程开发机，不对浏览器开放 |
 
 `deploy/api_mock/` 为归档，默认不再起 Node :3000。业务数据在 MySQL。
 
@@ -124,10 +130,9 @@ DetectSystem/
 
 | 文档 | 说明 |
 |------|------|
-| [docs/小挑/Intro/AI技术赋能下的作物灾害智慧监测预警系统V1.0.4使用说明书.md](docs/小挑/Intro/AI技术赋能下的作物灾害智慧监测预警系统V1.0.4使用说明书.md) | 用户操作说明（**v1.0.4**，软著主稿） |
-| [docs/小挑/前端/相关数据页/P1阶段学习笔记总结.md](docs/小挑/前端/相关数据页/P1阶段学习笔记总结.md) | 相关数据页 P0/P1 交付与验收 |
-| [docs/小挑/前端/相关数据页/气象Tab动态数据学习笔记.md](docs/小挑/前端/相关数据页/气象Tab动态数据学习笔记.md) | 气象 Tab 三站九项实现说明 |
-| [docs/模拟数据说明.md](docs/模拟数据说明.md) | Mock、json-server、Flask 接口 |
+| [docs/互联网+/说明/AI技术赋能下的作物灾害智慧监测预警系统V2.1.0使用说明书.md](docs/互联网+/说明/AI技术赋能下的作物灾害智慧监测预警系统V2.1.0使用说明书.md) | 用户操作说明（**V2.1.0**） |
+| [docs/互联网+/说明/AI技术赋能下的作物灾害智慧监测预警系统V2.1.0-源程序.md](docs/互联网+/说明/AI技术赋能下的作物灾害智慧监测预警系统V2.1.0-源程序.md) | 鉴别材料源程序（20 个模块） |
+| [docs/互联网+/网站/项目启动说明.md](docs/互联网+/网站/项目启动说明.md) | 本地开发环境与端口 |
 | [docs/互联网+/部署/云服务器部署更新说明.md](docs/互联网+/部署/云服务器部署更新说明.md) | 首次部署、日常更新、故障排查 |
 
 ---

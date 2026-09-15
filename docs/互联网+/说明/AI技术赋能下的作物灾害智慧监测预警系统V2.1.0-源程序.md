@@ -78,7 +78,7 @@
 | 16 | src/views/user/DataAnalysis.vue | 4.5 | 上传、选作物、展示防治 |
 | 17 | src/views/user/WarningSystem.vue | 4.6 | 预警列表与发布草稿 |
 | 18 | src/views/user/RelatedData.vue | 4.3 | 四 Tab（传感器/气象/遥感/GIS） |
-| 19 | src/views/user/DecisionSupport.vue | 4.7 | 按预警类型展示建议 |
+| 19 | src/views/user/DecisionSupport.vue | 4.7 | 按级别五档筛选待办，按预警类型展示建议 |
 | 20 | src/views/user/MapVisualization.vue | 4.4 | 地图监测点与抽屉读数 |
 
 ## 模块 1：业务表结构
