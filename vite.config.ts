@@ -1,8 +1,49 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type PreviewServer, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { createReadStream, existsSync, statSync } from 'fs'
+import { isAbsolute, relative, resolve } from 'path'
 import checker from 'vite-plugin-checker'
 import AutoImport from 'unplugin-auto-import/vite'
+
+function satelliteMapsPlugin() {
+  const mapsRoot = resolve(__dirname, 'docs/出图')
+
+  function attach(server: ViteDevServer | PreviewServer) {
+    server.middlewares.use((req, res, next) => {
+      const raw = req.url?.split('?')[0] ?? ''
+      if (!raw.startsWith('/satellite-maps/')) {
+        next()
+        return
+      }
+      const rel = decodeURIComponent(raw.slice('/satellite-maps/'.length))
+      const file = resolve(mapsRoot, rel)
+      const relCheck = relative(mapsRoot, file)
+      if (
+        !relCheck ||
+        relCheck.startsWith('..') ||
+        isAbsolute(relCheck) ||
+        !existsSync(file) ||
+        !statSync(file).isFile()
+      ) {
+        res.statusCode = 404
+        res.end()
+        return
+      }
+      res.setHeader('Content-Type', 'image/jpeg')
+      createReadStream(file).pipe(res)
+    })
+  }
+
+  return {
+    name: 'satellite-maps',
+    configureServer(server: ViteDevServer) {
+      attach(server)
+    },
+    configurePreviewServer(server: PreviewServer) {
+      attach(server)
+    }
+  }
+}
 
 export default defineConfig(({ command, mode }) => {
   if (command === 'build') {
@@ -18,6 +59,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
+      satelliteMapsPlugin(),
       vue(),
       checker({
         typescript: true,

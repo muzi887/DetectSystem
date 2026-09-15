@@ -1,0 +1,1010 @@
+{
+  "drought": {
+    "summary": {
+      "id": "summary",
+      "label": "1–8 月汇总",
+      "url": "/satellite-maps/%E6%80%BB/xinganhan.jpg"
+    },
+    "days": [
+      {
+        "date": "2025-01-15",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.15.jpg"
+      },
+      {
+        "date": "2025-01-16",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.16.jpg"
+      },
+      {
+        "date": "2025-01-17",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.17.jpg"
+      },
+      {
+        "date": "2025-01-18",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.18.jpg"
+      },
+      {
+        "date": "2025-01-19",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.19.jpg"
+      },
+      {
+        "date": "2025-01-20",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.20.jpg"
+      },
+      {
+        "date": "2025-01-21",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.21.jpg"
+      },
+      {
+        "date": "2025-01-22",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.22.jpg"
+      },
+      {
+        "date": "2025-01-23",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.23.jpg"
+      },
+      {
+        "date": "2025-01-24",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.24.jpg"
+      },
+      {
+        "date": "2025-01-25",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.25.jpg"
+      },
+      {
+        "date": "2025-01-26",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.26.jpg"
+      },
+      {
+        "date": "2025-01-27",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.27.jpg"
+      },
+      {
+        "date": "2025-01-28",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.28.jpg"
+      },
+      {
+        "date": "2025-01-29",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.29.jpg"
+      },
+      {
+        "date": "2025-01-30",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.30.jpg"
+      },
+      {
+        "date": "2025-01-31",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/1.31.jpg"
+      },
+      {
+        "date": "2025-02-01",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.1.jpg"
+      },
+      {
+        "date": "2025-02-02",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.2.jpg"
+      },
+      {
+        "date": "2025-02-03",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.3.jpg"
+      },
+      {
+        "date": "2025-02-04",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.4.jpg"
+      },
+      {
+        "date": "2025-02-05",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.5.jpg"
+      },
+      {
+        "date": "2025-02-06",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.6.jpg"
+      },
+      {
+        "date": "2025-02-07",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.7.jpg"
+      },
+      {
+        "date": "2025-02-08",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.8.jpg"
+      },
+      {
+        "date": "2025-02-09",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.9.jpg"
+      },
+      {
+        "date": "2025-02-10",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.10.jpg"
+      },
+      {
+        "date": "2025-02-11",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.11.jpg"
+      },
+      {
+        "date": "2025-02-12",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.12.jpg"
+      },
+      {
+        "date": "2025-02-13",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.13.jpg"
+      },
+      {
+        "date": "2025-02-14",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.14.jpg"
+      },
+      {
+        "date": "2025-02-15",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.15.jpg"
+      },
+      {
+        "date": "2025-02-16",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.16.jpg"
+      },
+      {
+        "date": "2025-02-17",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.17.jpg"
+      },
+      {
+        "date": "2025-02-18",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.18.jpg"
+      },
+      {
+        "date": "2025-02-19",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.19.jpg"
+      },
+      {
+        "date": "2025-02-20",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.20.jpg"
+      },
+      {
+        "date": "2025-02-21",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.21.jpg"
+      },
+      {
+        "date": "2025-02-22",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.22.jpg"
+      },
+      {
+        "date": "2025-02-23",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.23.jpg"
+      },
+      {
+        "date": "2025-02-24",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.24.jpg"
+      },
+      {
+        "date": "2025-02-25",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.25.jpg"
+      },
+      {
+        "date": "2025-02-26",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.26.jpg"
+      },
+      {
+        "date": "2025-02-27",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.27.jpg"
+      },
+      {
+        "date": "2025-02-28",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/2.28.jpg"
+      },
+      {
+        "date": "2025-03-01",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.1.jpg"
+      },
+      {
+        "date": "2025-03-02",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.2.jpg"
+      },
+      {
+        "date": "2025-03-03",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.3.jpg"
+      },
+      {
+        "date": "2025-03-04",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.4.jpg"
+      },
+      {
+        "date": "2025-03-05",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.5.jpg"
+      },
+      {
+        "date": "2025-03-06",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.6.jpg"
+      },
+      {
+        "date": "2025-03-07",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.7.jpg"
+      },
+      {
+        "date": "2025-03-08",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.8.jpg"
+      },
+      {
+        "date": "2025-03-09",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.9.jpg"
+      },
+      {
+        "date": "2025-03-10",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.10.jpg"
+      },
+      {
+        "date": "2025-03-11",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.11.jpg"
+      },
+      {
+        "date": "2025-03-12",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.12.jpg"
+      },
+      {
+        "date": "2025-03-13",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.13.jpg"
+      },
+      {
+        "date": "2025-03-14",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.14.jpg"
+      },
+      {
+        "date": "2025-03-15",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.15.jpg"
+      },
+      {
+        "date": "2025-03-16",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.16.jpg"
+      },
+      {
+        "date": "2025-03-17",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.17.jpg"
+      },
+      {
+        "date": "2025-03-18",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.18.jpg"
+      },
+      {
+        "date": "2025-03-19",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.19.jpg"
+      },
+      {
+        "date": "2025-03-20",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.20.jpg"
+      },
+      {
+        "date": "2025-03-21",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.21.jpg"
+      },
+      {
+        "date": "2025-03-22",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.22.jpg"
+      },
+      {
+        "date": "2025-03-23",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.23.jpg"
+      },
+      {
+        "date": "2025-03-24",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.24.jpg"
+      },
+      {
+        "date": "2025-03-25",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.25.jpg"
+      },
+      {
+        "date": "2025-03-26",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.26.jpg"
+      },
+      {
+        "date": "2025-03-27",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.27.jpg"
+      },
+      {
+        "date": "2025-03-28",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.28.jpg"
+      },
+      {
+        "date": "2025-03-29",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.29.jpg"
+      },
+      {
+        "date": "2025-03-30",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.30.jpg"
+      },
+      {
+        "date": "2025-03-31",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/3.31.jpg"
+      },
+      {
+        "date": "2025-04-01",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.1.jpg"
+      },
+      {
+        "date": "2025-04-02",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.2.jpg"
+      },
+      {
+        "date": "2025-04-03",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.3.jpg"
+      },
+      {
+        "date": "2025-04-04",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.4.jpg"
+      },
+      {
+        "date": "2025-04-05",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.5.jpg"
+      },
+      {
+        "date": "2025-04-06",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.6.jpg"
+      },
+      {
+        "date": "2025-04-07",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.7.jpg"
+      },
+      {
+        "date": "2025-04-08",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.8.jpg"
+      },
+      {
+        "date": "2025-04-09",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.9.jpg"
+      },
+      {
+        "date": "2025-04-10",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.10.jpg"
+      },
+      {
+        "date": "2025-04-11",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.11.jpg"
+      },
+      {
+        "date": "2025-04-12",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.12.jpg"
+      },
+      {
+        "date": "2025-04-13",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.13.jpg"
+      },
+      {
+        "date": "2025-04-14",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.14.jpg"
+      },
+      {
+        "date": "2025-04-15",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.15.jpg"
+      },
+      {
+        "date": "2025-04-16",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.16.jpg"
+      },
+      {
+        "date": "2025-04-17",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/4.17.jpg"
+      },
+      {
+        "date": "2025-06-09",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/6.9.jpg"
+      },
+      {
+        "date": "2025-06-10",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/6.10.jpg"
+      },
+      {
+        "date": "2025-06-11",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/6.11.jpg"
+      },
+      {
+        "date": "2025-06-12",
+        "url": "/satellite-maps/%E5%B9%B2%E6%97%B1/6.12.jpg"
+      }
+    ]
+  },
+  "heat": {
+    "summary": {
+      "id": "summary",
+      "label": "1–8 月汇总",
+      "url": "/satellite-maps/%E6%80%BB/xingaowen.jpg"
+    },
+    "days": [
+      {
+        "date": "2025-04-16",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A94.16.jpg"
+      },
+      {
+        "date": "2025-04-17",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A94.17.jpg"
+      },
+      {
+        "date": "2025-05-12",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A95.12.jpg"
+      },
+      {
+        "date": "2025-05-13",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A95.13.jpg"
+      },
+      {
+        "date": "2025-05-19",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A95.19.jpg"
+      },
+      {
+        "date": "2025-05-20",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A95.20.jpg"
+      },
+      {
+        "date": "2025-05-21",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/4-5/%E9%AB%98%E6%B8%A95.21.jpg"
+      },
+      {
+        "date": "2025-06-03",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-03%20%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-04",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-04%20%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-05",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-05%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-06",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-06%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-07",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-07%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-09",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-09%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-10",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-10%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-11",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-11%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-12",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-12%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-13",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-13%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-14",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-14%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-17",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-17%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-18",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-18%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-19",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-19%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-21",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-21%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-22",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-22%20%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-23",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-23%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-24",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-24%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-25",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-25%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-06-26",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/6/2025-06-26%E9%AB%98%E6%B8%A9.jpg"
+      },
+      {
+        "date": "2025-07-04",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.04.jpg"
+      },
+      {
+        "date": "2025-07-05",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.05.jpg"
+      },
+      {
+        "date": "2025-07-06",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.06.jpg"
+      },
+      {
+        "date": "2025-07-07",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.07.jpg"
+      },
+      {
+        "date": "2025-07-08",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.08.jpg"
+      },
+      {
+        "date": "2025-07-09",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.09.jpg"
+      },
+      {
+        "date": "2025-07-10",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.10.jpg"
+      },
+      {
+        "date": "2025-07-11",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.11.jpg"
+      },
+      {
+        "date": "2025-07-12",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.12.jpg"
+      },
+      {
+        "date": "2025-07-13",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.13.jpg"
+      },
+      {
+        "date": "2025-07-14",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.14.jpg"
+      },
+      {
+        "date": "2025-07-15",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.15.jpg"
+      },
+      {
+        "date": "2025-07-17",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.17.jpg"
+      },
+      {
+        "date": "2025-07-18",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.18.jpg"
+      },
+      {
+        "date": "2025-07-19",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.19.jpg"
+      },
+      {
+        "date": "2025-07-20",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.20.jpg"
+      },
+      {
+        "date": "2025-07-22",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.22.jpg"
+      },
+      {
+        "date": "2025-07-23",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.23.jpg"
+      },
+      {
+        "date": "2025-07-25",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.25.jpg"
+      },
+      {
+        "date": "2025-07-26",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.26.jpg"
+      },
+      {
+        "date": "2025-07-27",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.27.jpg"
+      },
+      {
+        "date": "2025-07-28",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.28.jpg"
+      },
+      {
+        "date": "2025-07-29",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.29.jpg"
+      },
+      {
+        "date": "2025-07-30",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/7/%E9%AB%98%E6%B8%A97.30.jpg"
+      },
+      {
+        "date": "2025-08-01",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.1.jpg"
+      },
+      {
+        "date": "2025-08-02",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.2.jpg"
+      },
+      {
+        "date": "2025-08-03",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.3.jpg"
+      },
+      {
+        "date": "2025-08-04",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.4.jpg"
+      },
+      {
+        "date": "2025-08-05",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.5.jpg"
+      },
+      {
+        "date": "2025-08-06",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.6.jpg"
+      },
+      {
+        "date": "2025-08-07",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.7.jpg"
+      },
+      {
+        "date": "2025-08-08",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.8.jpg"
+      },
+      {
+        "date": "2025-08-19",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.19.jpg"
+      },
+      {
+        "date": "2025-08-20",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.20.jpg"
+      },
+      {
+        "date": "2025-08-21",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.21.jpg"
+      },
+      {
+        "date": "2025-08-22",
+        "url": "/satellite-maps/%E9%AB%98%E6%B8%A9/8/%E9%AB%98%E6%B8%A98.22.jpg"
+      }
+    ]
+  },
+  "rain": {
+    "summary": {
+      "id": "summary",
+      "label": "1–8 月汇总",
+      "url": "/satellite-maps/%E6%80%BB/xinbaoyu.jpg"
+    },
+    "days": [
+      {
+        "date": "2025-05-08",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/5%E6%9C%88/5.8.jpg"
+      },
+      {
+        "date": "2025-05-09",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/5%E6%9C%88/5.9.jpg"
+      },
+      {
+        "date": "2025-06-14",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/6%E6%9C%88/6.14.jpg"
+      },
+      {
+        "date": "2025-06-29",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/6%E6%9C%88/6.29.jpg"
+      },
+      {
+        "date": "2025-07-02",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.2.jpg"
+      },
+      {
+        "date": "2025-07-09",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.9.jpg"
+      },
+      {
+        "date": "2025-07-19",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.19.jpg"
+      },
+      {
+        "date": "2025-07-20",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.20.jpg"
+      },
+      {
+        "date": "2025-07-24",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.24.jpg"
+      },
+      {
+        "date": "2025-07-25",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.25.jpg"
+      },
+      {
+        "date": "2025-07-26",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.26.jpg"
+      },
+      {
+        "date": "2025-07-27",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.27.jpg"
+      },
+      {
+        "date": "2025-07-28",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/7%E6%9C%88/7.28.jpg"
+      },
+      {
+        "date": "2025-08-05",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/8%E6%9C%88/8.5.jpg"
+      },
+      {
+        "date": "2025-08-15",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/8%E6%9C%88/8.15.jpg"
+      },
+      {
+        "date": "2025-08-19",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/8%E6%9C%88/8.19.jpg"
+      },
+      {
+        "date": "2025-08-21",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/8%E6%9C%88/8.21.jpg"
+      },
+      {
+        "date": "2025-08-24",
+        "url": "/satellite-maps/%E6%9A%B4%E9%9B%A8/8%E6%9C%88/8.24.jpg"
+      }
+    ]
+  },
+  "wind": {
+    "summary": {
+      "id": "summary",
+      "label": "1–8 月汇总",
+      "url": "/satellite-maps/%E6%80%BB/xindafeng.jpg"
+    },
+    "days": [
+      {
+        "date": "2025-01-05",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.5.jpg"
+      },
+      {
+        "date": "2025-01-07",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.7.jpg"
+      },
+      {
+        "date": "2025-01-08",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.8.jpg"
+      },
+      {
+        "date": "2025-01-14",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.14.jpg"
+      },
+      {
+        "date": "2025-01-26",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.26.jpg"
+      },
+      {
+        "date": "2025-01-27",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.27.jpg"
+      },
+      {
+        "date": "2025-01-28",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/1%E6%9C%88(1)/1.28.jpg"
+      },
+      {
+        "date": "2025-02-01",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.1.jpg"
+      },
+      {
+        "date": "2025-02-02",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.2.jpg"
+      },
+      {
+        "date": "2025-02-03",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.3.jpg"
+      },
+      {
+        "date": "2025-02-04",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.4.jpg"
+      },
+      {
+        "date": "2025-02-05",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.5.jpg"
+      },
+      {
+        "date": "2025-02-06",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.6.jpg"
+      },
+      {
+        "date": "2025-02-07",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.7.jpg"
+      },
+      {
+        "date": "2025-02-11",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.11.jpg"
+      },
+      {
+        "date": "2025-02-12",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.12.jpg"
+      },
+      {
+        "date": "2025-02-16",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.16.jpg"
+      },
+      {
+        "date": "2025-02-25",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/2%E6%9C%88(1)/2.25.jpg"
+      },
+      {
+        "date": "2025-03-02",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.2.jpg"
+      },
+      {
+        "date": "2025-03-11",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.11.jpg"
+      },
+      {
+        "date": "2025-03-14",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.14.jpg"
+      },
+      {
+        "date": "2025-03-15",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.15.jpg"
+      },
+      {
+        "date": "2025-03-16",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.16.jpg"
+      },
+      {
+        "date": "2025-03-17",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.17.jpg"
+      },
+      {
+        "date": "2025-03-20",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.20.jpg"
+      },
+      {
+        "date": "2025-03-24",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.24.jpg"
+      },
+      {
+        "date": "2025-03-25",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.25.jpg"
+      },
+      {
+        "date": "2025-03-26",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.26.jpg"
+      },
+      {
+        "date": "2025-03-27",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.27.jpg"
+      },
+      {
+        "date": "2025-03-28",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.28.jpg"
+      },
+      {
+        "date": "2025-03-29",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/3%E6%9C%88(1)/3.29.jpg"
+      },
+      {
+        "date": "2025-04-01",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.1.jpg"
+      },
+      {
+        "date": "2025-04-03",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.3.jpg"
+      },
+      {
+        "date": "2025-04-04",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.4.jpg"
+      },
+      {
+        "date": "2025-04-08",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.8.jpg"
+      },
+      {
+        "date": "2025-04-12",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.12.jpg"
+      },
+      {
+        "date": "2025-04-13",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.13.jpg"
+      },
+      {
+        "date": "2025-04-14",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.14.jpg"
+      },
+      {
+        "date": "2025-04-17",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.17.jpg"
+      },
+      {
+        "date": "2025-04-20",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.20.jpg"
+      },
+      {
+        "date": "2025-04-21",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.21.jpg"
+      },
+      {
+        "date": "2025-04-23",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.23.jpg"
+      },
+      {
+        "date": "2025-04-24",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.24.jpg"
+      },
+      {
+        "date": "2025-04-27",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.27.jpg"
+      },
+      {
+        "date": "2025-04-29",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.29.jpg"
+      },
+      {
+        "date": "2025-04-30",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/4%E6%9C%88(1)/4.30.jpg"
+      },
+      {
+        "date": "2025-05-13",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/5%E6%9C%88(1)/5.13.jpg"
+      },
+      {
+        "date": "2025-05-14",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/5%E6%9C%88(1)/5.14.jpg"
+      },
+      {
+        "date": "2025-05-16",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/5%E6%9C%88(1)/5.16.jpg"
+      },
+      {
+        "date": "2025-05-17",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/5%E6%9C%88(1)/5.17.jpg"
+      },
+      {
+        "date": "2025-06-02",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.2.jpg"
+      },
+      {
+        "date": "2025-06-03",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.3.jpg"
+      },
+      {
+        "date": "2025-06-09",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.9.jpg"
+      },
+      {
+        "date": "2025-06-12",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.12.jpg"
+      },
+      {
+        "date": "2025-06-15",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.15.jpg"
+      },
+      {
+        "date": "2025-06-29",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/6%E6%9C%88/6.29.jpg"
+      },
+      {
+        "date": "2025-07-07",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/7%E6%9C%88/7.7.jpg"
+      },
+      {
+        "date": "2025-07-15",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/7%E6%9C%88/7.15.jpg"
+      },
+      {
+        "date": "2025-07-28",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/7%E6%9C%88/7.28.jpg"
+      },
+      {
+        "date": "2025-08-03",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.3.jpg"
+      },
+      {
+        "date": "2025-08-06",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.6.jpg"
+      },
+      {
+        "date": "2025-08-07",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.7.jpg"
+      },
+      {
+        "date": "2025-08-10",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.10.jpg"
+      },
+      {
+        "date": "2025-08-15",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.15.jpg"
+      },
+      {
+        "date": "2025-08-16",
+        "url": "/satellite-maps/%E5%A4%A7%E9%A3%8E/8%E6%9C%88/8.16.jpg"
+      }
+    ]
+  }
+}
