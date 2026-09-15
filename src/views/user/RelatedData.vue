@@ -197,25 +197,28 @@
                 :options="satelliteDateOptions"
                 placeholder="选择日期"
                 show-search />
-              <div class="satellite-footer">
-                <span>
-                  {{ satelliteTypeLabel }}有图 {{ satelliteImageDayCount }} 天
-                  <template v-if="satelliteLatestDay">
-                    · 最近 {{ satelliteLatestDay }}
-                  </template>
-                </span>
-                <a-tag
-                  color="orange"
-                  style="cursor: pointer"
-                  @click="router.push('/warnings')">
-                  极端天气预警
-                </a-tag>
-              </div>
-              <div class="ai-analysis-box">
-                <span class="ai-tag">AI 智能分析</span>
-                <span class="ai-text">
-                  {{ aiConclusion }}
-                </span>
+              <div class="satellite-side-bottom">
+                <div class="satellite-footer">
+                  <p class="satellite-footer-meta">
+                    {{ satelliteTypeLabel }}有图 {{ satelliteImageDayCount }} 天
+                    <template v-if="satelliteLatestDay">
+                      · 最近 {{ satelliteLatestDay }}
+                    </template>
+                  </p>
+                  <button
+                    type="button"
+                    class="detail-btn satellite-warning-btn"
+                    @click="router.push('/warnings')">
+                    <WarningOutlined />
+                    极端天气预警
+                  </button>
+                </div>
+                <div class="ai-analysis-box">
+                  <span class="ai-tag">AI 智能分析</span>
+                  <span class="ai-text">
+                    {{ aiConclusion }}
+                  </span>
+                </div>
               </div>
             </aside>
           </div>
@@ -475,7 +478,7 @@ import { NDVI_DEMO_LAYER } from '@/constants/remoteSensingLayers'
 import { useDataStore, type WeatherReading } from '@/stores/data.ts'
 import { useRemoteSensingStore } from '@/stores/remoteSensing'
 import * as echarts from 'echarts'
-import { FilePdfOutlined } from '@ant-design/icons-vue'
+import { FilePdfOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import { fetchDailyReport, fetchExtremeEvents, fetchForecast, fetchSensorReadings, fetchThresholds, saveThresholds } from '@/api/rules'
 import { DEFAULT_THRESHOLD_PROFILE } from '@/utils/alertRules'
@@ -1426,8 +1429,15 @@ watch(
   min-width: 0;
 }
 
-.satellite-side .ai-analysis-box {
+.satellite-side-bottom {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.satellite-side .ai-analysis-box {
+  margin-top: 0;
   flex-direction: column;
   align-items: flex-start;
 }
@@ -1887,12 +1897,41 @@ watch(
 .satellite-footer {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 0;
-  font-size: 13px;
-  color: var(--glass-text-secondary);
+}
+
+.satellite-footer-meta {
+  margin: 0;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--glass-text-primary);
+  white-space: nowrap;
+}
+
+.satellite-warning-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 34px;
+  color: #fff;
+  background: rgb(250 173 20 / 28%);
+  border: 1px solid #faad14;
+}
+
+.satellite-warning-btn:hover {
+  color: #fff;
+  background: rgb(250 173 20 / 48%);
+  border-color: #ffc53d;
 }
 
 .weather-layout {
