@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { filterReadings } from './sensorReadings.ts'
+import { filterReadings, hasSensorTrendData } from './sensorReadings.ts'
 
 const rows = [
   { id: 1, pointId: 2, recordedAt: '2026-08-19T08:00:00+08:00', airTemp: 33, airRh: 40, soilVwc: 12.1, soilTemp10cm: 30 },
@@ -17,4 +17,24 @@ test('filters by point and date range inclusive', () => {
 test('sorts by recordedAt', () => {
   const out = filterReadings(rows, 2)
   assert.equal(out[0].id, 1)
+})
+
+test('hasSensorTrendData is false when stations have no rows', () => {
+  assert.equal(
+    hasSensorTrendData([
+      { rows: [] },
+      { rows: [] }
+    ]),
+    false
+  )
+})
+
+test('hasSensorTrendData is true when any station has rows', () => {
+  assert.equal(
+    hasSensorTrendData([
+      { rows: [] },
+      { rows: [rows[0]] }
+    ]),
+    true
+  )
 })

@@ -41,3 +41,9 @@ export function filterReadings(
     })
     .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
 }
+
+export function hasSensorTrendData(
+  stations: Array<{ rows: unknown[] }>
+): boolean {
+  return stations.some((station) => station.rows.length > 0)
+}

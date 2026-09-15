@@ -21,7 +21,7 @@
 
           <div class="header-actions">
             <a-select
-              v-if="currentTab === 'weather'"
+              v-if="showWeatherPanel"
               :key="`weather-point-${weatherPointOptionKey}`"
               v-model:value="selectedWeatherPointId"
               class="weather-point-select"
@@ -35,7 +35,7 @@
               </a-select-option>
             </a-select>
             <a-select
-              v-if="currentTab === 'sensor'"
+              v-if="showSoilPanel"
               v-model:value="selectedSensorPointIds"
               mode="multiple"
               class="weather-point-select weather-point-select--multi"
@@ -44,6 +44,21 @@
               :max-tag-count="2"
               placeholder="对比监测站（最多 3 个）"
               @change="onSensorPointsChange" />
+            <button
+              v-if="currentTab === 'sensor'"
+              type="button"
+              class="detail-btn"
+              @click="toggleGroundSection">
+              {{ showWeatherPanel ? '查看土壤监测' : '查看气象数据' }}
+            </button>
+            <button
+              v-if="currentTab === 'satellite'"
+              type="button"
+              class="detail-btn"
+              :disabled="!currentSatelliteItem"
+              @click="satelliteViewerOpen = true">
+              全屏看图
+            </button>
             <a-button
               type="primary"
               class="report-btn"
@@ -62,7 +77,10 @@
 
         <div
           class="chart-wrapper"
-          :class="{ 'chart-wrapper--weather': currentTab === 'weather' }">
+          :class="{
+            'chart-wrapper--weather': showWeatherPanel,
+            'chart-wrapper--satellite': currentTab === 'satellite'
+          }">
           <div
             v-if="loading"
             class="glass-loading-mask">
@@ -73,16 +91,22 @@
           </div>
 
           <div
-            v-show="currentTab === 'sensor'"
+            v-show="showSoilPanel"
             ref="sensorChartRef"
-            class="full-content sensor-chart"></div>
+            class="full-content sensor-chart"
+            :class="{ 'is-empty': !hasSensorChartData }"></div>
+          <div
+            v-if="showSoilPanel && !loading && !hasSensorChartData"
+            class="sensor-empty">
+            <GlassEmpty description="暂无近 7 日气温与墒情读数" />
+          </div>
 
           <div
-            v-if="currentTab === 'drone' || currentTab === 'gis'"
+            v-if="currentTab === 'drone'"
             class="full-content map-visual">
-            <NdviLayerControls v-if="currentTab === 'drone'" />
+            <NdviLayerControls />
             <a-alert
-              v-if="currentTab === 'drone' && remoteStore.selectedFieldHighRisk"
+              v-if="remoteStore.selectedFieldHighRisk"
               class="high-risk-banner"
               type="warning"
               show-icon
@@ -91,27 +115,26 @@
             <RemoteSensingMap
               ref="remoteMapRef"
               :key="currentTab"
-              :mode="currentTab === 'drone' ? 'ndvi' : 'moisture'"
+              mode="ndvi"
               :image-url="remoteRasterLayer.imageUrl"
               :bounds="remoteRasterLayer.bounds"
               :compare-image-url="ndviCompareImageUrl"
               :compare-opacity="remoteStore.compareOpacity"
               :high-risk-bounds="droneHighRiskBounds"
               :flight-path="droneFlightPath"
-              :show-monitor-points="currentTab === 'gis'"
-              :enable-moisture-query="currentTab === 'gis'"
+              :show-monitor-points="false"
+              :enable-moisture-query="false"
               :monitor-points="dataStore.filteredMonitorPoints"
-              :monitor-alerts="dataStore.filteredAlerts"
-              @moisture-query="onMoistureQuery" />
+              :monitor-alerts="dataStore.filteredAlerts" />
             <div class="map-caption">
               <h3 class="font-heading">
-                {{ currentTab === 'drone' ? 'NDVI 植被指数' : '土壤墒情分布' }}
+                NDVI 植被指数
               </h3>
               <p class="map-source">
                 来源：{{ mapDataSource }}
               </p>
               <p
-                v-if="currentTab === 'drone' && remoteStore.selectedNdviDate"
+                v-if="remoteStore.selectedNdviDate"
                 class="map-meta">
                 影像日期：{{ remoteStore.selectedNdviDate }}
                 <template v-if="remoteStore.compareEnabled && remoteStore.compareNdviDate">
@@ -119,28 +142,11 @@
                   · 历史透明度 {{ Math.round(remoteStore.compareOpacity * 100) }}%
                 </template>
               </p>
-              <p
-                v-if="currentTab === 'gis' && remoteStore.selectedMoistureDate"
-                class="map-meta">
-                影像日期：{{ remoteStore.selectedMoistureDate }} · 监测点为地面传感器
-              </p>
-              <p
-                v-if="currentTab === 'gis'"
-                class="map-meta map-meta--hint">
-                点击地图可查询该位置墒情（演示：最近监测点）
-              </p>
-              <p
-                v-if="currentTab === 'gis' && lastMoistureQuery"
-                class="map-meta">
-                最近查值：{{ lastMoistureQuery.moisture }}% · {{ lastMoistureQuery.pointName }}
-              </p>
             </div>
             <div
               class="map-legend"
-              :aria-label="currentTab === 'drone' ? 'NDVI 色标' : '土壤湿度色标'">
-              <span class="legend-title">
-                {{ currentTab === 'drone' ? 'NDVI' : '墒情 (%)' }}
-              </span>
+              aria-label="NDVI 色标">
+              <span class="legend-title">NDVI</span>
               <div class="legend-bar">
                 <span
                   v-for="step in legendSteps"
@@ -157,7 +163,65 @@
           </div>
 
           <div
-            v-if="currentTab === 'weather'"
+            v-if="currentTab === 'satellite'"
+            class="full-content satellite-layout">
+            <div class="satellite-stage">
+              <img
+                v-if="currentSatelliteItem && !satelliteImageError"
+                class="satellite-stage-img"
+                :src="currentSatelliteItem.url"
+                :alt="satelliteViewerTitle"
+                @error="satelliteImageError = true" />
+              <p
+                v-else
+                class="weather-empty">
+                {{ satelliteImageError ? '专题图加载失败，请确认开发服务已重启' : '当前类型暂无专题图' }}
+              </p>
+            </div>
+            <aside class="satellite-side">
+              <div class="satellite-type-switch">
+                <button
+                  v-for="item in satelliteTypes"
+                  :key="item.key"
+                  type="button"
+                  class="detail-btn"
+                  :class="{ 'active-type-btn': selectedSatelliteType === item.key }"
+                  @click="syncSatelliteSelection(item.key)">
+                  {{ item.label }}
+                </button>
+              </div>
+              <a-select
+                v-model:value="selectedSatelliteId"
+                class="weather-point-select satellite-date-select"
+                popup-class-name="weather-point-select-dropdown"
+                :options="satelliteDateOptions"
+                placeholder="选择日期"
+                show-search />
+              <div class="satellite-footer">
+                <span>
+                  {{ satelliteTypeLabel }}有图 {{ satelliteImageDayCount }} 天
+                  <template v-if="satelliteLatestDay">
+                    · 最近 {{ satelliteLatestDay }}
+                  </template>
+                </span>
+                <a-tag
+                  color="orange"
+                  style="cursor: pointer"
+                  @click="router.push('/warnings')">
+                  极端天气预警
+                </a-tag>
+              </div>
+              <div class="ai-analysis-box">
+                <span class="ai-tag">AI 智能分析</span>
+                <span class="ai-text">
+                  {{ aiConclusion }}
+                </span>
+              </div>
+            </aside>
+          </div>
+
+          <div
+            v-if="showWeatherPanel"
             class="weather-layout">
             <div
               v-if="activeExtremeTitles.length"
@@ -265,7 +329,9 @@
           </div>
         </div>
 
-        <div class="ai-analysis-box">
+        <div
+          v-if="currentTab !== 'satellite'"
+          class="ai-analysis-box">
           <span class="ai-tag">AI 智能分析</span>
           <span class="ai-text">
             {{ aiConclusion }}
@@ -278,10 +344,10 @@
       v-model:open="detailOpen"
       :title="`${currentTitle} · 详情`"
       root-class-name="data-detail-drawer"
-      :width="currentTab === 'weather' ? 640 : 520"
+      :width="showWeatherPanel ? 640 : 520"
       @after-open-change="onDetailDrawerOpen">
       <div
-        v-if="currentTab === 'sensor'"
+        v-if="showSoilPanel"
         class="detail-section">
         <h4 class="detail-section-title">近 7 日读数</h4>
         <a-table
@@ -294,7 +360,7 @@
           row-key="id" />
       </div>
       <div
-        v-else-if="currentTab === 'weather'"
+        v-else-if="showWeatherPanel"
         class="detail-section">
         <p class="detail-kicker">{{ getWeatherPointName(selectedWeatherPointId) }}</p>
         <h4 class="detail-section-title">实时读数</h4>
@@ -350,7 +416,7 @@
           {{
             currentTab === 'drone'
               ? '在灾害实时监测地图上对照田间监测点与当前 NDVI 图层。'
-              : '在灾害实时监测地图上查看墒情分布、站点位置与预警状态。'
+              : '当前展示 docs/出图 中对应日期的灾害专题图。'
           }}
         </p>
         <a-button
@@ -376,6 +442,25 @@
         class="report-preview">{{ reportPreview }}</pre>
       <p v-else>暂无日报内容</p>
     </a-modal>
+
+    <a-modal
+      v-model:visible="satelliteViewerOpen"
+      :footer="null"
+      :width="'min(920px, 92vw)'"
+      wrap-class-name="satellite-viewer-wrap"
+      :title="satelliteViewerTitle"
+      destroy-on-close>
+      <img
+        v-if="currentSatelliteItem"
+        class="satellite-viewer-img"
+        :src="currentSatelliteItem.url"
+        :alt="satelliteViewerTitle" />
+      <p
+        v-else
+        class="detail-empty">
+        当前日期没有专题图
+      </p>
+    </a-modal>
   </AppLayout>
 </template>
 
@@ -383,12 +468,12 @@
 import { ref, reactive, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
+import GlassEmpty from '@/components/GlassEmpty.vue'
 import RemoteSensingMap from '@/components/remote-sensing/RemoteSensingMap.vue'
 import NdviLayerControls from '@/components/remote-sensing/NdviLayerControls.vue'
-import { NDVI_DEMO_LAYER, MOISTURE_DEMO_LAYER } from '@/constants/remoteSensingLayers'
+import { NDVI_DEMO_LAYER } from '@/constants/remoteSensingLayers'
 import { useDataStore, type WeatherReading } from '@/stores/data.ts'
 import { useRemoteSensingStore } from '@/stores/remoteSensing'
-import type { MoistureQueryResult } from '@/types/remoteSensing'
 import * as echarts from 'echarts'
 import { FilePdfOutlined } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
@@ -402,7 +487,16 @@ import {
   sameBands
 } from '@/utils/thresholdPresets'
 import { daysForPoint, type ForecastRow } from '@/utils/forecastView'
-import { last7DayRange, type SensorReading } from '@/utils/sensorReadings'
+import { hasSensorTrendData, last7DayRange, type SensorReading } from '@/utils/sensorReadings'
+import {
+  EMPTY_CATALOG,
+  SATELLITE_TYPES,
+  itemById,
+  imageDayCount,
+  latestDay,
+  type SatelliteCatalog,
+  type SatelliteType
+} from '@/utils/satelliteThematic'
 
 const dataStore = useDataStore()
 const remoteStore = useRemoteSensingStore()
@@ -410,11 +504,77 @@ const router = useRouter()
 const loading = ref(false)
 
 const currentTab = ref('sensor')
+const sensorSection = ref<'soil' | 'weather'>('soil')
+const showSoilPanel = computed(
+  () => currentTab.value === 'sensor' && sensorSection.value === 'soil'
+)
+const showWeatherPanel = computed(
+  () => currentTab.value === 'sensor' && sensorSection.value === 'weather'
+)
+const satelliteCatalog = ref<SatelliteCatalog>(EMPTY_CATALOG)
+const selectedSatelliteType = ref<SatelliteType>('wind')
+const selectedSatelliteId = ref('summary')
+const satelliteViewerOpen = ref(false)
+const satelliteImageError = ref(false)
+const satelliteTypes = SATELLITE_TYPES
+
+const currentSatelliteBucket = computed(
+  () => satelliteCatalog.value[selectedSatelliteType.value]
+)
+const satelliteDateOptions = computed(() => {
+  const bucket = currentSatelliteBucket.value
+  const options: { value: string; label: string }[] = []
+  if (bucket.summary) {
+    options.push({ value: 'summary', label: bucket.summary.label })
+  }
+  for (const day of bucket.days) {
+    options.push({ value: day.date, label: day.date })
+  }
+  return options
+})
+const currentSatelliteItem = computed(() =>
+  itemById(satelliteCatalog.value, selectedSatelliteType.value, selectedSatelliteId.value)
+)
+const satelliteViewerTitle = computed(() => {
+  const typeLabel =
+    SATELLITE_TYPES.find((item) => item.key === selectedSatelliteType.value)?.label ?? '专题图'
+  const item = currentSatelliteItem.value
+  return item ? `${typeLabel} · ${item.label}` : typeLabel
+})
+const satelliteTypeLabel = computed(
+  () => SATELLITE_TYPES.find((item) => item.key === selectedSatelliteType.value)?.label ?? ''
+)
+const satelliteImageDayCount = computed(() =>
+  imageDayCount(satelliteCatalog.value, selectedSatelliteType.value)
+)
+const satelliteLatestDay = computed(() =>
+  latestDay(satelliteCatalog.value, selectedSatelliteType.value)
+)
+
+function syncSatelliteSelection(type: SatelliteType) {
+  selectedSatelliteType.value = type
+  const latest = latestDay(satelliteCatalog.value, type)
+  const bucket = satelliteCatalog.value[type]
+  selectedSatelliteId.value = latest ?? (bucket.summary ? 'summary' : '')
+}
+
+async function loadSatelliteCatalog() {
+  try {
+    const res = await fetch('/satellite/catalog.json')
+    if (!res.ok) throw new Error('catalog missing')
+    satelliteCatalog.value = (await res.json()) as SatelliteCatalog
+    syncSatelliteSelection(selectedSatelliteType.value)
+  } catch {
+    satelliteCatalog.value = EMPTY_CATALOG
+    message.warning('卫星专题图清单加载失败')
+  }
+}
 const selectedWeatherPointId = ref<number>(1)
 const selectedSensorPointIds = ref<number[]>([1, 2])
 const sensorByStation = ref<
   Array<{ pointId: number; name: string; rows: SensorReading[] }>
 >([])
+const hasSensorChartData = computed(() => hasSensorTrendData(sensorByStation.value))
 const extremeEvents = ref<Array<{ pointId: number; title: string; startAt: string }>>([])
 const forecastDays = ref<ForecastRow[]>([])
 const thresholdForm = reactive({ ...DEFAULT_THRESHOLD_PROFILE, pointId: 1 })
@@ -600,9 +760,9 @@ function buildWeatherAiConclusion(reading: WeatherReading, pointName: string) {
 const tabs = [
   {
     key: 'sensor',
-    label: '传感器数据 (地)',
-    title: '物联网传感器监控',
-    subtitle: '最近 7 天环境参数趋势'
+    label: '地面监测站 (地)',
+    title: '土壤监测',
+    subtitle: '最近 7 天气温与墒情趋势'
   },
   {
     key: 'drone',
@@ -611,18 +771,20 @@ const tabs = [
     subtitle: '作物长势 NDVI 指数分析'
   },
   {
-    key: 'weather',
-    label: '气象数据 (天)',
-    title: '气象站实时数据',
-    subtitle: '土壤墒情与局地小气候实时监测'
-  },
-  { key: 'gis', label: 'GIS 数据 (图)', title: '地理信息可视化', subtitle: '土壤墒情热力分布图' }
+    key: 'satellite',
+    label: '卫星遥感 (天)',
+    title: '卫星遥感监测',
+    subtitle: '区域灾害专题图'
+  }
 ]
 
-const currentTitle = computed(() => tabs.find((t) => t.key === currentTab.value)?.title)
+const currentTitle = computed(() => {
+  if (showWeatherPanel.value) return '气象站实时数据'
+  return tabs.find((t) => t.key === currentTab.value)?.title
+})
 const currentSubtitle = computed(() => {
   const base = tabs.find((t) => t.key === currentTab.value)?.subtitle ?? ''
-  if (currentTab.value === 'weather') {
+  if (showWeatherPanel.value) {
     const pointName = getWeatherPointName(selectedWeatherPointId.value)
     const forecastHint = forecastDays.value.length ? ' · 含 7 日预报' : ''
     return `${pointName} · 土壤墒情与局地小气候实时监测${forecastHint}`
@@ -637,26 +799,29 @@ const currentSubtitle = computed(() => {
     }
     return `${base} · ${datePart}`
   }
+  if (currentTab.value === 'satellite') {
+    const typeLabel =
+      SATELLITE_TYPES.find((item) => item.key === selectedSatelliteType.value)?.label ?? ''
+    const item = currentSatelliteItem.value
+    if (!item) return `${base} · ${typeLabel}`
+    return `${base} · ${typeLabel} · ${item.label}`
+  }
   return base
 })
 const currentTabName = computed(() => tabs.find((t) => t.key === currentTab.value)?.label)
 
-const remoteMapRef = ref<InstanceType<typeof RemoteSensingMap> | null>(null)
-const lastMoistureQuery = ref<MoistureQueryResult | null>(null)
-
-function onMoistureQuery(result: MoistureQueryResult) {
-  lastMoistureQuery.value = result
+function toggleGroundSection() {
+  if (sensorSection.value === 'soil') {
+    sensorSection.value = 'weather'
+    return
+  }
+  sensorSection.value = 'soil'
+  void nextTick(() => renderSensorChart())
 }
 
-const remoteRasterLayer = computed(() => {
-  if (currentTab.value === 'drone') {
-    return remoteStore.currentNdviRaster ?? NDVI_DEMO_LAYER
-  }
-  if (currentTab.value === 'gis') {
-    return remoteStore.currentMoistureRaster ?? MOISTURE_DEMO_LAYER
-  }
-  return NDVI_DEMO_LAYER
-})
+const remoteMapRef = ref<InstanceType<typeof RemoteSensingMap> | null>(null)
+
+const remoteRasterLayer = computed(() => remoteStore.currentNdviRaster ?? NDVI_DEMO_LAYER)
 
 const selectedFieldName = computed(() => {
   return (
@@ -682,12 +847,17 @@ const ndviCompareImageUrl = computed(() => {
   return remoteStore.compareNdviRaster?.imageUrl
 })
 
-const mapDataSource = computed(() => remoteRasterLayer.value.source)
+const mapDataSource = computed(() => {
+  if (currentTab.value === 'satellite') {
+    return currentSatelliteItem.value ? 'docs/出图' : '暂无专题图'
+  }
+  return remoteRasterLayer.value.source
+})
 
 const detailImageDate = computed(() => {
   if (currentTab.value === 'drone') return remoteStore.selectedNdviDate || remoteRasterLayer.value.date
-  if (currentTab.value === 'gis') {
-    return remoteStore.selectedMoistureDate || remoteRasterLayer.value.date
+  if (currentTab.value === 'satellite') {
+    return currentSatelliteItem.value?.label ?? ''
   }
   return ''
 })
@@ -700,35 +870,15 @@ const ndviLegend = [
   { label: '高 (茂盛)', color: '#1b5e20' }
 ]
 
-const soilLegend = [
-  { label: '干旱', color: '#c62828' },
-  { label: '偏干', color: '#ef6c00' },
-  { label: '适中', color: '#fdd835' },
-  { label: '湿润', color: '#42a5f5' },
-  { label: '饱和', color: '#1565c0' }
-]
+const legendSteps = computed(() => ndviLegend)
 
-const legendSteps = computed(() =>
-  currentTab.value === 'drone' ? ndviLegend : soilLegend
-)
-
-const GIS_DEFAULT_AI =
-  '土壤水分热力图显示栾城区一带墒情偏高，河间—雄县段偏干，建议分区灌溉。'
-
-function formatMoistureSourceLabel(source: string) {
-  return source === 'nearest-point' ? '最近监测点' : source
-}
-
-function moistureLevelHint(moisture: number) {
-  if (moisture <= 20) return '墒情偏低，与参考站传感器读数一致，建议关注灌溉'
-  if (moisture >= 60) return '墒情偏高，与参考站传感器读数一致，建议留意排水'
-  return '墒情适中，与参考站传感器读数一致'
-}
-
-function buildGisAiConclusion(query: MoistureQueryResult) {
-  const sourceLabel = formatMoistureSourceLabel(query.source)
-  const levelHint = moistureLevelHint(query.moisture)
-  return `${query.pointName} 附近墒情约 ${query.moisture}%（${sourceLabel}），${levelHint}。已定位至 ${query.pointName} 传感器。`
+function buildSatelliteAiConclusion() {
+  const typeLabel = satelliteTypeLabel.value
+  const item = currentSatelliteItem.value
+  if (!item) {
+    return `当前未选中${typeLabel}专题图，请切换灾害类型或日期。`
+  }
+  return `${typeLabel}专题图（${item.label}）来自出图目录，可对照京津冀空间分布评估影响范围，并跳转灾害预警查看站点告警。`
 }
 
 function buildDroneAiConclusion() {
@@ -745,7 +895,18 @@ function buildDroneAiConclusion() {
 }
 
 const aiConclusion = computed(() => {
-  if (currentTab.value === 'sensor') {
+  if (showWeatherPanel.value) {
+    const reading = selectedWeatherReading.value
+    if (!reading) {
+      return '气象读数加载中或暂无数据，请切换监测站或稍后重试。'
+    }
+    return buildWeatherAiConclusion(reading, getWeatherPointName(selectedWeatherPointId.value))
+  }
+
+  if (showSoilPanel.value) {
+    if (!hasSensorChartData.value) {
+      return '所选监测站近 7 日暂无气温与墒情读数，请切换监测站或稍后重试。'
+    }
     const alerts = dataStore.filteredAlerts || []
     const criticalCount = alerts.filter(
       (a: any) => a.level === 'critical' || a.level === 'high'
@@ -765,18 +926,8 @@ const aiConclusion = computed(() => {
     return buildDroneAiConclusion()
   }
 
-  if (currentTab.value === 'gis') {
-    return lastMoistureQuery.value
-      ? buildGisAiConclusion(lastMoistureQuery.value)
-      : GIS_DEFAULT_AI
-  }
-
-  if (currentTab.value === 'weather') {
-    const reading = selectedWeatherReading.value
-    if (!reading) {
-      return '气象读数加载中或暂无数据，请切换监测站或稍后重试。'
-    }
-    return buildWeatherAiConclusion(reading, getWeatherPointName(selectedWeatherPointId.value))
+  if (currentTab.value === 'satellite') {
+    return buildSatelliteAiConclusion()
   }
 
   return '数据分析中...'
@@ -919,13 +1070,11 @@ function renderSensorChart() {
 
 const switchTab = async (key: string) => {
   if (key === currentTab.value) return
-  if (currentTab.value === 'gis' && key !== 'gis') {
-    lastMoistureQuery.value = null
-  }
   currentTab.value = key
   if (key === 'sensor') {
+    sensorSection.value = 'soil'
     await loadSensorReadings(selectedSensorPointIds.value)
-  } else if (key === 'drone' || key === 'gis') {
+  } else if (key === 'drone') {
     await nextTick()
     remoteMapRef.value?.invalidate()
   }
@@ -1009,7 +1158,7 @@ const handleDownload = () => {
 
 function onWindowResize() {
   chartInstance?.resize()
-  if (currentTab.value === 'drone' || currentTab.value === 'gis') {
+  if (currentTab.value === 'drone') {
     remoteMapRef.value?.invalidate()
   }
 }
@@ -1046,9 +1195,10 @@ onMounted(async () => {
     )
     tasks.push(loadForecast(selectedWeatherPointId.value))
     tasks.push(loadSensorReadings(selectedSensorPointIds.value))
+    tasks.push(loadSatelliteCatalog())
     await Promise.all(tasks)
     syncSelectedWeatherPoint()
-    if (currentTab.value === 'weather') {
+    if (showWeatherPanel.value) {
       await Promise.all([
         loadThresholds(selectedWeatherPointId.value),
         loadForecast(selectedWeatherPointId.value)
@@ -1071,7 +1221,7 @@ onUnmounted(() => {
 watch(
   selectedSensorPointIds,
   (pointIds) => {
-    if (currentTab.value === 'sensor') {
+    if (showSoilPanel.value) {
       void loadSensorReadings(pointIds)
     }
   },
@@ -1079,14 +1229,21 @@ watch(
 )
 
 watch(remoteRasterLayer, async () => {
-  if (currentTab.value === 'drone' || currentTab.value === 'gis') {
+  if (currentTab.value === 'drone') {
     await nextTick()
     remoteMapRef.value?.invalidate()
   }
 })
 
-watch(currentTab, (tab) => {
-  if (tab !== 'weather') return
+watch(
+  () => currentSatelliteItem.value?.url,
+  () => {
+    satelliteImageError.value = false
+  }
+)
+
+watch(showWeatherPanel, (show) => {
+  if (!show) return
   const field = remoteStore.fields.find((item) => item.id === remoteStore.selectedFieldId)
   syncSelectedWeatherPoint(field?.monitorPointId)
   void loadThresholds(selectedWeatherPointId.value)
@@ -1122,10 +1279,10 @@ watch(
     if (points.length) {
       selectedSensorPointIds.value = defaultSensorPointIds(points)
     }
-    if (currentTab.value === 'sensor') {
+    if (showSoilPanel.value) {
       void loadSensorReadings(selectedSensorPointIds.value)
     }
-    if (currentTab.value === 'weather') {
+    if (showWeatherPanel.value) {
       void loadThresholds(selectedWeatherPointId.value)
       void loadForecast(selectedWeatherPointId.value)
     }
@@ -1220,9 +1377,78 @@ watch(
   height: 100%;
 }
 
+.satellite-stage {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+}
+
+.satellite-stage-img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.satellite-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.satellite-side {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+}
+
+.satellite-date-select.weather-point-select {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.satellite-side .ai-analysis-box {
+  margin-top: auto;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .sensor-chart {
   box-sizing: border-box;
   padding-bottom: 8px;
+}
+
+.sensor-chart.is-empty {
+  visibility: hidden;
+}
+
+.sensor-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .map-visual {
@@ -1630,6 +1856,45 @@ watch(
   flex-direction: column;
 }
 
+.chart-wrapper--satellite {
+  display: flex;
+  min-height: 0;
+}
+
+.satellite-type-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.satellite-type-switch .detail-btn {
+  width: 100%;
+}
+
+.active-type-btn,
+.active-type-btn:hover {
+  background: var(--dark-green) !important;
+  border-color: #73d13d !important;
+  color: #fff !important;
+}
+
+.detail-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.satellite-footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--glass-text-secondary);
+}
+
 .weather-layout {
   flex: 1;
   min-height: 0;
@@ -1836,11 +2101,26 @@ watch(
     gap: 8px;
   }
 
+  .satellite-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(320px, 52vh) auto;
+  }
+
+  .satellite-type-switch {
+    width: 100%;
+  }
+
   .weather-point-select {
     width: auto;
     min-width: 160px;
     flex: 1 1 180px;
     max-width: none;
+  }
+
+  .satellite-date-select.weather-point-select {
+    width: 100%;
+    flex: none;
+    min-width: 0;
   }
 
   .weather-layout {
@@ -2167,5 +2447,19 @@ watch(
   .data-detail-drawer .detail-metric-grid--two {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<style>
+.satellite-viewer-wrap .ant-modal-body {
+  background: var(--dark-green);
+}
+
+.satellite-viewer-wrap .satellite-viewer-img {
+  display: block;
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  background: var(--dark-green);
 }
 </style>
