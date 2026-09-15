@@ -9,7 +9,7 @@ import {
 } from '../src/utils/satelliteThematic.ts'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const mapsRoot = join(root, 'docs', '出图')
+const mapsRoot = join(root, 'satellite-maps')
 const year = 2025
 
 function walk(dir: string, acc: string[] = []): string[] {

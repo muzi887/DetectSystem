@@ -6,7 +6,7 @@ import checker from 'vite-plugin-checker'
 import AutoImport from 'unplugin-auto-import/vite'
 
 function satelliteMapsPlugin() {
-  const mapsRoot = resolve(__dirname, 'docs/出图')
+  const mapsRoot = resolve(__dirname, 'satellite-maps')
 
   function attach(server: ViteDevServer | PreviewServer) {
     server.middlewares.use((req, res, next) => {
