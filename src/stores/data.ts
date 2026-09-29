@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http'
 import { deriveMonitorStatus } from '@/utils/monitorStatus'
-import { initialMonitorRegion, type MonitorRegionId } from '@/constants/monitorRegions''
+import { initialMonitorRegion, type MonitorRegionId } from '@/constants/monitorRegions'
 
 export type AlertLevel = 'low' | 'medium' | 'high' | 'critical' | 'warning'
 
