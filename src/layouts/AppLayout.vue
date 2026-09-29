@@ -178,6 +178,7 @@
     <main class="content-slot">
       <slot></slot>
     </main>
+    <SiteDemoFooter />
   </div>
 </template>
 
@@ -199,6 +200,7 @@ import { useGlobalSearch } from '@/composables/useGlobalSearch'
 import { useAlertEngine, type SiteNotification } from '@/composables/useAlertEngine'
 import { markNotificationRead } from '@/api/rules'
 import RegionSelect from '@/components/RegionSelect.vue'
+import SiteDemoFooter from '@/components/SiteDemoFooter.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
