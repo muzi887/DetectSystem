@@ -14,8 +14,8 @@ export class StaticDemoError extends Error {
 type Row = Record<string, unknown>
 
 function splitUrl(url: string) {
-  const [path, search = ''] = url.split('?')
-  return { path, query: new URLSearchParams(search) }
+  const [pathPart, search = ''] = url.split('?')
+  return { path: pathPart ?? url, query: new URLSearchParams(search) }
 }
 
 function applyQuery(rows: Row[], query: URLSearchParams, params?: Record<string, unknown>) {
@@ -38,8 +38,8 @@ function applyQuery(rows: Row[], query: URLSearchParams, params?: Record<string,
   if (sortKey) {
     const reverse = (query.get('_order') || 'asc').toLowerCase() === 'desc'
     filtered = [...filtered].sort((a, b) => {
-      const av = a[sortKey]
-      const bv = b[sortKey]
+      const av = a[sortKey] as number | string | null | undefined
+      const bv = b[sortKey] as number | string | null | undefined
       if (av == null && bv == null) return 0
       if (av == null) return 1
       if (bv == null) return -1
@@ -52,7 +52,9 @@ function applyQuery(rows: Row[], query: URLSearchParams, params?: Record<string,
 }
 
 function nearestMoisture(db: DemoSnapshot, lat: number, lng: number) {
-  let best = db.monitorPoints[0]
+  const first = db.monitorPoints[0]
+  if (!first) throw new StaticDemoError('没有监测点', 404)
+  let best = first
   let bestDistance = Number.POSITIVE_INFINITY
   for (const point of db.monitorPoints) {
     const distance = Math.hypot(Number(point.lat) - lat, Number(point.lng) - lng)
@@ -103,7 +105,7 @@ function dispatch(
   }
 
   const publish = path.match(/^\/alerts\/(\d+)\/publish$/)
-  if (verb === 'POST' && publish) {
+  if (verb === 'POST' && publish?.[1]) {
     const row = db.alerts.find((alert) => alert.id === Number(publish[1]))
     if (!row) throw new StaticDemoError('预警不存在', 404)
     row.draft = false
@@ -119,20 +121,21 @@ function dispatch(
   }
 
   const alertPath = path.match(/^\/alerts\/(\d+)$/)
-  if (alertPath && (verb === 'PATCH' || verb === 'DELETE')) {
+  if (alertPath?.[1] && (verb === 'PATCH' || verb === 'DELETE')) {
     const id = Number(alertPath[1])
     const index = db.alerts.findIndex((alert) => alert.id === id)
-    if (index < 0) throw new StaticDemoError('预警不存在', 404)
+    const target = db.alerts[index]
+    if (index < 0 || !target) throw new StaticDemoError('预警不存在', 404)
     if (verb === 'DELETE') {
       db.alerts.splice(index, 1)
       return null
     }
-    Object.assign(db.alerts[index], (body ?? {}) as Row)
-    return db.alerts[index]
+    Object.assign(target, (body ?? {}) as Row)
+    return target
   }
 
   const noticePath = path.match(/^\/notifications\/(\d+)$/)
-  if (verb === 'PATCH' && noticePath) {
+  if (verb === 'PATCH' && noticePath?.[1]) {
     const row = db.notifications.find((item) => item.id === Number(noticePath[1]))
     if (!row) throw new StaticDemoError('通知不存在', 404)
     row.read = true
@@ -140,12 +143,12 @@ function dispatch(
   }
 
   const readingsPath = path.match(/^\/field-sensors\/(\d+)\/readings$/)
-  if (verb === 'GET' && readingsPath) {
+  if (verb === 'GET' && readingsPath?.[1]) {
     return db.sensorReadings.filter((row) => row.pointId === Number(readingsPath[1]))
   }
 
   const thresholdPath = path.match(/^\/field-sensors\/(\d+)\/thresholds$/)
-  if (thresholdPath) {
+  if (thresholdPath?.[1]) {
     const pointId = Number(thresholdPath[1])
     const current = db.thresholds.find((row) => Number(row.pointId) === pointId) ?? { pointId }
     if (verb === 'PUT') {
@@ -194,20 +197,20 @@ export function createStaticHttp(source: DemoSnapshot) {
     }
   }
   return {
-    get(url: string, config?: { params?: Record<string, unknown> }) {
-      return call('GET', url, config)
+    get<T = unknown>(url: string, config?: { params?: Record<string, unknown> }) {
+      return call('GET', url, config) as Promise<{ data: T }>
     },
-    post(url: string, body?: unknown) {
-      return call('POST', url, undefined, body)
+    post<T = unknown>(url: string, body?: unknown) {
+      return call('POST', url, undefined, body) as Promise<{ data: T }>
     },
-    patch(url: string, body?: unknown) {
-      return call('PATCH', url, undefined, body)
+    patch<T = unknown>(url: string, body?: unknown) {
+      return call('PATCH', url, undefined, body) as Promise<{ data: T }>
     },
-    put(url: string, body?: unknown) {
-      return call('PUT', url, undefined, body)
+    put<T = unknown>(url: string, body?: unknown) {
+      return call('PUT', url, undefined, body) as Promise<{ data: T }>
     },
-    delete(url: string) {
-      return call('DELETE', url)
+    delete<T = unknown>(url: string) {
+      return call('DELETE', url) as Promise<{ data: T }>
     }
   }
 }
