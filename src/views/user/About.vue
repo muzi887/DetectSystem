@@ -16,9 +16,7 @@
           <p class="slogan-sub">—— 坤灵智巡，让灾害预警“跑”在成灾前</p>
 
           <div class="vision-text">
-            我们是
-            <strong>河北地质大学</strong>
-            坤灵智巡创工队，队员来自地信、测绘、运营等专业。团队自主开发了这套 Web 监测预警系统，目前已部署上线，供合作社与农技推广场景演示使用。
+            本团队自主开发了这套 Web 监测预警系统，供合作社与农技推广场景演示使用。监测、预报与遥感图层为演示数据。
           </div>
 
           <img
@@ -128,55 +126,6 @@
         </div>
       </div>
 
-      <div class="glass-panel section-panel">
-        <div class="section-header">
-          <TrophyOutlined />
-          导师引领
-        </div>
-        <div class="advisor-grid">
-          <div
-            v-for="advisor in advisors"
-            :key="advisor.name"
-            class="member-card advisor-card">
-            <div class="avatar-wrapper">
-              <a-avatar
-                :size="80"
-                :src="advisorDefaultAvatar"
-                class="custom-avatar advisor-avatar">
-                {{ advisor.name.charAt(0) }}
-              </a-avatar>
-            </div>
-            <div class="info-wrapper text-center">
-              <div class="name-row center-row">
-                <span class="name">{{ advisor.name }}</span>
-                <span class="role-tag">{{ advisor.role }}</span>
-              </div>
-              <div class="major-row center-row">{{ advisor.title }}</div>
-              <div class="divider-line"></div>
-              <p class="desc-text center-text">{{ advisor.bio }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-panel footer-panel">
-        <div class="footer-inner">
-          <p class="contest-info">
-            本平台由
-            <strong>河北地质大学</strong>
-            开发，面向智慧农业监测与灾害预警场景
-          </p>
-          <p class="school-info">河北地质大学 &nbsp;|&nbsp; 坤灵智巡创工队</p>
-          <div class="contact-action">
-            <a
-              href="mailto:kunling-smart@hgu.edu.cn"
-              class="contact-btn">
-              <MailOutlined />
-              联系我们
-            </a>
-          </div>
-        </div>
-      </div>
     </div>
   </AppLayout>
 </template>
@@ -191,8 +140,6 @@ import {
   CodeOutlined,
   TeamOutlined,
   BookOutlined,
-  TrophyOutlined,
-  MailOutlined,
   CloudServerOutlined,
   RobotOutlined,
   AreaChartOutlined,
@@ -201,7 +148,6 @@ import {
 
 import vueIcon from '@/assets/icons/vue.svg'
 import teamDefaultAvatar from '@/assets/avatars/team-default.svg'
-import advisorDefaultAvatar from '@/assets/avatars/advisor-default.svg'
 import agriMonitoringIllustration from '@/assets/illustrations/agri-monitoring-line.svg'
 import { fetchAnalysisModelInfo } from '@/api/analysis.ts'
 
@@ -238,21 +184,6 @@ const techStack = ref([
     color: '#bae637'
   }
 ])
-
-const advisors = [
-  {
-    name: '刘兴冉',
-    role: '指导教师',
-    title: '副教授 / 地理信息科学教研室副主任',
-    bio: '毕业于中国科学院大学/中国科学院遗传发育与生物学研究所农业资源研究中心，获得理学博士学位。主要研究方向为生态水文、农业水文与水资源。'
-  },
-  {
-    name: '孙丞淼',
-    role: '指导教师',
-    title: '讲师',
-    bio: '博士毕业于西北农林科技大学农业水土工程专业，主要研究方向为作物水分管理、生态水文。'
-  }
-]
 
 const teamMembers = ref([
   {
