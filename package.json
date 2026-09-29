@@ -7,6 +7,7 @@
     "dev": "vite --host",
     "build": "vite build && node scripts/copy-satellite-maps.mjs",
     "check:static": "node scripts/check-static-site.mjs",
+    "export:snapshot": "node scripts/export-demo-snapshot.mjs",
     "preview": "vite preview",
     "lint": "eslint --fix src",
     "prettier": "prettier --write .",
