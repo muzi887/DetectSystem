@@ -8,7 +8,7 @@
           </template>
 
           <section v-if="staticDemo" class="analysis-demo">
-            <video controls playsinline preload="metadata" src="/demo/analysis.mp4"></video>
+            <video controls playsinline preload="metadata" :src="analysisDemoVideo"></video>
             <p>{{ ANALYSIS_DEMO_NOTE }}</p>
             <p>{{ MODEL_METRICS_LINE }}</p>
           </section>
@@ -322,6 +322,7 @@ import { BJJ_CROP_LABELS, BJJ_CROP_OPTIONS } from '@/constants/crops.ts'
 import { canonicalizeDiseaseLabel } from '@/utils/diseaseLabels.ts'
 
 const staticDemo = import.meta.env.PROD
+const analysisDemoVideo = '/demo/analysis.mp4'
 const store = useDataStore()
 const router = useRouter()
 const { getTreatment, disclaimer: treatmentDisclaimer } = useTreatmentGuide()

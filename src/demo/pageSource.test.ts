@@ -11,7 +11,7 @@ test('analysis page plays the demo video and hides upload in the static build', 
   const src = readFileSync(new URL('../views/user/DataAnalysis.vue', import.meta.url), 'utf8')
   assert.equal(src.includes('ANALYSIS_DEMO_NOTE'), true)
   assert.equal(src.includes('MODEL_METRICS_LINE'), true)
-  assert.match(src, /src="\/demo\/analysis\.mp4"/)
+  assert.match(src, /\/demo\/analysis\.mp4/)
   assert.match(src, /<video[^>]*controls/)
   assert.equal(src.includes('在线体验'), false)
   const uploads = src.match(/<a-upload/g) || []
