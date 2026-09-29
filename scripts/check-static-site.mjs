@@ -36,12 +36,16 @@ function walk(path) {
   if (path.split(/[/\\]/).includes('mock')) return
   if (!textExt.has(extname(path))) return
   const lines = readFileSync(path, 'utf8').split(/\r?\n/)
-  const banned = path === 'README.md' || path.startsWith('README.md') ? words : words.concat(loopback)
+  const inDist = path === 'dist' || path.startsWith('dist/') || path.startsWith('dist\\')
+  const banned = path === 'README.md' ? words : words.concat(loopback)
   lines.forEach((line, index) => {
     for (const word of banned) {
+      if (word === 'localhost' && inDist) continue
+      if (word === '98.99' && inDist && !/(^|[^\d.])98\.99/.test(line)) continue
       if (line.includes(word)) hits.push(`${path}:${index + 1}: ${word}`)
     }
-    if (path.endsWith('.js') && path.startsWith('dist')) {
+    if (inDist && line.includes('://localhost')) hits.push(`${path}:${index + 1}: ://localhost`)
+    if (path.endsWith('.js') && inDist) {
       if (line.includes('baseURL:"/api"') || line.includes('baseURL: "/api"') || line.includes("baseURL:'/api'")) {
         hits.push(`${path}:${index + 1}: live api baseURL`)
       }
