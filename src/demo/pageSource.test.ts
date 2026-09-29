@@ -7,12 +7,11 @@ test('warning page states that alerts are precomputed', () => {
   assert.equal(src.includes('RULE_CHAIN_NOTE'), true)
 })
 
-test('analysis page plays the demo video and hides upload in the static build', () => {
+test('analysis page hides upload in the static build while the demo video stays commented out', () => {
   const src = readFileSync(new URL('../views/user/DataAnalysis.vue', import.meta.url), 'utf8')
-  assert.equal(src.includes('ANALYSIS_DEMO_NOTE'), true)
-  assert.equal(src.includes('MODEL_METRICS_LINE'), true)
-  assert.match(src, /\/demo\/analysis\.mp4/)
-  assert.match(src, /<video[^>]*controls/)
+  const live = src.replace(/<!--[\s\S]*?-->/g, '')
+  assert.equal(/<video[\s>]/.test(live), false)
+  assert.match(src, /<!--[\s\S]*\/demo\/analysis\.mp4[\s\S]*-->/)
   assert.equal(src.includes('在线体验'), false)
   const uploads = src.match(/<a-upload/g) || []
   assert.equal(uploads.length >= 2, true)
