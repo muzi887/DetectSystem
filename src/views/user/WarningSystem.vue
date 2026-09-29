@@ -5,6 +5,7 @@
         <a-card :bordered="false">
           <template #title>
             <div class="glass-card-title">预警管理</div>
+            <p class="rule-chain-note">{{ RULE_CHAIN_NOTE }}</p>
           </template>
           <template #extra>
             <div class="warning-toolbar">
@@ -151,6 +152,7 @@ import { useDataStore } from '@/stores/data'
 import { getAlertLevelColor, getAlertLevelText } from '@/utils/alertLevel'
 import { formatTime } from '@/utils/formatTime'
 import { publishAlert } from '@/api/rules'
+import { RULE_CHAIN_NOTE } from '@/demo/copy'
 
 const dataStore = useDataStore()
 const showDrafts = ref(false)

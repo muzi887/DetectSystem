@@ -7,6 +7,12 @@
             <div class="glass-card-title">智能分析</div>
           </template>
 
+          <section v-if="staticDemo" class="analysis-demo">
+            <video controls playsinline preload="metadata" src="/demo/analysis.mp4"></video>
+            <p>{{ ANALYSIS_DEMO_NOTE }}</p>
+            <p>{{ MODEL_METRICS_LINE }}</p>
+          </section>
+
           <div class="analysis-dashboard page-grid-stack-md">
             <div class="col-input">
               <a-card
@@ -15,6 +21,7 @@
                 title="分析参数">
                 <div class="input-main">
                   <div class="preview-box">
+                    <template v-if="!staticDemo">
                     <a-upload
                       v-if="!imageUrl"
                       v-model:file-list="fileList"
@@ -55,6 +62,7 @@
                           size="large" />
                       </div>
                     </button>
+                    </template>
                   </div>
 
                   <div class="input-fields">
@@ -273,6 +281,7 @@
         </div>
       </div>
       <div class="preview-modal-footer">
+        <template v-if="!staticDemo">
         <a-upload
           v-model:file-list="fileList"
           name="file"
@@ -283,6 +292,7 @@
           @change="handleChange">
           <a-button>更换图片</a-button>
         </a-upload>
+        </template>
         <a-button
           type="primary"
           @click="previewOpen = false">
@@ -300,6 +310,7 @@ import { message } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { analyzeImage, analyzeBatch, submitAnalysisFeedback } from '@/api/analysis.ts'
+import { ANALYSIS_DEMO_NOTE, MODEL_METRICS_LINE } from '@/demo/copy'
 import {
   useTreatmentGuide,
   buildTreatmentPanels,
@@ -310,6 +321,7 @@ import { useRouter } from 'vue-router'
 import { BJJ_CROP_LABELS, BJJ_CROP_OPTIONS } from '@/constants/crops.ts'
 import { canonicalizeDiseaseLabel } from '@/utils/diseaseLabels.ts'
 
+const staticDemo = import.meta.env.PROD
 const store = useDataStore()
 const router = useRouter()
 const { getTreatment, disclaimer: treatmentDisclaimer } = useTreatmentGuide()
@@ -626,6 +638,20 @@ const handleFeedback = async () => {
 </script>
 
 <style scoped>
+.analysis-demo {
+  margin-bottom: 16px;
+}
+
+.analysis-demo video {
+  width: 100%;
+  max-height: 420px;
+}
+
+.analysis-demo p {
+  margin: 8px 0 0;
+  color: var(--glass-text-secondary);
+  line-height: 1.6;
+}
 .analysis-page-root {
   width: 100%;
 }
