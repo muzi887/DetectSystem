@@ -17,7 +17,10 @@ declare module 'vue-router' {
 }
 
 const routes: RouteRecordRaw[] = [
-  { path: '/', redirect: '/login' },
+  {
+    path: '/',
+    redirect: () => (useUserStore().isLogged ? '/home' : '/login')
+  },
   {
     path: '/login',
     component: Login,

@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import http from '@/utils/http'
+import { seedStaticDemoSession } from '@/demo/session'
+
+seedStaticDemoSession(import.meta.env.PROD, localStorage)
 
 export type FarmUserRole = 'admin' | 'agronomist' | 'cooperative'
 

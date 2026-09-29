@@ -28,6 +28,10 @@ export const MONITOR_REGIONS: MonitorRegionOption[] = [
 
 export const DEFAULT_MONITOR_REGION: MonitorRegionId = 'northeast'
 
+export function initialMonitorRegion(prod: boolean): MonitorRegionId {
+  return prod ? 'jjj' : DEFAULT_MONITOR_REGION
+}
+
 export function getMonitorRegion(id: MonitorRegionId): MonitorRegionOption {
   return MONITOR_REGIONS.find((r) => r.id === id) ?? MONITOR_REGIONS[0]
 }
